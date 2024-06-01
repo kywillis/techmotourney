@@ -1,0 +1,60 @@
+openapi: 3.0.0
+info:
+  title: (title)
+  version: 0.0.0
+tags: []
+paths: {}
+components:
+  schemas:
+    CreatePlayerRequest:
+      type: object
+      required:
+        - name
+        - profilePic
+      properties:
+        name:
+          type: string
+        profilePic:
+          type: string
+    GameResult:
+      type: object
+      required:
+        - gameResultId
+        - player1
+        - player2
+        - tournamentId
+      properties:
+        gameResultId:
+          type: integer
+          format: int32
+        player1:
+          $ref: '#/components/schemas/GameResultStats'
+        player2:
+          $ref: '#/components/schemas/GameResultStats'
+        tournamentId:
+          type: integer
+          format: int32
+    GameResultStats:
+      type: object
+      required:
+        - playerId
+        - teamId
+        - score
+        - passingYards
+        - rushingYards
+      properties:
+        playerId:
+          type: integer
+          format: int32
+        teamId:
+          type: integer
+          format: int32
+        score:
+          type: integer
+          format: int32
+        passingYards:
+          type: integer
+          format: int32
+        rushingYards:
+          type: integer
+          format: int32

@@ -1,0 +1,3 @@
+model CreateTournamentRequest{
+    name: string;
+}
