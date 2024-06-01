@@ -12,7 +12,7 @@ namespace Players {
         
         @get getPlayer(@path id: int32): Player;
 
-        @post addPlayer(@body player: Player): Player;
+        @post addPlayer(@header contentType: "multipart/form-data", @body player: CreatePlayerRequest, logo: bytes[]): Player;
 
         @put updatePlayer(@path id: int32, @body player: Player): Player;
         
