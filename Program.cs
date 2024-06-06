@@ -1,3 +1,5 @@
+using TecmoTourney.DataAccess.Interfaces;
+using TecmoTourney.DataAccess;
 using TecmoTourney.Orchestration;
 using TecmoTourney.Orchestration.Interfaces;
 
@@ -14,6 +16,9 @@ builder.Services.AddSwaggerGen();
 // Add the orchestrations to the dependency injection container
 builder.Services.AddScoped<PlayerOrchestration, PlayerOrchestration>();
 builder.Services.AddScoped<IGameResultOrchestration, GameResultOrchestration>();
+builder.Services.AddScoped<ITournamentsOrchestration, TournamentsOrchestration>();
+builder.Services.AddScoped<IGameResultDAO, GameResultDAO>();
+builder.Services.AddScoped<ITournamentsDAO, TournamentsDAO>();
 
 var app = builder.Build();
 
