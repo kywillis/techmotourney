@@ -1,0 +1,74 @@
+Consider the typespec code below. 
+<typespec>
+
+
+I now need you to either create new files based on the typespec or update existing one. When you add code to the existing files pre pend this message above your edits:
+//Generated Code
+
+And add this after your changes:
+//End Generated Code
+
+for example if you changed these lines :
+
+for(int i=0;i<5;i++)
+{
+    Console.WriteLine(i);
+}
+
+to this:
+//Generated Code
+for(int i=0;i<10;i++)
+{
+    Console.WriteLine(i + ".");
+}
+//End Generated Code
+
+Below are the contents of the files that have been identified as being derived from the typespec above. The first section are the new files (if there were any).
+
+
+New Files:
+<newfiles>
+
+This next section are the files that need to be updated. Do your best to modify these files to account for the contents of the type spec file. If you only need to add a method then just include the namespace, class, and the method(s). Do not include any methods in the generated code that you did not need to modify. 
+For example if you need to add a new method to this class below:
+
+using System;
+namespace Test{
+    public class Foo
+    {
+        public string Bar()
+        {
+            Console.WriteLine("foo bar")
+        }    
+    }
+}
+
+The output should be:
+
+using System;
+namespace Test{
+    public class Foo
+    {
+        //Generated Code
+        public string NewMethod()
+        {
+            Console.WriteLine("I am new")
+        }    
+        //End Generated Code
+    }
+}
+
+The other method "Bar" is not included because it was not modified. If you did need to modify it then it would be included in the generated code.
+
+The files to update are below in the following format:
+Files and their contents that need to be updated:
+<updatefiles>
+
+For the output I want you to list the complete contents of the files which should include your additions. I want the response to have the following layout:
+
+<<<<<File: {filePath}>>>>>
+{fileContents}
+
+
+Where {filePath} is the path to the file that was supplied in the list and {fileContents} is the code you generated. 
+Do not include any preamble or summary. I want the output to be exactly as I have described. The header with the path and the contents you have generated.

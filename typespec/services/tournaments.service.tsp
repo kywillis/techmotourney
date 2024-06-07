@@ -19,5 +19,7 @@ namespace Tournaments {
         @put updateTournament(@path tournamentId: int32, @body tournament: UpdateTournamentRequest): void;
         
         @delete deleteTournament(@path tournamentId: int32): void;
+		
+		@get getTournamentById(@path tournamentId: int32): Tournament;
     }
 }
