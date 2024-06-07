@@ -13,9 +13,8 @@ namespace TecmoTourney.DataAccess.Interfaces
         Task AddTournamentAsync(CreateTournamentRequestModel tournament);
         Task UpdateTournamentAsync(int tournamentId, UpdateTournamentRequestModel tournament);
         Task DeleteTournamentAsync(int tournamentId);
-
         //Generated Code
-        Task<TournamentModel> GetTournamentByIdAsync(int tournamentId);
+        Task<TournamentDAOModel> GetTournamentByIdAsync(int tournamentId);
         //End Generated Code
     }
 }
