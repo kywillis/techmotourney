@@ -20,6 +20,6 @@ namespace Tournaments {
         
         @delete deleteTournament(@path tournamentId: int32): void; 
 		
-		@get getTournamentById(@path tournamentId: int32): Tournament;
+		@get getTournamentById(@path tournamentId: int32): Tournament; 
     }
 }
