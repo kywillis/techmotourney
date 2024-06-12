@@ -6,7 +6,7 @@ import "@typespec/http";
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
-namespace Tournaments {
+namespace Tournaments { 
     
     @route("/tournaments")
     interface Tournaments {        

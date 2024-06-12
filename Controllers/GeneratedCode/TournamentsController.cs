@@ -36,22 +36,22 @@ namespace SE.Zeigo.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> AddTournament([FromBody] CreateTournamentRequest tournament)
         {
-            var result = await _tournamentOrchestration.AddTournament(tournament);
-            return result.ToActionResult();
+            await _tournamentOrchestration.AddTournament(tournament);
+            return Ok();
         }
 
         [HttpPut("{tournamentId}")]
         public async Task<IActionResult> UpdateTournament(int tournamentId, [FromBody] UpdateTournamentRequest tournament)
         {
-            var result = await _tournamentOrchestration.UpdateTournament(tournamentId, tournament);
-            return result.ToActionResult();
+            await _tournamentOrchestration.UpdateTournament(tournamentId, tournament);
+            return Ok();
         }
 
         [HttpDelete("{tournamentId}")]
         public async Task<IActionResult> DeleteTournament(int tournamentId)
         {
-            var result = await _tournamentOrchestration.DeleteTournament(tournamentId);
-            return result.ToActionResult();
+            await _tournamentOrchestration.DeleteTournament(tournamentId);
+            return Ok();
         }
 
         [HttpGet("{tournamentId}")]
@@ -59,6 +59,14 @@ namespace SE.Zeigo.Admin.Controllers
         public async Task<IActionResult> GetTournamentById(int tournamentId)
         {
             var result = await _tournamentOrchestration.GetTournamentById(tournamentId);
+            return result.ToActionResult();
+        }
+
+        [HttpGet("{tournamentId}/{tournamentId2}")]
+        [ProducesResponseType(200, Type = typeof(ActionResult<Tournament[]>))]
+        public async Task<IActionResult> GetTournamentByIds(int tournamentId, int tournamentId2)
+        {
+            var result = await _tournamentOrchestration.GetTournamentByIds(tournamentId, tournamentId2);
             return result.ToActionResult();
         }
     }

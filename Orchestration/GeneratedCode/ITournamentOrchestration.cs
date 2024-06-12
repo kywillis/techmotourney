@@ -12,5 +12,6 @@ namespace SE.Zeigo.Admin.Orchestration
         Task UpdateTournament(int tournamentId, UpdateTournamentRequest tournament);
         Task DeleteTournament(int tournamentId);
         Task<Tournament> GetTournamentById(int tournamentId);
+        Task<IEnumerable<Tournament>> GetTournamentByIds(int tournamentId, int tournamentId2);
     }
 }
