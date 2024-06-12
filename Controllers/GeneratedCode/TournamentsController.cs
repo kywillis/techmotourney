@@ -7,7 +7,6 @@ namespace SE.Zeigo.Admin.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [ProducesResponseType(400, Type = typeof(ErrorContent))]
     public class TournamentsController : ControllerBase
     {
         private readonly ITournamentsOrchestration _tournamentsOrchestration;
