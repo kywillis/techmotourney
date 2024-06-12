@@ -11,7 +11,7 @@ namespace Tournaments {
     @route("/tournaments")
     interface Tournaments {             
         @get listAll(): Tournament[]; 
-        
+         
         @get listResultsByPlayer(@path  @segment("player") playerId: int32): Player;
 
         @post addTournament(@body tournament: CreateTournamentRequest): void;
