@@ -23,6 +23,6 @@ namespace Tournaments {
 		@get getTournamentById(@path tournamentId: int32): Tournament;
 
         @get getTournamentByIds(@path tournamentId: int32, @path tournamentId2: int32): Tournament[]; 
-        @get getTournamentByIds2(@path tournamentId: int32, @path tournamentId2: int32): Tournament[]; 
+        @get getTournamentByIfff(@path tournamentId: int32, @path tournamentId2: int32): Tournament[]; 
     }
 }
