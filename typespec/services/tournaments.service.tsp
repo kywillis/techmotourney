@@ -1,6 +1,6 @@
 import "../models/request/createTournamentRequest.model.tsp";
 import "../models/request/updateTournamentRequest.model.tsp";
-import "../models/tournament.model.tsp";
+import "../models/tournament.model.tsp"; 
 import "@typespec/http";
 
 using TypeSpec.Http;
@@ -23,5 +23,6 @@ namespace Tournaments {
 		@get getTournamentById(@path tournamentId: int32): Tournament;
 
         @get getTournamentByIds(@path tournamentId: int32, @path tournamentId2: int32): Tournament[]; 
+        @get getTournamentByIds2(@path tournamentId: int32, @path tournamentId2: int32): Tournament[]; 
     }
 }
