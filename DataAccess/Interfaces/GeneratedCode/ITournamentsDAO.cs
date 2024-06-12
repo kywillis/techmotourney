@@ -8,16 +8,15 @@ namespace TecmoTourney.DataAccess.Interfaces
 {
     public interface ITournamentsDAO
     {
+        //Generated Code
         Task<IEnumerable<TournamentDAOModel>> ListAllAsync();
         Task<PlayerModel> ListResultsByPlayerAsync(int playerId);
         Task AddTournamentAsync(CreateTournamentRequestModel tournament);
         Task UpdateTournamentAsync(int tournamentId, UpdateTournamentRequestModel tournament);
         Task DeleteTournamentAsync(int tournamentId);
-
-        //Generated Code
-        Task<TournamentModel> GetTournamentByIdAsync(int tournamentId);
-        Task<IEnumerable<TournamentModel>> GetTournamentByIdsAsync(int tournamentId, int tournamentId2);
-        Task<IEnumerable<TournamentModel>> GetTournamentByIfffAsync(int tournamentId, int tournamentId2);
+        Task<TournamentDAOModel> GetTournamentByIdAsync(int tournamentId);
+        Task<IEnumerable<TournamentDAOModel>> GetTournamentByIdsAsync(int tournamentId, int tournamentId2);
+        Task<IEnumerable<TournamentDAOModel>> GetTournamentByIfffAsync(int tournamentId, int tournamentId2);
         //End Generated Code
     }
 }
