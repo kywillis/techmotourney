@@ -6,12 +6,13 @@ namespace SE.Zeigo.Admin.Orchestration
 {
     public interface ITournamentOrchestration
     {
-        Task<IEnumerable<Tournament>> ListAll();
-        Task<Player> ListResultsByPlayer(int playerId);
-        Task AddTournament(CreateTournamentRequest tournament);
-        Task UpdateTournament(int tournamentId, UpdateTournamentRequest tournament);
-        Task DeleteTournament(int tournamentId);
-        Task<Tournament> GetTournamentById(int tournamentId);
-        Task<IEnumerable<Tournament>> GetTournamentByIds(int tournamentId, int tournamentId2);
+        Task<IEnumerable<Tournament>> ListAllAsync();
+        Task<Player> ListResultsByPlayerAsync(int playerId);
+        Task AddTournamentAsync(CreateTournamentRequest tournament);
+        Task UpdateTournamentAsync(int tournamentId, UpdateTournamentRequest tournament);
+        Task DeleteTournamentAsync(int tournamentId);
+        Task<Tournament> GetTournamentByIdAsync(int tournamentId);
+        Task<IEnumerable<Tournament>> GetTournamentByIdsAsync(int tournamentId, int tournamentId2);
+        Task<IEnumerable<Tournament>> GetTournamentByIfffAsync(int tournamentId, int tournamentId2);
     }
 }
