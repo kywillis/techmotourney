@@ -1,13 +1,14 @@
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using SE.Zeigo.Admin.Orchestration;
-using SE.Zeigo.Admin.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using TecmoTourney.Models;
+using TecmoTourney.Models.Requests;
+using TecmoTourney.Orchestration.Interfaces;
 
-namespace SE.Zeigo.Admin.Controllers
+namespace TecmoTourney.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    [ProducesResponseType(400, Type = typeof(ErrorContent))]
+    [Route("api/tournaments")]
     public class TournamentsController : ControllerBase
     {
         private readonly ITournamentsOrchestration _tournamentsOrchestration;
@@ -18,64 +19,69 @@ namespace SE.Zeigo.Admin.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(200, Type = typeof(ActionResult<Tournament[]>))]
-        public async Task<IActionResult> ListAll()
+        public async Task<ActionResult<IEnumerable<TournamentModel>>> ListAll()
         {
-            var result = await _tournamentsOrchestration.ListAll();
-            return result.ToActionResult();
+            var tournaments = await _tournamentsOrchestration.ListAllAsync();
+            return Ok(tournaments);
         }
 
-        [HttpGet("{playerId}")]
-        [ProducesResponseType(200, Type = typeof(ActionResult<Player>))]
-        public async Task<IActionResult> ListResultsByPlayer(int playerId)
+        [HttpGet("player/{playerId}")]
+        public async Task<ActionResult<PlayerModel>> ListResultsByPlayer(int playerId)
         {
-            var result = await _tournamentsOrchestration.ListResultsByPlayer(playerId);
-            return result.ToActionResult();
+            var player = await _tournamentsOrchestration.ListResultsByPlayerAsync(playerId);
+            if (player == null)
+            {
+                return NotFound();
+            }
+            return Ok(player);
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddTournament([FromBody] CreateTournamentRequest tournament)
+        public async Task<IActionResult> AddTournament([FromBody] CreateTournamentRequestModel tournament)
         {
-            await _tournamentsOrchestration.AddTournament(tournament);
+            await _tournamentsOrchestration.AddTournamentAsync(tournament);
             return Ok();
         }
 
         [HttpPut("{tournamentId}")]
-        public async Task<IActionResult> UpdateTournament(int tournamentId, [FromBody] UpdateTournamentRequest tournament)
+        public async Task<IActionResult> UpdateTournament(int tournamentId, [FromBody] UpdateTournamentRequestModel tournament)
         {
-            await _tournamentsOrchestration.UpdateTournament(tournamentId, tournament);
+            await _tournamentsOrchestration.UpdateTournamentAsync(tournamentId, tournament);
             return Ok();
         }
 
         [HttpDelete("{tournamentId}")]
         public async Task<IActionResult> DeleteTournament(int tournamentId)
         {
-            await _tournamentsOrchestration.DeleteTournament(tournamentId);
+            await _tournamentsOrchestration.DeleteTournamentAsync(tournamentId);
             return Ok();
         }
 
+        //Generated Code
         [HttpGet("{tournamentId}")]
-        [ProducesResponseType(200, Type = typeof(ActionResult<Tournament>))]
-        public async Task<IActionResult> GetTournamentById(int tournamentId)
+        public async Task<ActionResult<TournamentModel>> GetTournamentById(int tournamentId)
         {
-            var result = await _tournamentsOrchestration.GetTournamentById(tournamentId);
-            return result.ToActionResult();
+            var tournament = await _tournamentsOrchestration.GetTournamentByIdAsync(tournamentId);
+            if (tournament == null)
+            {
+                return NotFound();
+            }
+            return Ok(tournament);
         }
 
         [HttpGet("{tournamentId}/{tournamentId2}")]
-        [ProducesResponseType(200, Type = typeof(ActionResult<Tournament[]>))]
-        public async Task<IActionResult> GetTournamentByIds(int tournamentId, int tournamentId2)
+        public async Task<ActionResult<IEnumerable<TournamentModel>>> GetTournamentByIds(int tournamentId, int tournamentId2)
         {
-            var result = await _tournamentsOrchestration.GetTournamentByIds(tournamentId, tournamentId2);
-            return result.ToActionResult();
+            var tournaments = await _tournamentsOrchestration.GetTournamentByIdsAsync(tournamentId, tournamentId2);
+            return Ok(tournaments);
         }
 
-        [HttpGet("{tournamentId}/{tournamentId2}")]
-        [ProducesResponseType(200, Type = typeof(ActionResult<Tournament[]>))]
-        public async Task<IActionResult> GetTournamentByIfff(int tournamentId, int tournamentId2)
+        [HttpGet("{tournamentId}/{tournamentId2}/ifff")]
+        public async Task<ActionResult<IEnumerable<TournamentModel>>> GetTournamentByIfff(int tournamentId, int tournamentId2)
         {
-            var result = await _tournamentsOrchestration.GetTournamentByIfff(tournamentId, tournamentId2);
-            return result.ToActionResult();
+            var tournaments = await _tournamentsOrchestration.GetTournamentByIfffAsync(tournamentId, tournamentId2);
+            return Ok(tournaments);
         }
+        //End Generated Code
     }
 }

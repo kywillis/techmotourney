@@ -46,6 +46,16 @@ namespace TecmoTourney.Orchestration
         {
             return await _tournamentsDAO.GetTournamentByIdAsync(tournamentId);
         }
+
+        public async Task<IEnumerable<TournamentModel>> GetTournamentByIdsAsync(int tournamentId, int tournamentId2)
+        {
+            return await _tournamentsDAO.GetTournamentByIdsAsync(tournamentId, tournamentId2);
+        }
+
+        public async Task<IEnumerable<TournamentModel>> GetTournamentByIfffAsync(int tournamentId, int tournamentId2)
+        {
+            return await _tournamentsDAO.GetTournamentByIfffAsync(tournamentId, tournamentId2);
+        }
         //End Generated Code
     }
 }
