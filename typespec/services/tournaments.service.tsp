@@ -9,7 +9,7 @@ using TypeSpec.Rest;
 namespace Tournaments { 
     
     @route("/tournaments")
-    interface Tournaments {            
+    interface Tournaments {             
         @get listAll(): Tournament[]; 
         
         @get listResultsByPlayer(@path  @segment("player") playerId: int32): Player;
