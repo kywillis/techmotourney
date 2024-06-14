@@ -17,5 +17,9 @@ namespace Players {
         @put updatePlayer(@path id: int32, @body player: Player): Player;
         
         @delete deletePlayer(@path id: int32): void;
+
+        @post addPlayerToTournament(@path playerId: int32, @query tourneyId: int32): void;
+        
+        @delete removePlayerFromTournament(@path playerId: int32, @query tourneyId: int32): void;
     }
 }
