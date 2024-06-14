@@ -8,20 +8,15 @@ using TecmoTourney.Models.Requests;
 
 namespace TecmoTourney.DataAccess
 {
-    public class TournamentsDAO : ITournamentsDAO
+    public class TournamentsDAO : BaseDAO, ITournamentsDAO
     {
-        private readonly string _connectionString;
-
-        public TournamentsDAO(string connectionString)
-        {
-            _connectionString = connectionString;
-        }
+        public TournamentsDAO(ApplicationConfig config) : base(config) { } 
 
         public async Task<IEnumerable<TournamentDAOModel>> ListAllAsync()
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var sql = "SELECT * FROM Tournaments";
+                var sql = "SELECT * FROM TC_Tournaments";
                 return await connection.QueryAsync<TournamentDAOModel>(sql);
             }
         }
@@ -30,7 +25,7 @@ namespace TecmoTourney.DataAccess
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var sql = "SELECT * FROM Players WHERE PlayerId = @PlayerId";
+                var sql = "SELECT * FROM TC_Players WHERE PlayerId = @PlayerId";
                 return await connection.QuerySingleOrDefaultAsync<PlayerModel>(sql, new { PlayerId = playerId });
             }
         }
@@ -39,7 +34,7 @@ namespace TecmoTourney.DataAccess
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var sql = "INSERT INTO Tournaments (Name, StartDate, EndDate) VALUES (@Name, @StartDate, @EndDate)";
+                var sql = "INSERT INTO TC_Tournaments (Name, StartDate, EndDate) VALUES (@Name, @StartDate, @EndDate)";
                 await connection.ExecuteAsync(sql, tournament);
             }
         }
@@ -48,7 +43,7 @@ namespace TecmoTourney.DataAccess
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var sql = "UPDATE Tournaments SET Name = @Name, StartDate = @StartDate, EndDate = @EndDate WHERE TournamentId = @TournamentId";
+                var sql = "UPDATE TC_Tournaments SET Name = @Name, StartDate = @StartDate, EndDate = @EndDate WHERE TournamentId = @TournamentId";
                 await connection.ExecuteAsync(sql, new { tournament.Name, tournament.StartDate, tournament.EndDate, TournamentId = tournamentId });
             }
         }
@@ -57,7 +52,7 @@ namespace TecmoTourney.DataAccess
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var sql = "DELETE FROM Tournaments WHERE TournamentId = @TournamentId";
+                var sql = "DELETE FROM TC_Tournaments WHERE TournamentId = @TournamentId";
                 await connection.ExecuteAsync(sql, new { TournamentId = tournamentId });
             }
         }

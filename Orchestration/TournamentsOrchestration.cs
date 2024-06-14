@@ -4,21 +4,26 @@ using TecmoTourney.Models;
 using TecmoTourney.Models.Requests;
 using TecmoTourney.Orchestration.Interfaces;
 using TecmoTourney.DataAccess.Interfaces;
+using AutoMapper;
+using TecmoTourney.DataAccess.Models;
 
-namespace TecmoTourney.Orchestration
+namespace TecmoTourney.Orchestration 
 {
     public class TournamentsOrchestration : ITournamentsOrchestration
     {
         private readonly ITournamentsDAO _tournamentsDAO;
+        private readonly IMapper _mapper;
 
-        public TournamentsOrchestration(ITournamentsDAO tournamentsDAO)
+        public TournamentsOrchestration(ITournamentsDAO tournamentsDAO, IMapper mapper)
         {
             _tournamentsDAO = tournamentsDAO;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<TournamentModel>> ListAllAsync()
         {
-            return await _tournamentsDAO.ListAllAsync();
+            var tournaments = await _tournamentsDAO.ListAllAsync();
+            return _mapper.Map< IEnumerable<TournamentDAOModel>, IEnumerable<TournamentModel>>(tournaments);
         }
 
         public async Task<PlayerModel> ListResultsByPlayerAsync(int playerId)

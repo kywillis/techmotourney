@@ -11,16 +11,16 @@ namespace TecmoTourney.DataAccess
     {
         private readonly string _connectionString;
 
-        public GameResultDAO(string connectionString)
+        public GameResultDAO(ApplicationConfig config)
         {
-            _connectionString = connectionString;
+            _connectionString = config.MainDBConnectionString;
         }
 
         public async Task<IEnumerable<GameResultDAOModel>> ListResultsByTournamentAsync(int tourneyId)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var sql = "SELECT * FROM GameResults WHERE TournamentId = @TourneyId";
+                var sql = "SELECT * FROM TC_GameResults WHERE TournamentId = @TourneyId";
                 return await connection.QueryAsync<GameResultDAOModel>(sql, new { TourneyId = tourneyId });
             }
         }
@@ -29,7 +29,7 @@ namespace TecmoTourney.DataAccess
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var sql = "SELECT * FROM GameResults WHERE Player1Id = @PlayerId OR Player2Id = @PlayerId";
+                var sql = "SELECT * FROM TC_GameResults WHERE Player1Id = @PlayerId OR Player2Id = @PlayerId";
                 return await connection.QueryAsync<GameResultDAOModel>(sql, new { PlayerId = playerId });
             }
         }
@@ -38,7 +38,7 @@ namespace TecmoTourney.DataAccess
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var sql = "SELECT * FROM GameResults WHERE (Player1Id = @Player1Id AND Player2Id = @Player2Id) OR (Player1Id = @Player2Id AND Player2Id = @Player1Id)";
+                var sql = "SELECT * FROM TC_GameResults WHERE (Player1Id = @Player1Id AND Player2Id = @Player2Id) OR (Player1Id = @Player2Id AND Player2Id = @Player1Id)";
                 return await connection.QueryAsync<GameResultDAOModel>(sql, new { Player1Id = player1Id, Player2Id = player2Id });
             }
         }
@@ -47,7 +47,7 @@ namespace TecmoTourney.DataAccess
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var sql = "INSERT INTO GameResults (Player1Id, Player2Id, Score1, Score2, PassingYards1, PassingYards2, RushingYards1, RushingYards2, TournamentId) VALUES (@Player1Id, @Player2Id, @Score1, @Score2, @PassingYards1, @PassingYards2, @RushingYards1, @RushingYards2, @TournamentId)";
+                var sql = "INSERT INTO TC_GameResults (Player1Id, Player2Id, Score1, Score2, PassingYards1, PassingYards2, RushingYards1, RushingYards2, TournamentId) VALUES (@Player1Id, @Player2Id, @Score1, @Score2, @PassingYards1, @PassingYards2, @RushingYards1, @RushingYards2, @TournamentId)";
                 await connection.ExecuteAsync(sql, gameResult);
             }
         }
@@ -56,7 +56,7 @@ namespace TecmoTourney.DataAccess
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var sql = "UPDATE GameResults SET Player1Id = @Player1Id, Player2Id = @Player2Id, Score1 = @Score1, Score2 = @Score2, PassingYards1 = @PassingYards1, PassingYards2 = @PassingYards2, RushingYards1 = @RushingYards1, RushingYards2 = @RushingYards2, TournamentId = @TournamentId WHERE GameResultId = @GameResultId";
+                var sql = "UPDATE TC_GameResults SET Player1Id = @Player1Id, Player2Id = @Player2Id, Score1 = @Score1, Score2 = @Score2, PassingYards1 = @PassingYards1, PassingYards2 = @PassingYards2, RushingYards1 = @RushingYards1, RushingYards2 = @RushingYards2, TournamentId = @TournamentId WHERE GameResultId = @GameResultId";
                 await connection.ExecuteAsync(sql, new { gameResult.Player1Id, gameResult.Player2Id, gameResult.Score1, gameResult.Score2, gameResult.PassingYards1, gameResult.PassingYards2, gameResult.RushingYards1, gameResult.RushingYards2, gameResult.TournamentId, GameResultId = gameResultId });
             }
         }
@@ -65,9 +65,18 @@ namespace TecmoTourney.DataAccess
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var sql = "DELETE FROM GameResults WHERE GameResultId = @Id";
+                var sql = "UPDATE TC_GameResults SET Deleted = 1 WHERE GameResultId = @Id";
                 await connection.ExecuteAsync(sql, new { Id = id });
             }
         }
+        public async Task UnDeleteGameResultAsync(int id)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "UPDATE TC_GameResults SET Deleted = 0 WHERE GameResultId = @Id";
+                await connection.ExecuteAsync(sql, new { Id = id });
+            }
+        }
+
     }
 }
