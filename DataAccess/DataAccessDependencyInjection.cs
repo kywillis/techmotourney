@@ -10,6 +10,7 @@ namespace TecmoTourney.DataAccess
             services.AddScoped<IGameResultDAO, GameResultDAO>();
             services.AddScoped<ITournamentsDAO, TournamentsDAO>();
             services.AddScoped<IPlayerDAO, PlayerDAO>();
+            services.AddScoped<IPlayerTournamentDAO, PlayerTournamentDAO>();
         }
     }
 }

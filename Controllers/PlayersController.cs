@@ -8,7 +8,7 @@ using TecmoTourney.Orchestration.Interfaces;
 namespace TecmoTourney.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/player")]
     public class PlayersController : ControllerBase
     {
         private readonly IPlayerOrchestration _playerOrchestration;
@@ -18,10 +18,10 @@ namespace TecmoTourney.Controllers
             _playerOrchestration = playerOrchestration;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<CreatePlayerRequestModel>>> GetPlayers()
+        [HttpGet("tournaments/{tournamentId}")]
+        public async Task<ActionResult<IEnumerable<CreatePlayerRequestModel>>> GetPlayers(int tournamentId)
         {
-            var players = await _playerOrchestration.GetPlayersAsync();
+            var players = await _playerOrchestration.GetPlayersAsync(tournamentId);
             return Ok(players);
         }
 
@@ -70,6 +70,20 @@ namespace TecmoTourney.Controllers
             }
 
             return NoContent();
+        }
+
+        [HttpPost("addPlayerToTournament/{id}")]
+        public async Task<IActionResult> AddPlayerToTournament(int id, [FromQuery] int tournamentId)
+        {
+            await _playerOrchestration.AddPlayerToTournament(id, tournamentId);
+            return Ok();
+        }
+
+        [HttpDelete("removePlayerFromTournament/{id}")]
+        public async Task<IActionResult> RemovePlayerFromTournament(int id, [FromQuery] int tournamentId)
+        {
+            await _playerOrchestration.RemovePlayerFromTournament(id, tournamentId);
+            return Ok();
         }
     }
 }
