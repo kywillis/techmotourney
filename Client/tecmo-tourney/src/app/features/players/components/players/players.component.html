@@ -1,0 +1,54 @@
+<div *ngIf="loading" class="text-center">
+    <div class="spinner-border" role="status">
+        <span class="sr-only"></span>
+    </div>
+</div>
+<!-- <div class="message" *ngIf="message">{{message}}</div> -->
+<div class="row">
+    <div class="col-10"></div>
+    <div class="col-2">
+        <button class="btn btn-primary" (click)="openNewPlayer()">
+            <a class="dark" >New <i class="bi bi-plus"></i></a>
+        </button>
+    </div>
+</div>
+<div *ngIf="!loading">
+    <table class="table table-dark thead-light table-striped players">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th></th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let player of players">
+                <td class="name">{{player.fullName}}</td>
+                <td class="email">{{player.emailAddress}}</td>
+                <td class="view">
+                    <button class="btn btn-primary">
+                        <a class="dark" [routerLink]="['/players', player.playerId]">Go <i
+                                class="bi bi-arrow-right"></i></a>
+                    </button>
+                </td>
+                <td class="edit"><button class="btn btn-primary" (click)="openEditPlayer(player)">
+                    <a class="dark" >Edit <i class="bi bi-pen"></i></a>
+                </button></td>
+                <td class="delete"><button class="btn btn-primary" (click)="openDeletePlayer(player)">
+                    <a class="dark" >Delete <i class="bi bi-trash"></i></a>
+                </button></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<app-modal #newPlayerModal title="New Player">
+    <app-new-player (newPlayerCreated)="newPlayerCreated()"></app-new-player>
+</app-modal>
+<app-modal #deletePlayerModal title="Delete Player">
+    <app-delete-player #deletePlayer (playerDeleted)="playerDeleted()"></app-delete-player>
+</app-modal>
+<app-modal #editPlayerModal title="Update Player">
+    <app-edit-player #editPlayer (playerUpdated)="playerUpdated()"></app-edit-player>
+</app-modal>

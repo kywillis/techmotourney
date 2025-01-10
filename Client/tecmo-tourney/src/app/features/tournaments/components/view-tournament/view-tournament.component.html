@@ -1,0 +1,88 @@
+
+<div *ngIf="!loading && tournament">
+    <div *ngIf="tournament.status == TournamentStatus.Waiting">
+        <h2>Tournament Waiting To Start</h2>
+        <span>Players in {{tournament.name}}</span> 
+        <ul>
+            <li *ngFor="let player of players">
+                {{player.fullName}}
+            </li>
+        </ul>
+        <button class="btn btn-primary" (click)="startPrelims()">
+            Generate Matchups & Start Prelims <i class="bi bi-dpad"></i>
+        </button>
+    </div>
+    <mat-tab-group *ngIf="tournament.status != TournamentStatus.Waiting" [(selectedIndex)]="selectedIndex"  (selectedIndexChange)="onTabChange($event)">
+        <mat-tab label="Preliminaries">
+            <h2>Preliminaries</h2>
+            <div class="row">
+                <td class="col-2">
+                    <button class="btn btn-primary" (click)="onEditGame(null)" *ngIf="tournament.status == TournamentStatus.Preliminaries" >
+                        <a class="dark" >Add Game <i class="bi bi-plus"></i></a>
+                    </button>
+                </td>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <h3>Standings</h3>
+                    <table class="standings">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Points Scored</th>
+                                <th>Points Allowed</th>
+                                <th>Record</th>
+                                <th>Prelim Points</th>
+                                <th>Tie Breaker</th>
+                            </tr>
+                        </thead>
+                        <tr *ngFor="let standing of standings">
+                            <th>{{standing.preliminaryPosition}}</th>
+                            <th>{{standing.playerName}}</th>
+                            <th>{{standing.totalPointsAgainst}}</th>
+                            <th>{{standing.totalPointsFor}}</th>
+                            <th>{{standing.wins}} - {{standing.loses}}</th>
+                            <th>{{standing.preliminariesScore}}</th>
+                            <th>
+                                <span *ngIf="standing.preliminariesTieBreakerUsed">
+                                    {{ standing.preliminariesTieBreakerUsed | enumFriendlyName }}
+                                </span>
+                            </th>
+                        </tr>
+                    </table>
+                    <button class="btn btn-primary" (click)="startTournament()" *ngIf="tournament.status == TournamentStatus.Preliminaries">
+                        <a class="dark" >Start Tournament <i class="bi bi-arrow-right-circle"></i></a>
+                    </button>    
+                </div>
+                <div class="col-6">
+                    <h3>Games</h3>
+                    <div class="games">
+                        <div *ngFor="let game of prelimGames">
+                            <app-view-game-result [gameResult]="game" (editGame)="onEditGame($event)" (deleteGame)="onDeleteGame($event)"></app-view-game-result>
+                        </div>
+                    </div>
+                </div>
+            </div>        
+        </mat-tab>
+        <mat-tab label="Tournament" [disabled]="tournament.status == TournamentStatus.Preliminaries">
+            bracket:
+            <iframe  id="bracket-iframe"
+                     src="./assets/bracket.html"
+                     style="width: 100%; height: 600px; border: none;"></iframe>
+                
+        </mat-tab>
+    </mat-tab-group>
+   
+</div>
+<div *ngIf="loading">    
+    loading
+</div>
+
+<!-- view-tournament.component.html -->
+<app-modal #editGameResultModal title="Edit Game">
+  <app-edit-game-result #editGameResult (gameResultSaved)="gameResultSaved()"></app-edit-game-result>
+</app-modal>
+<app-modal #deleteGameResultModal title="Delete Game">
+    <app-delete-game-result #deleteGameResult (gameDeleted)="gameDeleted()"></app-delete-game-result>
+</app-modal>

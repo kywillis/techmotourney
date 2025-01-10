@@ -1,0 +1,53 @@
+
+<div *ngIf="loading" class="text-center">
+    <div class="spinner-border" role="status">
+        <span class="sr-only"></span>
+    </div>
+</div>
+<div class="row">
+    <div class="col-10"></div>
+    <div class="col-2">
+        <button class="btn btn-primary" (click)="openNewTournament()">
+            <a class="dark" >New <i class="bi bi-plus"></i></a>
+        </button>
+    </div>
+</div>
+<div *ngIf="!loading">
+    <table class="table table-dark thead-light table-striped players">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Start Date</th>
+                <th></th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let tournament of tournaments">
+                <td class="name">{{tournament.name}}</td>
+                <td class="status">{{tournament.status}}</td>
+                <td class="date">{{tournament.startDate}}</td>
+                <td class="view">
+                    <button class="btn btn-primary">
+                        <a class="dark" [routerLink]="['/tournaments', tournament.tournamentId]">Go <i
+                                class="bi bi-arrow-right"></i></a>
+                    </button>
+                </td>
+                <td class="edit"><button class="btn btn-primary" (click)="openEditTournament(tournament)">
+                    <a class="dark" >Edit <i class="bi bi-pen"></i></a>
+                </button></td>
+                <td class="delete"><button class="btn btn-primary" (click)="openDeleteTournament(tournament)">
+                    <a class="dark" >Delete <i class="bi bi-trash"></i></a>
+                </button></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<app-modal #deleteTournamentModal title="Delete Tournament">
+    <app-delete-tournament #deleteTournament (tournamentDeleted)="tournamentDeleted()"></app-delete-tournament>
+</app-modal>
+<app-modal #editTournamentModal title="Update Tournament">
+    <app-edit-tournament #editTournament (tournamentUpdated)="tournamentUpdated()"></app-edit-tournament>
+</app-modal>

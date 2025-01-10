@@ -1,0 +1,28 @@
+<form [formGroup]="playerForm" (ngSubmit)="update()">
+    <app-message #message></app-message>
+    <div class="row inputGroup">
+        <div class="col-4 value">Name:</div>
+        <div class="col-8">
+            <input type="text" formControlName="name" required>
+        </div>
+        <div *ngIf="playerForm.get('name')?.invalid && playerForm.get('name')?.touched">
+            Name is required.
+        </div>
+    </div>
+
+    <div class="row inputGroup">
+        <div class="col-4 value">Email:</div>
+        <div class="col-8">
+            <input type="email" formControlName="email" required>
+        </div>
+        <div *ngIf="playerForm.get('email')?.invalid && playerForm.get('email')?.touched">
+            Valid email is required.
+        </div>        
+    </div>
+
+    <div class="save">
+        <button class="btn btn-primary" type="submit">
+            Save <i class="bi bi-floppy"></i>
+        </button>
+    </div>
+</form>

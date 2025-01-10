@@ -1,0 +1,115 @@
+<app-message #message></app-message>
+
+<form [formGroup]="gameResultForm" (ngSubmit)="onSubmit()">
+    <!-- Display business rule validation errors -->
+    <div *ngIf="player1Controls['playerId'].hasError('samePlayer')  || player2Controls['playerId'].hasError('samePlayer')">
+      <p class="error">Player 1 and Player 2 cannot be the same.</p>
+    </div>
+    <div *ngIf="player1Controls['playerId'].hasError('sameTeam')  || player2Controls['playerId'].hasError('sameTeam')">
+      <p class="error">Teams cannot be the same.</p>
+    </div>
+  
+    <!-- Player 1 -->
+    <div formGroupName="player1">
+      <h3>Player 1</h3>
+      <label>Player Name</label>
+      <select formControlName="playerId">
+        <option value="">Select Player</option>
+        <option *ngFor="let player of players" [value]="player.playerId">{{ player.fullName }}</option>
+      </select>
+      <div *ngIf="player1Controls['playerId'].invalid && (player1Controls['playerId'].dirty || player1Controls['playerId'].touched)">
+        <small class="error">Player 1 is required.</small>
+      </div>
+  
+      <label>Team Name</label>
+      <select formControlName="teamId">
+        <option value="">Select Team</option>
+        <option *ngFor="let team of teams" [value]="team.gameTeamId">{{ team.teamName }}</option>
+      </select>
+      <div *ngIf="player1Controls['teamId'].invalid && (player1Controls['teamId'].dirty || player1Controls['teamId'].touched)">
+        <small class="error">Team 1 is required.</small>
+      </div>
+  
+      <label>Score</label>
+      <input type="number" formControlName="score">
+      <div *ngIf="player1Controls['score'].invalid && (player1Controls['score'].dirty || player1Controls['score'].touched)">
+        <small class="error">Score is required.</small>
+      </div>
+  
+      <label>Passing Yards</label>
+      <input type="number" formControlName="passingYards">
+      <div *ngIf="player1Controls['passingYards'].invalid && (player1Controls['passingYards'].dirty || player1Controls['passingYards'].touched)">
+        <small class="error">Passing Yards are required.</small>
+      </div>
+  
+      <label>Rushing Yards</label>
+      <input type="number" formControlName="rushingYards">
+      <div *ngIf="player1Controls['rushingYards'].invalid && (player1Controls['rushingYards'].dirty || player1Controls['rushingYards'].touched)">
+        <small class="error">Rushing Yards are required.</small>
+      </div>
+    </div>
+  
+    <!-- Player 2 -->
+    <div formGroupName="player2">
+      <h3>Player 2</h3>
+      <label>Player Name</label>
+      <select formControlName="playerId">
+        <option value="">Select Player</option>
+        <option *ngFor="let player of players" [value]="player.playerId">{{ player.fullName }}</option>
+      </select>
+      <div *ngIf="player2Controls['playerId'].invalid && (player2Controls['playerId'].dirty || player2Controls['playerId'].touched)">
+        <small class="error">Player 2 is required.</small>
+      </div>
+  
+      <label>Team Name</label>
+      <select formControlName="teamId">
+        <option value="">Select Team</option>
+        <option *ngFor="let team of teams" [value]="team.gameTeamId">{{ team.teamName }}</option>
+      </select>
+      <div *ngIf="player2Controls['teamId'].invalid && (player2Controls['teamId'].dirty || player2Controls['teamId'].touched)">
+        <small class="error">Team 2 is required.</small>
+      </div>
+  
+      <label>Score</label>
+      <input type="number" formControlName="score">
+      <div *ngIf="player2Controls['score'].invalid && (player2Controls['score'].dirty || player2Controls['score'].touched)">
+        <small class="error">Score is required.</small>
+      </div>
+  
+      <label>Passing Yards</label>
+      <input type="number" formControlName="passingYards">
+      <div *ngIf="player2Controls['passingYards'].invalid && (player2Controls['passingYards'].dirty || player2Controls['passingYards'].touched)">
+        <small class="error">Passing Yards are required.</small>
+      </div>
+  
+      <label>Rushing Yards</label>
+      <input type="number" formControlName="rushingYards">
+      <div *ngIf="player2Controls['rushingYards'].invalid && (player2Controls['rushingYards'].dirty || player2Controls['rushingYards'].touched)">
+        <small class="error">Rushing Yards are required.</small>
+      </div>
+    </div>
+  
+    <input type="hidden" formControlName="tournamentId">
+    <input type="hidden" formControlName="bracketGameId">
+
+    <label>Status</label>
+    <select formControlName="status">
+      <option value="">Select Status</option>
+      <option *ngFor="let status of statuses" [value]="status.value">{{ status.display }}</option>
+    </select>
+    <div *ngIf="gameResultForm.get('status')?.invalid && (gameResultForm.get('status')?.dirty || gameResultForm.get('status')?.touched)">
+      <small class="error">Status is required.</small>
+    </div>
+  
+    <label>Game Type</label>
+    <select formControlName="gameType">
+      <option value="">Select Game Type</option>
+      <option *ngFor="let type of gameTypes" [value]="type.value">{{ type.display }}</option>
+    </select>
+    <div *ngIf="gameResultForm.get('gameType')?.invalid && (gameResultForm.get('gameType')?.dirty || gameResultForm.get('gameType')?.touched)">
+      <small class="error">Game Type is required.</small>
+    </div>
+  
+    <button type="submit">Save</button>
+  </form>
+  

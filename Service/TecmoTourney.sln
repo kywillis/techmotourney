@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34622.214
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TecmoTourney", "TecmoTourney.csproj", "{DFE86BDA-6B62-42FF-9129-5468FC61A45C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreCapture", "..\ScoreCapture\ScoreCapture.csproj", "{67D1A85B-846F-49C4-8C1F-C8F7B853A7A4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DFE86BDA-6B62-42FF-9129-5468FC61A45C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DFE86BDA-6B62-42FF-9129-5468FC61A45C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DFE86BDA-6B62-42FF-9129-5468FC61A45C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DFE86BDA-6B62-42FF-9129-5468FC61A45C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67D1A85B-846F-49C4-8C1F-C8F7B853A7A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67D1A85B-846F-49C4-8C1F-C8F7B853A7A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67D1A85B-846F-49C4-8C1F-C8F7B853A7A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67D1A85B-846F-49C4-8C1F-C8F7B853A7A4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EE08C418-C6B2-4F2B-8BF1-25EAFF69F43D}
+	EndGlobalSection
+EndGlobal

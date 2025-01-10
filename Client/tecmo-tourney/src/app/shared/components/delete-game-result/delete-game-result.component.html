@@ -1,0 +1,13 @@
+<app-message #message></app-message>
+
+<div *ngIf="gameResult && !deleted">
+
+    Are you sure you want to delete {{gameTitle}}
+
+    <div class="deleteBtn">
+        <button class="btn btn-primary" (click)="delete()">
+            <a class="dark" >Confirm Deletion <i class="bi bi-trash"></i></a>
+        </button>
+
+    </div>
+</div>

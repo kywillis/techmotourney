@@ -1,0 +1,41 @@
+/* You can add global styles to this file, and also import other style files */
+@text-color: #efefef;
+@link-color: #d8dcad;
+@dark-color: #23224d;
+.body{
+    background-color: #202020;
+    color: @text-color;
+
+}
+
+a
+{
+    color: @link-color;
+    text-decoration: none;
+    &.dark{
+        color: @dark-color;
+
+    }
+}
+
+
+a:hover
+{
+    color: lighten(@link-color, 20%);
+}
+
+nav a {
+    display: block;
+    padding: 10px 0;    
+  }
+
+.main{
+    width: 80%;
+    margin: 20px auto;
+}
+.nav{
+    padding: 0;
+    margin: 0;
+}
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

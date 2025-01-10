@@ -1,0 +1,47 @@
+<app-message #message ></app-message>
+
+<table class="tournament" *ngIf="!loading">
+    <tr>
+        <td>Name</td>
+        <td>
+            <input type="text" [(ngModel)]="name">
+        </td>
+    </tr>    
+    <tr>
+        <td class="playerList">
+           <span>All Players</span> 
+           <ul>
+            <li *ngFor="let player of allPlayers" [ngClass]="{selected: selected(player)}">
+                <span *ngIf="!selected(player)">
+                    <span class="playerName">{{player.fullName}}</span>
+                    <span class="addPlayer">
+                        <button class="btn btn-primary" (click)="addPlayer(player)">
+                            Edit <i class="bi bi-plus"></i>
+                        </button>
+                    </span>
+                </span>
+            </li>
+           </ul>
+        </td>
+        <td class="playerList">
+            <span>Selected Players</span> 
+            <ul>
+                <li *ngFor="let player of selectedPlayers">
+                    <span class="playerName">{{player.fullName}}</span>
+                    <span class="addPlayer">
+                        <button class="btn btn-primary" (click)="removePlayer(player)">
+                            Delete <i class="bi bi-trash"></i>
+                        </button>
+                    </span>
+                </li>
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <button class="btn btn-primary" (click)="save()" *ngIf="!saving">
+                Save <i class="bi bi-floppy"></i>
+            </button>
+        </td>
+    </tr>
+</table>

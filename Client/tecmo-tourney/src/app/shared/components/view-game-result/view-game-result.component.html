@@ -1,0 +1,43 @@
+<div *ngIf="gameResult">
+    <table>
+        <thead>
+            <tr>
+                <th>Player</th>
+                <th>Team</th>
+                <th>Rush Yards</th>
+                <th>Pass Yards</th>
+                <th>Total Yards</th>
+                <th>Score</th>    
+            </tr>
+        </thead>
+        <tr>
+            <td>{{gameResult.player1.playerName}}</td>
+            <td>{{gameResult.player1.teamName}}</td>
+            <td>{{gameResult.player1.rushingYards}}</td>
+            <td>{{gameResult.player1.passingYards}}</td>
+            <td>{{gameResult.player1.rushingYards + gameResult.player1.passingYards}}</td>
+            <td>{{gameResult.player1.score}}</td>
+        </tr>
+        <tr>
+            <td>{{gameResult.player2.playerName}}</td>
+            <td>{{gameResult.player2.teamName}}</td>
+            <td>{{gameResult.player2.rushingYards}}</td>
+            <td>{{gameResult.player2.passingYards}}</td>
+            <td>{{gameResult.player2.rushingYards + gameResult.player1.passingYards}}</td>
+            <td>{{gameResult.player2.score}}</td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                {{gameResult.status}}
+            </td>
+            <td colspan="3">
+                <button class="btn btn-primary" (click)="editGameResult(gameResult)">
+                    <a class="dark" >Edit <i class="bi bi-pen"></i></a>
+                </button>
+                <button class="btn btn-primary" (click)="deleteGameResult(gameResult)">
+                    <a class="dark" >Delete <i class="bi bi-trash"></i></a>
+                </button>
+            </td>
+        </tr>
+    </table>
+</div>

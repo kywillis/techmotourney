@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bracket Viewer</title>
+  <link rel="stylesheet" href="jquery.bracket.min.css">
+  <script src="jquery.min.js"></script>
+  <script src="jquery.bracket.min.js"></script>
+</head>
+<body>
+  <div id="bracket-container" style="width: 100%; max-width: 800px; margin: 0 auto; padding: 20px;"></div>
+  
+  <script>
+   console.log('test');
+   function renderBracket(data){
+      $('#bracket-container').bracket({
+        init: data,
+        save: function(data) {
+          parent.postMessage({ type: 'bracketSave', data }, '*'); 
+        },
+        decorator: {
+          edit: edit,
+          render: render
+        }
+      });
+    }
+
+    function edit(container, data, done) {
+      container.empty(); // Clear the existing content
+      
+      const input = $('<input type="text">').val(data);
+      container.append(input);
+
+      // When the user leaves the input, commit the new value
+      input.blur(() => {
+        done(input.val());
+      });
+
+      // Auto-focus the input
+      input.focus();
+    }
+
+    function render(container, data, score, state) {
+      switch(state) {
+      case "empty-bye":
+        container.append("Bye")
+        return;
+      case "empty-tbd":
+        container.append("")
+        return;
+    
+      case "entry-no-score":
+      case "entry-default-win":
+      case "entry-complete":
+      container.append(`<div id="${data.playerId}_${data.gameId}">${data.seed}. ${data.player}</div>`);
+        return;
+      }
+	  } 
+
+    function newResult(gameResult){
+      $(`#${gameResult.player1Id}_${gameResult.gameResultId}`).parent().parent().children('.score').first().click();
+      $("input").val();
+      $("input").blue();
+
+      $(`#${gameResult.player2Id}_${gameResult.gameResultId}`).parent().parent().children('.score').first().click();
+      $("input").val();
+      $("input").blue();
+    }
+
+    // Listen for messages from the parent frame
+    window.addEventListener('message', function(event) {
+      console.log('message');
+      if (event.data.type === 'initBracket') {
+        renderBracket(event.data.data); // Initialize the bracket
+      }
+      if (event.data.type === 'result') {
+        newResult(event.data.data); // Initialize the bracket
+      }
+    });
+  </script>
+</body>
+</html>
