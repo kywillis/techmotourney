@@ -12,13 +12,25 @@
   <div id="bracket-container" style="width: 100%; max-width: 800px; margin: 0 auto; padding: 20px;"></div>
   
   <script>
-   console.log('test');
+    $(function() {      
+      window.addEventListener('message', function(event) { // Listen for messages from the parent frame
+        console.log('message');
+        if (event.data.type === 'initBracket') {
+          renderBracket(event.data.data); // Initialize the bracket
+        }
+        if (event.data.type === 'result') {
+          newResultFromParent(event.data.data); // Initialize the bracket
+        }
+      });
+    });
+
    function renderBracket(data){
       $('#bracket-container').bracket({
+        skipConsolationRound: true,
+        skipSecondaryFinal: false,
+        disableToolbar: true,
         init: data,
-        save: function(data) {
-          parent.postMessage({ type: 'bracketSave', data }, '*'); 
-        },
+        save: save,
         decorator: {
           edit: edit,
           render: render
@@ -26,7 +38,15 @@
       });
     }
 
+    function save(updatedData, userData) {
+      console.log('save')
+
+      console.log(updatedData)
+      console.log(userData)
+    }
+
     function edit(container, data, done) {
+      console.log('edit')
       container.empty(); // Clear the existing content
       
       const input = $('<input type="text">').val(data);
@@ -42,42 +62,69 @@
     }
 
     function render(container, data, score, state) {
+      const teamContainer = container.closest('.teamContainer');      
+
+      container.empty(); // Clear existing content
+
       switch(state) {
-      case "empty-bye":
-        container.append("Bye")
-        return;
-      case "empty-tbd":
-        container.append("")
-        return;
-    
-      case "entry-no-score":
-      case "entry-default-win":
-      case "entry-complete":
-      container.append(`<div id="${data.playerId}_${data.gameId}">${data.seed}. ${data.player}</div>`);
-        return;
+        case "empty-bye":
+          container.append("Bye");
+          break;
+        case "empty-tbd":
+          container.append("");
+          break;
+        case "entry-no-score":
+        case "entry-default-win":
+        case "entry-complete": // Render team information          
+          container.append(`<div class="team-${data.playerId}">${data.seed}. ${data.player}</div>`);
+          break;
+        case "score": // Render custom score element          
+          const scoreElement = $('<span>')
+            .addClass('custom-score')
+            .attr('data-game-id', data.gameId)
+            .attr('data-player-id', data.playerId)
+            .text(score !== null ? score : '');
+          container.append(scoreElement);
+          break;
+        default:
+          container.append("");
       }
-	  } 
-
-    function newResult(gameResult){
-      $(`#${gameResult.player1Id}_${gameResult.gameResultId}`).parent().parent().children('.score').first().click();
-      $("input").val();
-      $("input").blue();
-
-      $(`#${gameResult.player2Id}_${gameResult.gameResultId}`).parent().parent().children('.score').first().click();
-      $("input").val();
-      $("input").blue();
     }
 
-    // Listen for messages from the parent frame
-    window.addEventListener('message', function(event) {
-      console.log('message');
-      if (event.data.type === 'initBracket') {
-        renderBracket(event.data.data); // Initialize the bracket
+    function newResultFromParent(gameResult){
+      let team1Pattern = `.team-${gameResult.player1Id}`
+      let team2Pattern = `.team-${gameResult.player2Id}`
+
+      let team1 = $(team1Pattern);
+      let team2 = $(team2Pattern);
+      let matchUpCount = 0;
+      let matchingTeamIndex = -1;
+       for (let i = 0; i < team1.length; i++) {
+        matchingTeamIndex++;
+        team2 = team1.eq(i).closest('.teamContainer').find(team2Pattern)
+        if(team2.length > 0)
+        {
+          if(matchUpCount == gameResult.matchUpIndex)
+            break;
+
+          matchUpCount++
+        }
       }
-      if (event.data.type === 'result') {
-        newResult(event.data.data); // Initialize the bracket
+
+      if(team1.length > 0 && team2.length > 0)
+      {
+        team2.parent().parent().children('.score').first().trigger('click');
+
+        $("input").val(gameResult.player2Score);
+        $("input").blur();
+  
+        setTimeout(() => {
+          $(team1Pattern).eq(matchingTeamIndex).parent().parent().children('.score').first().trigger('click');
+          $("input").val(gameResult.player1Score);
+          $("input").blur();          
+        }, 1000);
       }
-    });
+    }
   </script>
 </body>
 </html>

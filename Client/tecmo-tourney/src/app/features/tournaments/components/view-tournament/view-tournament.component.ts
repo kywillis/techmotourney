@@ -152,26 +152,4 @@ export class ViewTournamentComponent implements OnInit {
       }
       }, 1000);
   }
-
-  save(data: any): void {
-    console.log('Save called with data:', JSON.stringify(data));
-  }
-
-  render(container: any, data: any, score: any, state: string): void {
-    switch (state) {
-      case 'empty-bye':
-        container.append('Bye');
-        break;
-      case 'empty-tbd':
-        container.append('TBD');
-        break;
-      case 'entry-no-score':
-      case 'entry-default-win':
-      case 'entry-complete':
-        container.append(`${data.seed}. ${data.name}`);
-        break;
-      default:
-        container.append('Unknown');
-    }
-  }
 }  
