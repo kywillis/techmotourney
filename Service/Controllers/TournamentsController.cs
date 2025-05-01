@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using TecmoTourney.Models;
 using TecmoTourney.Models.Requests;
@@ -29,10 +31,19 @@ namespace TecmoTourney.Controllers
             return tournaments.ToActionResult();
         }
 
+        [HttpGet("active")]
+        public async Task<IActionResult> GetActive()
+        {
+            var results = await _tournamentsOrchestration.GetActive();
+            //results.Data.TournamentBracket
+            return results.ToActionResult();
+        }
+
         [HttpGet("{tournamentId}")]
         public async Task<IActionResult> GetById(int tournamentId)
         {
             var results = await _tournamentsOrchestration.GetById(tournamentId);
+            //results.Data.TournamentBracket
             return results.ToActionResult();
         }
 
@@ -58,9 +69,9 @@ namespace TecmoTourney.Controllers
         }
 
         [HttpPatch("{tournamentId}")]
-        public async Task<IActionResult> UpdateTournamentBracketData(int tournamentId, [FromBody] string bracketData)
+        public async Task<IActionResult> UpdateTournamentBracketData(int tournamentId, [FromBody] JsonElement bracketData)
         {
-            var updatedTournament = await _tournamentsOrchestration.UpdateBracketDataAsync(tournamentId, bracketData);
+            var updatedTournament = await _tournamentsOrchestration.UpdateBracketDataAsync(tournamentId, bracketData.GetRawText());
             return updatedTournament.ToActionResult();
         }
 
@@ -85,6 +96,13 @@ namespace TecmoTourney.Controllers
         public async Task<IActionResult> GetStandings(int tournamentId, [FromQuery] TournamentStatus status)
         {
             var result = await _tournamentsOrchestration.GetStandingsAsync(tournamentId, status);
+            return result.ToActionResult();
+        }
+
+        [HttpPost("{tournamentId}/reset")]
+        public async Task<IActionResult> Reset(int tournamentId, ResetTournamentRequestModel request)
+        {
+            var result = await _tournamentsOrchestration.Reset(tournamentId, request);
             return result.ToActionResult();
         }
     }

@@ -4,9 +4,10 @@ import { PlayersService } from 'src/app/core/services/players.service';
 import { MessageComponent } from 'src/app/shared/components/message/message.component';
 
 @Component({
-  selector: 'app-delete-player',
-  templateUrl: './delete-player.component.html',
-  styleUrl: './delete-player.component.less'
+    selector: 'app-delete-player',
+    templateUrl: './delete-player.component.html',
+    styleUrl: './delete-player.component.less',
+    standalone: false
 })
 export class DeletePlayerComponent {
   @Output() playerDeleted: EventEmitter<void> = new EventEmitter();

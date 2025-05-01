@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HomeRoutingModule } from './home-routing.module';
 import { HomeComponent } from './components/home.component';
+import { TournamentsModule } from '../tournaments/tournaments.module'; 
 
 @NgModule({
   declarations: [
@@ -9,7 +9,7 @@ import { HomeComponent } from './components/home.component';
   ],
   imports: [
     CommonModule,
-    HomeRoutingModule
+    TournamentsModule 
   ]
 })
 export class HomeModule { }

@@ -1,79 +1,113 @@
 
 <div *ngIf="!loading && tournament">
+    <app-section-header text="{{tournament.name}}"></app-section-header>
     <div *ngIf="tournament.status == TournamentStatus.Waiting">
-        <h2>Tournament Waiting To Start</h2>
-        <span>Players in {{tournament.name}}</span> 
-        <ul>
-            <li *ngFor="let player of players">
-                {{player.fullName}}
-            </li>
-        </ul>
+        <div class="statsHeader">Tournament Waiting To Start</div>
+        <div class="tournamentPlayers">
+            <div>Tournament Players</div> 
+            <ul>
+                <li *ngFor="let player of players">
+                    {{player.fullName}}
+                </li>
+            </ul>
+        </div>
         <button class="btn btn-primary" (click)="startPrelims()">
             Generate Matchups & Start Prelims <i class="bi bi-dpad"></i>
         </button>
     </div>
-    <mat-tab-group *ngIf="tournament.status != TournamentStatus.Waiting" [(selectedIndex)]="selectedIndex"  (selectedIndexChange)="onTabChange($event)">
+    <mat-tab-group  #tabGroup *ngIf="tournament.status != TournamentStatus.Waiting" [(selectedIndex)]="selectedIndex"  (selectedIndexChange)="onTabChange($event)">
         <mat-tab label="Preliminaries">
-            <h2>Preliminaries</h2>
-            <div class="row">
-                <td class="col-2">
-                    <button class="btn btn-primary" (click)="onEditGame(null)" *ngIf="tournament.status == TournamentStatus.Preliminaries" >
-                        <a class="dark" >Add Game <i class="bi bi-plus"></i></a>
-                    </button>
-                </td>
-            </div>
-            <div class="row">
-                <div class="col-6">
-                    <h3>Standings</h3>
-                    <table class="standings">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th>Player</th>
-                                <th>Points Scored</th>
-                                <th>Points Allowed</th>
-                                <th>Record</th>
-                                <th>Prelim Points</th>
-                                <th>Tie Breaker</th>
+            <div class="tabContent">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="row">
+                            <div class="col-7"><app-section-header text="Standings"></app-section-header></div>
+                            <div class="col-5 topButton">
+                                <button class="btn btn-primary" (click)="startTournament()" *ngIf="loggedIn() && tournament.status == TournamentStatus.Preliminaries">
+                                    <a class="dark" >Start Tournament <i class="bi bi-arrow-right-circle"></i></a>
+                                </button>    
+                            </div>
+                        </div>
+                        <table class="standings white-border">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th style="width: 25%;">Player</th>
+                                    <th title="Points Scored">PF</th>
+                                    <th title="Points Against">PA</th>
+                                    <th>Record</th>
+                                    <th>Pts</th>
+                                    <th title="Tie Breaker">Tie Brk</th>
+                                </tr>
+                            </thead>
+                            <tr *ngFor="let standing of standings">
+                                <th>{{standing.preliminaryPosition}}</th>
+                                <th><span class="link" title="show prelim games" (click)="filterPrelimGames(standing.playerId)">{{standing.playerName}}</span></th>
+                                <th>{{standing.totalPointsFor}}</th>
+                                <th>{{standing.totalPointsAgainst}}</th>
+                                <th>{{standing.wins}}-{{standing.loses}}</th>
+                                <th>{{standing.preliminariesScore}}</th>
+                                <th>
+                                    <span *ngIf="standing.preliminariesTieBreakerUsed">
+                                        {{ standing.preliminariesTieBreakerUsed | enumFriendlyName }}
+                                    </span>
+                                </th>
                             </tr>
-                        </thead>
-                        <tr *ngFor="let standing of standings">
-                            <th>{{standing.preliminaryPosition}}</th>
-                            <th>{{standing.playerName}}</th>
-                            <th>{{standing.totalPointsAgainst}}</th>
-                            <th>{{standing.totalPointsFor}}</th>
-                            <th>{{standing.wins}} - {{standing.loses}}</th>
-                            <th>{{standing.preliminariesScore}}</th>
-                            <th>
-                                <span *ngIf="standing.preliminariesTieBreakerUsed">
-                                    {{ standing.preliminariesTieBreakerUsed | enumFriendlyName }}
-                                </span>
-                            </th>
-                        </tr>
-                    </table>
-                    <button class="btn btn-primary" (click)="startTournament()" *ngIf="tournament.status == TournamentStatus.Preliminaries">
-                        <a class="dark" >Start Tournament <i class="bi bi-arrow-right-circle"></i></a>
-                    </button>    
-                </div>
-                <div class="col-6">
-                    <h3>Games</h3>
-                    <div class="games">
-                        <div *ngFor="let game of prelimGames">
-                            <app-view-game-result [gameResult]="game" (editGame)="onEditGame($event)" (deleteGame)="onDeleteGame($event)"></app-view-game-result>
+                        </table>
+                    </div>
+                    <div class="col-6">
+                        <div class="row">
+                            <div class="col-9"><app-section-header text="{{filteredPlayerName}} Games"></app-section-header></div>
+                            <div class="col-3 topButton">
+                                <button class="btn btn-primary" (click)="onEditGame(null)" *ngIf="loggedIn() && tournament.status == TournamentStatus.Preliminaries" >
+                                    <a class="dark" >Add Game <i class="bi bi-plus"></i></a>
+                                </button>
+                            </div>
+                        </div>                        
+                        <div class="games white-border">
+                            <div *ngIf="filteredPrelimGames.length - prelimGames.length" style="text-align: right;"><span class="btn btn-primary" (click)="filterPrelimGames(-1)">Show All</span></div>
+                            <div *ngFor="let game of filteredPrelimGames" class="prelimGame gameCnt">
+                                <app-view-game-result [gameResult]="game" (editGame)="onEditGame($event)" (deleteGame)="onDeleteGame($event)" [showControls]="!tournamentCompleted" [showDatePlayed]="tournamentCompleted" [showStatus]="!tournamentCompleted" ></app-view-game-result>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+            </div>       
+        </mat-tab>
+        <mat-tab label="Bracket" [disabled]="tournament.status == TournamentStatus.Preliminaries" class="tabContent">
+            <img *ngIf="tournament.bracketImage != ''"  class="bracket" src="/assets/{{tournament.bracketImage}}" style="display: block;margin-top:10px;" />
+            <iframe *ngIf="tournament.bracketImage == ''"  id="bracket-iframe"
+                     src="./assets/bracket.html"
+                     style="width: 100%; height: 825px; border: none;"></iframe>
+                
+        </mat-tab>
+        <mat-tab label="Stats" class="tabContent">
+            <div class="tabContent">
+                <div class="row">
+                    <div class="col-4 sideNav">
+                        <div class="link" (click)="selectedStatType = statType.HighestScore"  [ngClass]="{'selectedState': selectedStatType == statType.HighestScore}">Highest Score</div>
+                        <div class="link" (click)="selectedStatType = statType.TotalOffensiveYards"  [ngClass]="{'selectedState': selectedStatType == statType.TotalOffensiveYards}">Total Offensive Yards</div>
+                        <div class="link" (click)="selectedStatType = statType.TopPassingYards"  [ngClass]="{'selectedState': selectedStatType == statType.TopPassingYards}">Top Passing Yards</div>
+                        <div class="link" (click)="selectedStatType = statType.TopRushingYards"  [ngClass]="{'selectedState': selectedStatType == statType.TopRushingYards}">Top Rushing Yards</div>
+                        <div class="link" (click)="selectedStatType = statType.FewestPointsAllowed"  [ngClass]="{'selectedState': selectedStatType == statType.FewestPointsAllowed}">Fewest points Allowed</div>
+                        <div class="link" (click)="selectedStatType = statType.Games" [ngClass]="{'selectedState': selectedStatType == statType.Games}">Games</div>
+                    </div>
+                    <div class="col-8">
+                        <app-display-stats #stats *ngIf="selectedStatType !== statType.Games" (selectedGames)="showGames($event)" [statType]="selectedStatType" [games]="allGames" [players]="players"></app-display-stats>
+                        <div *ngIf="selectedStatType==statType.Games" >
+                            <app-section-header text="All Games"></app-section-header>
+                            <div class="games">
+                                <div class="gameCnt" *ngFor="let game of allGames">
+                                    <app-view-game-result [gameResult]="game" (editGame)="onEditGame($event)" (deleteGame)="onDeleteGame($event)" [showControls]="!tournamentCompleted" [showDatePlayed]="tournamentCompleted" [showStatus]="!tournamentCompleted" ></app-view-game-result>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>        
-        </mat-tab>
-        <mat-tab label="Tournament" [disabled]="tournament.status == TournamentStatus.Preliminaries">
-            bracket:
-            <iframe  id="bracket-iframe"
-                     src="./assets/bracket.html"
-                     style="width: 100%; height: 600px; border: none;"></iframe>
-                
+            </div>
         </mat-tab>
     </mat-tab-group>
-   
+   <div *ngIf="loggedIn() && tournament.status != TournamentStatus.Waiting" style="margin-top: 150px;"><button class="btn btn-primary" (click)="showReset()">Reset Tournament</button></div>
 </div>
 <div *ngIf="loading">    
     loading
@@ -81,8 +115,29 @@
 
 <!-- view-tournament.component.html -->
 <app-modal #editGameResultModal title="Edit Game">
-  <app-edit-game-result #editGameResult (gameResultSaved)="gameResultSaved()"></app-edit-game-result>
+    <app-edit-game-result #editGameResult (gameResultSaved)="gameResultSaved()"></app-edit-game-result>
 </app-modal>
 <app-modal #deleteGameResultModal title="Delete Game">
     <app-delete-game-result #deleteGameResult (gameDeleted)="gameDeleted()"></app-delete-game-result>
+</app-modal>
+<app-modal #viewGameResultModal title="View Game">
+    <app-view-game-result #viewGameResult (editGame)="onEditGame($event)" (deleteGame)="onDeleteGame($event)" [showControls]="!tournamentCompleted" [showDatePlayed]="tournamentCompleted" [showStatus]="!tournamentCompleted"></app-view-game-result>
+</app-modal>
+<app-modal #viewGameResultsModal title="View Games">
+    <div *ngFor="let gameResult of selectedGames" class="gameCnt">
+        <app-view-game-result #viewGameResult [gameResult]="gameResult" (editGame)="onEditGame($event)" (deleteGame)="onDeleteGame($event)"[showControls]="!tournamentCompleted" [showDatePlayed]="tournamentCompleted" [showStatus]="!tournamentCompleted"></app-view-game-result>
+    </div>
+</app-modal>
+
+<app-modal #resetModal title="Reset Tournament">
+    <strong>You are about to reset this tournmanet</strong>
+    <ul>
+        <li>This will reset this tournament to a status of Preliminaries.</li>
+        <li>It will set all bracket games to deleted</li>
+        <li>It will delete the bracket data</li>
+        <li>It will delete all point spread data</li>
+    </ul>
+    Reset Password: <input type="text" [(ngModel)]="resetPassword">
+    <button class="btn btn-primary" (click)="resetTournament()">Reset Tournmanent</button>
+    <div *ngIf="resetError" style="color: red;">{{resetError}}</div>
 </app-modal>

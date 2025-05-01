@@ -8,6 +8,7 @@ namespace TecmoTourney.Orchestration.Interfaces
     {
         Task<Operation<List<PlayerModel>, ApiError>> GetPlayersAsync(int tournamentId);
         Task<Operation<List<PlayerModel>, ApiError>> GetAllPlayersAsync();
+        Task<Operation<List<PlayerSummaryModel>, ApiError>> GetAllPlayersSummariesAsync();
 
         Task<Operation<PlayerModel, ApiError>> GetPlayerAsync(int playerId);
         Task<Operation<PlayerModel, ApiError>> CreatePlayerAsync(CreatePlayerRequestModel player);

@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://localhost:7043/api'
+  apiUrl: 'https://tecmo.azurewebsites.net/api'
 };

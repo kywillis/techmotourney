@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { shareReplay, tap } from 'rxjs/operators';
 import { IGameTeam } from '../models/gameTeam.model';
 import { ConfigService } from './config.service';
 
@@ -8,6 +9,7 @@ import { ConfigService } from './config.service';
   providedIn: 'root'
 })
 export class GameTeamsService {
+  private teamsCache$: Observable<any[]> | null = null;
   private apiUrl: string;
 
   constructor(private http: HttpClient, private configService: ConfigService) {
@@ -15,6 +17,12 @@ export class GameTeamsService {
   }
 
   getAll(): Observable<IGameTeam[]> {
-    return this.http.get<IGameTeam[]>(`${this.apiUrl}/gameTeams`);
+    const cached = localStorage.getItem('gameTeams');
+    if(cached){
+      return of(JSON.parse(cached)); 
+    }
+    return this.http.get<IGameTeam[]>(`${this.apiUrl}/gameTeams`).pipe(
+      tap(data => localStorage.setItem('gameTeams', JSON.stringify(data)))
+    );
   }
 }

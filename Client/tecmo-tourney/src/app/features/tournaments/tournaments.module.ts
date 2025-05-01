@@ -6,6 +6,7 @@ import { TournamentsRoutingModule } from './tournaments-routing.module';
 import { EditTournamentComponent } from './components/edit-tournament/edit-tournament.component';
 import { DeleteTournamentComponent } from './components/delete-tournament/delete-tournament.component';
 import { TournamentsComponent } from './components/tournaments/tournaments.component'; // Import the missing component
+import { DisplayStatsComponent } from './components/display-stats/display-stats.component';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { FormsModule } from '@angular/forms'; 
 import { MatTabsModule } from '@angular/material/tabs';
@@ -15,7 +16,8 @@ import { MatTabsModule } from '@angular/material/tabs';
     ViewTournamentComponent,
     TournamentsComponent,    
     EditTournamentComponent,
-    DeleteTournamentComponent, 
+    DeleteTournamentComponent,
+    DisplayStatsComponent
   ],
   imports: [
     CommonModule,
@@ -24,6 +26,9 @@ import { MatTabsModule } from '@angular/material/tabs';
     SharedModule,
     FormsModule,
     MatTabsModule
+  ],
+  exports:[
+    TournamentsComponent
   ]
 })
 export class TournamentsModule { }

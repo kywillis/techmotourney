@@ -1,0 +1,197 @@
+﻿## Overall Team Ranking
+
+| Tier 1 | Tier 2 | Tier 3 | Tier 4 | Tier 5 |
+|---|---|---|---|---|
+| 1. San Francisco 49ers | 5. Kansas City Chiefs | 11. Minnesota Vikings | 19. Pittsburgh Steelers | 24. Green Bay Packers |
+| 2. New York Giants | 6. Chicago Bears | 12. Detroit Lions | 20. Phoenix Cardinals | 25. Cleveland Browns |
+| 3. Buffalo Bills | 7. Los Angeles Raiders | 13. Los Angeles Rams | 21. Atlanta Falcons | 26. Seattle Seahawks |
+| 4. Houston Oilers | 8. Philadelphia Eagles | 14. Washington Redskins | 22. New York Jets | 27. New England Patriots |
+|  | 9. Miami Dolphins | 15. Los Angeles Rams | 23. New Orleans Saints | 28. Indianapolis Colts |
+|  | 10. Cincinnati Bengals | 16. San Diego Chargers |  |  |
+|  |  | 17. Tampa Bay Buccaneers |  |  |
+|  |  | 18. Dallas Cowboys |  |  |
+
+## Team Rankings (Offense & Defense)
+
+| Offensive Team Ranking | Defensive Team Ranking |
+|---|---|
+| 1. San Francisco 49ers | 1. Pittsburgh Steelers |
+| 2. Houston Oilers | 2. New York Giants |
+| 3. Buffalo Bills | 3. Chicago Bears |
+| 4. New York Giants | 4. Philadelphia Eagles |
+| 5. Miami Dolphins | 5. Buffalo Bills |
+| 6. Los Angeles Raiders | 6. Kansas City Chiefs |
+| 7. Chicago Bears | 7. San Francisco 49ers |
+| 8. Philadelphia Eagles | 8. Los Angeles Raiders |
+| 9. Denver Broncos | 9. Minnesota Vikings |
+| 10. Los Angeles Rams | 10. New York Jets |
+| 11. Detroit Lions | 11. Washington Redskins |
+| 12. New York Jets | 12. Denver Broncos |
+| 13. Cincinnati Bengals | 13. Cincinnati Bengals |
+| 14. Kansas City Chiefs | 14. Miami Dolphins |
+| 15. Atlanta Falcons | 15. Dallas Cowboys |
+| 16. Washington Redskins | 16. New Orleans Saints |
+| 17. Dallas Cowboys | 17. Houston Oilers |
+| 18. Minnesota Vikings | 18. Cleveland Browns |
+| 19. New Orleans Saints | 19. Green Bay Packers |
+| 20. San Diego Chargers | 20. Los Angeles Rams |
+| 21. Seattle Seahawks | 21. San Diego Chargers |
+| 22. Cleveland Browns | 22. Tampa Bay Buccaneers |
+| 23. Phoenix Cardinals | 23. Detroit Lions |
+| 24. Green Bay Packers | 24. Atlanta Falcons |
+| 25. Tampa Bay Buccaneers | 25. Phoenix Cardinals |
+| 26. Indianapolis Colts | 26. New England Patriots |
+| 27. Pittsburgh Steelers | 27. Seattle Seahawks |
+| 28. New England Patriots | 28. Indianapolis Colts |
+
+## Quality Match Ups
+
+| 49ers - Dolphins | Steelers - Cowboys | Vikings - Chargers | Rams - Saints | Packers - Patriots |
+|---|---|---|---|---|
+| Oilers - Giants | Redskins - Cowboys | Lions - Bengals | Jets - Cardinals | Seahawks - Colts |
+| Raiders - Dolphins | Eagles - Chiefs | Falcons - Broncos | Bucs - Browns | |
+
+### Best Defenders By Team (Highest Rank: Woodson (Pit) 382, Lowest Rank: Zander (Cin): 194)
+
+| Team | Player | Position | Rank |
+|---|---|---|---|
+| Atl | D. Sanders | db | 337 |
+|  | Mike Gann | dl | 250 |
+|  | Tim Green | dl | 219 |
+|  | Jessie Tuggle | lb | 214 |
+|  | Tory Epps | dl | 213 |
+| Buf | Bruce Smith | dl | 350 |
+|  | C. Bennett | lb | 302 |
+|  | Nate Odomes | db | 270 |
+|  | Darryl Talley | lb | 270 |
+|  | Shane Conlan | lb | 269 |
+| Chi | Mark Carrier | db | 338 |
+|  | M. Singletary | lb | 319 |
+|  | Ll. Stinson | db | 313 |
+|  | R. Dent | dl | 307 |
+|  | D. Woolford | db | 289 |
+| Cin | D. Fulcher | db | 388 |
+|  | B. Bussey | db | 282 |
+|  | J. Francis | lb | 276 |
+|  | Leon White | lb | 201 |
+|  | Carl Zander | lb | 194 |
+| Cle | Mike Johnson | lb | 276 |
+|  | F. Minnefield | db | 263 |
+|  | Felix Wright | db | 226 |
+|  | Tony Blaylock | lb | 221 |
+|  | C. Matthews | lb | 202 |
+| Dal | Issiac Holt | db | 307 |
+|  | M. Hendrix | db | 295 |
+|  | Dl. Stubbs | dl | 263 |
+|  | Ray Horton | db | 257 |
+|  | J Washington | db | 257 |
+| Den | Dennis Smith | db | 295 |
+|  | Steve Atwater | db | 282 |
+|  | S. Fletcher | lb | 270 |
+|  | Mecklenburg | lb | 263 |
+|  | M.l Brooks | lb | 238 |
+| Det | William White | db | 306 |
+|  | Michael Cofer | lb | 281 |
+|  | Jerry Ball | dl | 276 |
+|  | Ray Crockett | db | 269 |
+|  | C. Spielman | lb | 250 |
+| GB | Tim Harris | lb | 276 |
+|  | Bob Nelson | dl | 263 |
+|  | Mark Murphy | db | 232 |
+|  | Jerry Holmes | db | 226 |
+|  | Chuck Cecil | db | 207 |
+| Gia | L. Taylor | lb | 356 |
+|  | P. Johnson | lb | 307 |
+|  | Mark Collins | db | 295 |
+|  | Greg Jackson | db | 287 |
+|  | Everson Walls | db | 276 |
+| Hou | R Johnson | db | 345 |
+|  | Ray Childress | lb | 295 |
+|  | Sean Jones | dl | 275 |
+|  | Terry Kinard | db | 263 |
+|  | William Fuller | dl | 244 |
+| Ind | Sam Clancy | dl | 226 |
+|  | Mike Prior | db | 226 |
+|  | Keith Taylor | db | 220 |
+|  | Duane Bickett | lb | 207 |
+|  | Jeff Herrod | lb | 206 |
+| Jets | Erik McMillan | db | 338 |
+|  | Dennis Byrd | lb | 307 |
+|  | Kyle Clifton | lb | 269 |
+|  | B. Washington | db | 226 |
+|  | Ron Stallworth | dl | 213 |
+| KC | D Thomas | lb | 332 |
+|  | Albert Lewis | db | 294 |
+|  | Percy Snow | lb | 281 |
+|  | Neil Smith | dl | 263 |
+|  | Kevin Ross | db | 263 |
+| Mia | Louis Oliver | db | 306 |
+|  | J Williams | db | 306 |
+|  | Jeff Cross | dl | 282 |
+|  | John Offerdahl | lb | 269 |
+|  | Tim McKyer | db | 263 |
+| Min | Joey Browner | db | 345 |
+|  | Carl Lee | db | 326 |
+|  | Keith Millard | lb | 313 |
+|  | C. Doleman | dl | 294 |
+|  | Merriweather | lb | 294 |
+| NE | Ronnie Lippett | db | 307 |
+|  | Ray Agnew | dl | 287 |
+|  | Maurice Hurst | db | 251 |
+|  | Fred Marion | db | 244 |
+|  | Andre Tippett | lb | 238 |
+| NO | Turnbull | dl | 270 |
+|  | Pat Swilling | lb | 270 |
+|  | Jim Wilks | dl | 269 |
+|  | Massey | db | 269 |
+|  | Brett Maxie | db | 257 |
+| Phi | Reggie White | dl | 319 |
+|  | Eric Allen | db | 301 |
+|  | Jerome Brown | lb | 295 |
+|  | Seth Joyner | lb | 294 |
+|  | Ben Smith | db | 270 |
+| Phx | Tim McDonald | db | 319 |
+|  | Lonnie Young | db | 288 |
+|  | Ken Harvey | lb | 276 |
+|  | F. Joe Nunn | dl | 256 |
+|  | Rod Saddler | dl | 213 |
+| Pit | Rod Woodson | db | 382 |
+|  | Greg Lloyd | lb | 307 |
+|  | D. Woodruff | db | 306 |
+|  | Carnell Lake | db | 301 |
+|  | G. Williams | dl | 282 |
+| Rai | E Anderson | db | 333 |
+|  | Howie Long | dl | 313 |
+|  | G Townsend | dl | 307 |
+|  | L.Washington | db | 270 |
+|  | T McDaniel | db | 270 |
+| Rams | Kevin Greene | lb | 301 |
+|  | V. Newsome | db | 250 |
+|  | B. Humphery | db | 237 |
+|  | A. Newman | db | 206 |
+|  | Doug Reed | dl | 201 |
+| SD | Gill Byrd | db | 345 |
+|  | Leslie O'Neal | lb | 295 |
+|  | Sam Seale | db | 270 |
+|  | B Grossman | dl | 257 |
+|  | Lee Williams | dl | 256 |
+| Sea | Jacob Green | dl | 295 |
+|  | N Glasgow | db | 256 |
+|  | D Harper | db | 250 |
+|  | Tony Woods | dl | 232 |
+|  | Rufus Porter | lb | 226 |
+| SF | Ronnie Lott | db | 363 |
+|  | Dave Waymer | db | 333 |
+|  | Charles Haley | lb | 301 |
+|  | Matt Millen | lb | 270 |
+|  | Pierce Holt | dl | 263 |
+| TB | W Haddix | db | 363 |
+|  | M Robinson | db | 269 |
+|  | H Hamilton | db | 250 |
+|  | R Reynolds | db | 213 |
+|  | B Thomas | lb | 207 |
+| Was | Darrell Green | db | 294 |
+|  | M Mayhew | db | 289 |
+|  | Charles Mann | dl | 263 |
+|  | Todd Bowles | db | 225 |
+|  | W Marshall | lb | 225 |

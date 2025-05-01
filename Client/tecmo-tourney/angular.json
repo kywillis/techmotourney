@@ -18,11 +18,13 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:browser",
+          "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/tecmo-tourney",
+            "poll": 0,
+            "outputPath": {
+              "base": "dist/tecmo-tourney"
+            },
             "index": "src/index.html",
-            "main": "src/main.ts",
             "polyfills": [
               "src/polyfills.ts",
               "@angular/localize/init"
@@ -34,16 +36,17 @@
               "src/assets"
             ],
             "styles": [
+              "src/styles.less",
               "@angular/material/prebuilt-themes/azure-blue.css",
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
               "node_modules/jquery-bracket/dist/jquery.bracket.min.css",
-              "src/styles.less"
             ],
             "scripts": [
               "node_modules/jquery/dist/jquery.js",
               "node_modules/jquery-bracket/dist/jquery.bracket.min.js"
 
-            ]
+            ],
+            "browser": "src/main.ts"
           },
           "configurations": {
             "production": {
@@ -51,12 +54,12 @@
                 {
                   "type": "initial",
                   "maximumWarning": "500kb",
-                  "maximumError": "1mb"
+                  "maximumError": "2mb"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "10kb",
+                  "maximumError": "40kb"
                 }
               ],
               "fileReplacements": [
@@ -68,9 +71,7 @@
               "outputHashing": "all"
             },
             "development": {
-              "buildOptimizer": false,
               "optimization": false,
-              "vendorChunk": true,
               "extractLicenses": false,
               "sourceMap": true,
               "namedChunks": true
@@ -82,10 +83,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "tecmo-tourney:build:production"
+              "buildTarget": "tecmo-tourney:build:production"
             },
             "development": {
-              "browserTarget": "tecmo-tourney:build:development"
+              "buildTarget": "tecmo-tourney:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -93,7 +94,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "tecmo-tourney:build"
+            "buildTarget": "tecmo-tourney:build"
           }
         },
         "test": {
@@ -112,8 +113,8 @@
               "src/assets"
             ],
             "styles": [
-              "@angular/material/prebuilt-themes/azure-blue.css",
               "src/styles.less",
+              "@angular/material/prebuilt-themes/azure-blue.css",
               "node_modules/bootstrap-icons/font/bootstrap-icons.css"
             ],
             "scripts": [

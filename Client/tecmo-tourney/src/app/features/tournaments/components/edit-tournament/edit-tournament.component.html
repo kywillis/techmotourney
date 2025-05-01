@@ -16,7 +16,7 @@
                     <span class="playerName">{{player.fullName}}</span>
                     <span class="addPlayer">
                         <button class="btn btn-primary" (click)="addPlayer(player)">
-                            Edit <i class="bi bi-plus"></i>
+                            Add 
                         </button>
                     </span>
                 </span>
@@ -30,7 +30,7 @@
                     <span class="playerName">{{player.fullName}}</span>
                     <span class="addPlayer">
                         <button class="btn btn-primary" (click)="removePlayer(player)">
-                            Delete <i class="bi bi-trash"></i>
+                            Delete
                         </button>
                     </span>
                 </li>
@@ -40,7 +40,7 @@
     <tr>
         <td colspan="2">
             <button class="btn btn-primary" (click)="save()" *ngIf="!saving">
-                Save <i class="bi bi-floppy"></i>
+                Save 
             </button>
         </td>
     </tr>

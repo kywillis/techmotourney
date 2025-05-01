@@ -9,5 +9,7 @@
         public GameStatus Status { get; set; }
         public GameType GameType { get; set; }
         public int BracketGameId { get; set; }
+        public int MatchUpIndex { get; set; }
+        public DateTime Date { get; set; }
     }
 }

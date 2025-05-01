@@ -1,0 +1,111 @@
+﻿You are going to calculate the point spread for a game between two players in the game Tecmo Super Bowl for Nintendo Entertainment System.
+
+Below a list of results from the original nintendo game Tecmo Super Bowl. These games are from tournaments over the last 9 years. 
+There is one line per result. When I ask you to create a point spread the players will almost always have games in the data set to help you.
+
+Below is a description of each column in the command delimited data set:
+
+Player1: name of player one
+Player2: name of player two
+Player1 Team: name of the team player one used (ex: Browns, Cowboys, ect)
+Player 2 Team: name of the team player two used (ex: Browns, Cowboys, ect) 
+Player 1 Score: player 1's final score
+Player 2 Score: player 2's final score 
+Player 1 Rushing Yards: how many yards player 1 rushed for  
+Player 2 Rushing Yards: how many yards player 2 rushed for 
+Player1 Passing Yards: how many yards player 1 passed for 
+Player2 Passing Yards: how many yards player 2 passed for 
+Game Date: when the game was played
+GameType: value will be either "preliminary" or "tournament". All players play preliminary games to get seeded into the tournament.
+
+{{gamedata}}
+
+Here are somethings to consider when calculating thw point spread for two players:
+- what is their overall record? Better players will have the best records
+- When a player wins or losses, how much did they win or lose by? If they typically lose by a large margin then they are not very good. What counts as a large or small margin can be inferred from the data set. If the average margin of victory is 3, then losing by 17 is a bad loss
+- How good where teams in their matchup. For example if player 1 played with the Giants and player 2 used the the Packers, player 1 would have a huge advantage. If player 2 won or kept the game very close it indicates in a matchup with even teams player 2 would have an advantage.
+- does the player use the strengths of the teams, for example a good passing team against a week defense, are they able to get lots of passing yards. To determine if the yards passing we a lot or a little compare them to the average number in other games. (same goes for rushing yards)
+- more recent matchups should weight heavier than older ones
+- consider previous head to head matchups when calculating the spread. If they have played against each other a number of times with even teams and one player consistently beats the other that would tilt the spread in the winners direction
+
+I'm going to ask you to generate 1 to many spreads. To help you calcute this I have data below about the teams in Tecmo Super Bowl, use this when considering previous matchups.
+
+## Overall Team Ranking
+
+| Tier 1 | Tier 2 | Tier 3 | Tier 4 | Tier 5 |
+|---|---|---|---|---|
+| 1. San Francisco 49ers | 5. Kansas City Chiefs | 11. Minnesota Vikings | 19. Pittsburgh Steelers | 24. Green Bay Packers |
+| 2. New York Giants | 6. Chicago Bears | 12. Detroit Lions | 20. Phoenix Cardinals | 25. Cleveland Browns |
+| 3. Buffalo Bills | 7. Los Angeles Raiders | 13. Los Angeles Rams | 21. Atlanta Falcons | 26. Seattle Seahawks |
+| 4. Houston Oilers | 8. Philadelphia Eagles | 14. Washington Redskins | 22. New York Jets | 27. New England Patriots |
+|  | 9. Miami Dolphins | 15. Los Angeles Rams | 23. New Orleans Saints | 28. Indianapolis Colts |
+|  | 10. Cincinnati Bengals | 16. San Diego Chargers |  |  |
+|  |  | 17. Tampa Bay Buccaneers |  |  |
+|  |  | 18. Dallas Cowboys |  |  |
+
+## Team Rankings (Offense & Defense)
+
+| Offensive Team Ranking | Defensive Team Ranking |
+|---|---|
+| 1. San Francisco 49ers | 1. Pittsburgh Steelers |
+| 2. Houston Oilers | 2. New York Giants |
+| 3. Buffalo Bills | 3. Chicago Bears |
+| 4. New York Giants | 4. Philadelphia Eagles |
+| 5. Miami Dolphins | 5. Buffalo Bills |
+| 6. Los Angeles Raiders | 6. Kansas City Chiefs |
+| 7. Chicago Bears | 7. San Francisco 49ers |
+| 8. Philadelphia Eagles | 8. Los Angeles Raiders |
+| 9. Denver Broncos | 9. Minnesota Vikings |
+| 10. Los Angeles Rams | 10. New York Jets |
+| 11. Detroit Lions | 11. Washington Redskins |
+| 12. New York Jets | 12. Denver Broncos |
+| 13. Cincinnati Bengals | 13. Cincinnati Bengals |
+| 14. Kansas City Chiefs | 14. Miami Dolphins |
+| 15. Atlanta Falcons | 15. Dallas Cowboys |
+| 16. Washington Redskins | 16. New Orleans Saints |
+| 17. Dallas Cowboys | 17. Houston Oilers |
+| 18. Minnesota Vikings | 18. Cleveland Browns |
+| 19. New Orleans Saints | 19. Green Bay Packers |
+| 20. San Diego Chargers | 20. Los Angeles Rams |
+| 21. Seattle Seahawks | 21. San Diego Chargers |
+| 22. Cleveland Browns | 22. Tampa Bay Buccaneers |
+| 23. Phoenix Cardinals | 23. Detroit Lions |
+| 24. Green Bay Packers | 24. Atlanta Falcons |
+| 25. Tampa Bay Buccaneers | 25. Phoenix Cardinals |
+| 26. Indianapolis Colts | 26. New England Patriots |
+| 27. Pittsburgh Steelers | 27. Seattle Seahawks |
+| 28. New England Patriots | 28. Indianapolis Colts |
+
+## Quality Match Ups
+
+| 49ers - Dolphins | Steelers - Cowboys | Vikings - Chargers | Rams - Saints | Packers - Patriots |
+|---|---|---|---|---|
+| Oilers - Giants | Redskins - Cowboys | Lions - Bengals | Jets - Cardinals | Seahawks - Colts |
+| Raiders - Dolphins | Eagles - Chiefs | Falcons - Broncos | Bucs - Browns | |
+
+
+I want to parse your response directly into an array of objects. When you generate the spread I want it to be in the format below. 
+Your response MUST NOT include the markdown code marker of "''json". I MUST be able to parse your resposne into objects: 
+[{
+    player1Name: "Stags"
+    player2Name: "McGinty""
+    spread:-11
+    favoredPlayerName: "Stags",
+    summary: "brief explination of the point spread"
+},
+{
+    player1Name: "Willis"
+    player2Name: "Murphy""
+    spread:-6
+    favoredPlayerName: "Willis",
+    summary: "brief explination of the point spread"
+}]
+
+Ths is critical, your response to me must only contain json results in the above format. Your response should not include anything else. ONLY JSON.
+
+create point spreads for the following matchups:
+{{matchups}}
+
+
+
+

@@ -13,12 +13,13 @@ namespace TecmoTourney
             CreateMap<GameTeamDAOModel, GameTeamModel>();
             CreateMap<CreatePlayerRequestModel, PlayerDAOModel>();
             CreateMap<TournamentDAOModel, TournamentModel>()
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => ((TournamentStatus)src.StatusId).ToString()))
-                .ForMember(dest => dest.TournamentBracket, opt => opt.MapFrom(src => JsonConvert.DeserializeObject<TournamentBracketModel>(src.BracketData)));
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => ((TournamentStatus)src.StatusId).ToString()));
+                //.ForMember(dest => dest.TournamentBracket, opt => opt.MapFrom(src => JsonConvert.DeserializeObject<TournamentBracketModel>(src.BracketData)));
             CreateMap<TournamentModel, TournamentDAOModel>()
-                .ForMember(dest => dest.StatusId, opt => opt.MapFrom(src => (int)src.Status))
-                .ForMember(dest => dest.BracketData, opt => opt.MapFrom(src => JsonConvert.SerializeObject(src.TournamentBracket)));
+                .ForMember(dest => dest.StatusId, opt => opt.MapFrom(src => (int)src.Status));
+                //.ForMember(dest => dest.BracketData, opt => opt.MapFrom(src => JsonConvert.SerializeObject(src.TournamentBracket)));
             CreateMap<PlayerDAOModel, PlayerModel>().ReverseMap();
+            CreateMap<PlayerModel, PlayerSummaryModel>().ReverseMap();
 
             CreateMap<SaveGameResultRequestModel, GameResultDAOModel>()
              .ForMember(dest => dest.StatusId, opt => opt.MapFrom(src => (int)src.Status))
@@ -28,6 +29,7 @@ namespace TecmoTourney
             CreateMap<GameResultDAOModel, GameResultModel>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => ((GameStatus)src.StatusId).ToString()))
                 .ForMember(dest => dest.GameType, opt => opt.MapFrom(src => ((GameType)src.GameTypeId).ToString()))
+                .ForMember(dest => dest.Date, opt => opt.MapFrom(src => src.DateAdded))
                 .MapDAOToGameResultStatsModel();
 
             CreateMap<GameResultModel, GameResultDAOModel>()
@@ -44,6 +46,11 @@ namespace TecmoTourney
                 .ForMember(dest => dest.Player2GameTeamID, opt => opt.MapFrom(src => (int?)src.Player2.GameTeamId))
                 .ForMember(dest => dest.StatusId, opt => opt.MapFrom(src => (int)src.Status))
                 .ForMember(dest => dest.GameTypeId, opt => opt.MapFrom(src => (int)src.GameType));
+
+            CreateMap<PointSpreadModel, PointSpreadDAOModel>();
+            CreateMap<PointSpreadRequestModel, PointSpreadDAOModel>();
+            CreateMap<PointSpreadDAOModel, PointSpreadModel>();
+
         }
     }
 }

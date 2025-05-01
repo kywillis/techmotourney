@@ -1,14 +1,18 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { IPlayer } from 'src/app/core/models/player.model';
+import { Router } from '@angular/router';
 import { PlayersService } from 'src/app/core/services/players.service';
 import { ModalComponent } from 'src/app/shared/components/modal/modal.component';
 import { DeletePlayerComponent } from '../delete-player/delete-player.component';
 import { EditPlayerComponent } from '../edit-player/edit-player.component';
+import { IPlayerSummary } from 'src/app/core/models/playerSummary.model';
+import { IPlayer } from 'src/app/core/models/player.model';
+import { AuthenticationService } from 'src/app/core/services/authentication.service';
 
 @Component({
-  selector: 'app-players',
-  templateUrl: './players.component.html',
-  styleUrls: ['./players.component.less']
+    selector: 'app-players',
+    templateUrl: './players.component.html',
+    styleUrls: ['./players.component.less'],
+    standalone: false
 })
 export class PlayersComponent implements OnInit {
 
@@ -17,9 +21,12 @@ export class PlayersComponent implements OnInit {
   @ViewChild('newPlayerModal') newPlayerModal!: ModalComponent;
   @ViewChild('deletePlayer') deletePlayer!: DeletePlayerComponent;
   @ViewChild('editPlayer') editPlayer!: EditPlayerComponent;
-  players = [] as IPlayer[];
+  summaries = [] as IPlayerSummary[];
   loading = false;
-  constructor(private playersService: PlayersService) { }
+  constructor(
+      private playersService: PlayersService, 
+      private router: Router, 
+      private authenticationService: AuthenticationService) { }
 
   ngOnInit(): void {
     this.loadPlayers();
@@ -27,9 +34,9 @@ export class PlayersComponent implements OnInit {
 
   loadPlayers():void{
     this.loading = false;
-    this.playersService.getAllPlayers().subscribe({
-      next: (player)=>{
-        this.players = player;
+    this.playersService.getAllPlayerSummaries().subscribe({
+      next: (summaries)=>{
+        this.summaries = summaries;
         this.loading = false;
         },
       error: (error) => {
@@ -39,14 +46,14 @@ export class PlayersComponent implements OnInit {
     })
   }
 
-  openDeletePlayer(player: IPlayer):void{
-    this.deletePlayer.player = player;
+  openDeletePlayer(summary: IPlayerSummary):void{
+    this.deletePlayer.player = summary as IPlayer;
     this.deletePlayer.resetStateOnPlayerChange(); 
     this.deletePlayerModal.open();
   }
 
-  openEditPlayer(player: IPlayer):void{
-    this.editPlayer.player = player;
+  openEditPlayer(summary: IPlayerSummary):void{
+    this.editPlayer.player = summary as IPlayer;;
     this.editPlayer.resetStateOnPlayerChange(); 
     this.editPlayerModal.open();
   }
@@ -71,5 +78,13 @@ export class PlayersComponent implements OnInit {
 		console.log(message)
     this.loadPlayers();
 
+  }
+
+  showPlayer(playerId: number){
+    this.router.navigate(['/players', playerId]);
+  }
+
+  loggedIn():boolean{
+    return this.authenticationService.isAdminLoggedIn();
   }
 }

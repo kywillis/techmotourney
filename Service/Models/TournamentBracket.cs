@@ -4,7 +4,9 @@ namespace TecmoTourney.Models
 {
     public class TournamentBracketModel
     {
+        [JsonProperty("teams")]
         public List<List<BracketTeam?>> Teams { get; set; } = new List<List<BracketTeam?>>();
+        [JsonProperty("results")]
         public List<List<List<List<object>>>> Results { get; set; } = new()
         {
             new List<List<List<object>>>
@@ -40,6 +42,30 @@ namespace TecmoTourney.Models
                     break;
                 case 8:
                     Teams = build8Teams();
+                    break;
+                case 9:
+                    Teams = build9Teams();
+                    break;
+                case 10:
+                    Teams = build10Teams();
+                    break;
+                case 11:
+                    Teams = build11Teams();
+                    break;
+                case 12:
+                    Teams = build12Teams();
+                    break;
+                case 13:
+                    Teams = build13Teams();
+                    break;
+                case 14:
+                    Teams = build14Teams();
+                    break;
+                case 15:
+                    Teams = build15Teams();
+                    break;
+                case 16:
+                    Teams = build16Teams();
                     break;
             }
         }
@@ -95,13 +121,129 @@ namespace TecmoTourney.Models
                 new List<BracketTeam?> { new BracketTeam { Seed = 2 }, new BracketTeam { Seed = 5 } },
             };
         }
+        private List<List<BracketTeam?>> build9Teams()
+        {
+            return new List<List<BracketTeam?>>
+            {
+                new List<BracketTeam?> { new BracketTeam { Seed = 1 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 8 }, new BracketTeam { Seed = 9 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 5 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 4 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 3 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 6 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 7 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 2 }, null },
+            };
+        }
+        private List<List<BracketTeam?>> build10Teams()
+        {
+            return new List<List<BracketTeam?>>
+            {
+                new List<BracketTeam?> { new BracketTeam { Seed = 1 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 8 }, new BracketTeam { Seed = 9 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 5 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 4 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 3 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 6 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 7 }, new BracketTeam { Seed = 10 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 2 }, null },
+            };
+        }
+        private List<List<BracketTeam?>> build11Teams()
+        {
+            return new List<List<BracketTeam?>>
+            {
+                new List<BracketTeam?> { new BracketTeam { Seed = 1 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 8 }, new BracketTeam { Seed = 9 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 5 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 4 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 3 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 6 }, new BracketTeam { Seed = 11 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 7 }, new BracketTeam { Seed = 10 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 2 }, null },
+            };
+        }
+        private List<List<BracketTeam?>> build12Teams()
+        {
+            return new List<List<BracketTeam?>>
+            {
+                new List<BracketTeam?> { new BracketTeam { Seed = 1 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 8 }, new BracketTeam { Seed = 9 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 5 }, new BracketTeam { Seed = 12 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 4 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 3 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 6 }, new BracketTeam { Seed = 11 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 7 }, new BracketTeam { Seed = 10 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 2 }, null },
+            };
+        }
+        private List<List<BracketTeam?>> build13Teams()
+        {
+            return new List<List<BracketTeam?>>
+            {
+                new List<BracketTeam?> { new BracketTeam { Seed = 1 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 8 }, new BracketTeam { Seed = 9 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 5 }, new BracketTeam { Seed = 12 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 4 }, new BracketTeam { Seed = 13 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 3 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 6 }, new BracketTeam { Seed = 11 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 7 }, new BracketTeam { Seed = 10 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 2 }, null },
+            };
+        }
+        private List<List<BracketTeam?>> build14Teams()
+        {
+            return new List<List<BracketTeam?>>
+            {
+                new List<BracketTeam?> { new BracketTeam { Seed = 1 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 8 }, new BracketTeam { Seed = 9 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 5 }, new BracketTeam { Seed = 12 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 4 }, new BracketTeam { Seed = 13 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 3 }, new BracketTeam { Seed = 14 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 6 }, new BracketTeam { Seed = 11 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 7 }, new BracketTeam { Seed = 10 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 2 }, null },
+            };
+        }
+        private List<List<BracketTeam?>> build15Teams()
+        {
+            return new List<List<BracketTeam?>>
+            {
+                new List<BracketTeam?> { new BracketTeam { Seed = 1 }, null },
+                new List<BracketTeam?> { new BracketTeam { Seed = 8 }, new BracketTeam { Seed = 9 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 5 }, new BracketTeam { Seed = 12 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 4 }, new BracketTeam { Seed = 13 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 3 }, new BracketTeam { Seed = 14 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 6 }, new BracketTeam { Seed = 11 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 7 }, new BracketTeam { Seed = 10 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 2 }, new BracketTeam { Seed = 15 } },
+            };
+        }
+        private List<List<BracketTeam?>> build16Teams()
+        {
+            return new List<List<BracketTeam?>>
+            {
+                new List<BracketTeam?> { new BracketTeam { Seed = 1 }, new BracketTeam { Seed = 16 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 8 }, new BracketTeam { Seed = 9 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 5 }, new BracketTeam { Seed = 12 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 4 }, new BracketTeam { Seed = 13 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 3 }, new BracketTeam { Seed = 14 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 6 }, new BracketTeam { Seed = 11 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 7 }, new BracketTeam { Seed = 10 } },
+                new List<BracketTeam?> { new BracketTeam { Seed = 2 }, new BracketTeam { Seed = 15 } },
+            };
+        }
     }
 
     public class BracketTeam
     {
+        [JsonProperty("seed")]
         public int Seed { get; set; }
+        [JsonProperty("player")]
         public string Player { get; set; } = "";
+        [JsonProperty("playerId")]
         public int PlayerId { get; set; }
+        [JsonProperty("gameId")]
         public int GameId { get; set; }
     }
      

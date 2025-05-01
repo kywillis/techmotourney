@@ -13,6 +13,7 @@ import { ViewGameResultComponent } from './components/view-game-result/view-game
 import { EditGameResultComponent } from './components/edit-game-result/edit-game-result.component';
 import { DeleteGameResultComponent } from './components/delete-game-result/delete-game-result.component';
 import { EnumFriendlyNamePipe } from './pipes/enum-friendly-name.pipe';
+import { SectionHeaderComponent } from '../shared/components/section-header/section-header.component';
 
 @NgModule({
   imports: [
@@ -32,6 +33,7 @@ import { EnumFriendlyNamePipe } from './pipes/enum-friendly-name.pipe';
     EditGameResultComponent,
     DeleteGameResultComponent,
     EnumFriendlyNamePipe,
+    SectionHeaderComponent,
   ],
   exports: [
     HeaderComponent,
@@ -43,6 +45,7 @@ import { EnumFriendlyNamePipe } from './pipes/enum-friendly-name.pipe';
     EditGameResultComponent,
     DeleteGameResultComponent,
     EnumFriendlyNamePipe,
+    SectionHeaderComponent,
   ]
 })
 export class SharedModule {

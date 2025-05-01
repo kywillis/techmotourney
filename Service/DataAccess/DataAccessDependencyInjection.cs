@@ -13,6 +13,7 @@ namespace TecmoTourney.DataAccess
             services.AddScoped<ITournamentBracketUpdateDAO, TournamentBracketUpdateDAO>();
             services.AddScoped<IPlayerTournamentDAO, PlayerTournamentDAO>();
             services.AddScoped<IGameTeamDAO, GameTeamDAO>();
+            services.AddScoped<IPointSpreadDAO, PointSpreadDAO>();
         }
     }
 }

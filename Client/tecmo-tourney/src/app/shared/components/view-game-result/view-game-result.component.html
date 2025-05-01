@@ -1,42 +1,39 @@
-<div *ngIf="gameResult">
-    <table>
+<div *ngIf="gameResult && gameResult.player1 && gameResult.player2">
+    <table class="viewResult">
         <thead>
             <tr>
                 <th>Player</th>
                 <th>Team</th>
-                <th>Rush Yards</th>
-                <th>Pass Yards</th>
-                <th>Total Yards</th>
+                <th>Rush</th>
+                <th>Pass</th>
+                <th>Total</th>
                 <th>Score</th>    
             </tr>
         </thead>
         <tr>
-            <td>{{gameResult.player1.playerName}}</td>
-            <td>{{gameResult.player1.teamName}}</td>
+            <td><span class="link" (click)="showPlayer(gameResult.player1.playerId)">{{gameResult.player1.playerName}}</span></td>
+            <td><div *ngIf="gameResult.player1.teamName != ''" class="helmet-small helmet-small-{{gameResult.player1.teamName | lowercase}}"></div>{{gameResult.player1.teamName}}</td>
             <td>{{gameResult.player1.rushingYards}}</td>
             <td>{{gameResult.player1.passingYards}}</td>
             <td>{{gameResult.player1.rushingYards + gameResult.player1.passingYards}}</td>
-            <td>{{gameResult.player1.score}}</td>
+            <td><span [ngClass]="{ 'win': spotlightWon(gameResult, gameResult.player1.score)}">{{gameResult.player1.score}}</span></td>
         </tr>
         <tr>
-            <td>{{gameResult.player2.playerName}}</td>
-            <td>{{gameResult.player2.teamName}}</td>
+            <td><span class="link" (click)="showPlayer(gameResult.player2.playerId)">{{gameResult.player2.playerName}}</span></td>
+            <td><div *ngIf="gameResult.player1.teamName != ''" class="helmet-small helmet-small-{{gameResult.player2.teamName | lowercase}}"></div>{{gameResult.player2.teamName}}</td>
             <td>{{gameResult.player2.rushingYards}}</td>
             <td>{{gameResult.player2.passingYards}}</td>
-            <td>{{gameResult.player2.rushingYards + gameResult.player1.passingYards}}</td>
-            <td>{{gameResult.player2.score}}</td>
+            <td>{{gameResult.player2.rushingYards + gameResult.player2.passingYards}}</td>
+            <td><span [ngClass]="{ 'win': spotlightWon(gameResult, gameResult.player2.score)}">{{gameResult.player2.score}}</span></td>
         </tr>
         <tr>
             <td colspan="3">
-                {{gameResult.status}}
+                <div *ngIf="showStatus && gameResult.status != GameStatus.Completed">{{gameResult.status}}</div>                
+                <div class="date" *ngIf="showDatePlayed">{{gameResult.date | date:'EEE h:mm a, MMMM d, y' }}</div>
             </td>
-            <td colspan="3">
-                <button class="btn btn-primary" (click)="editGameResult(gameResult)">
-                    <a class="dark" >Edit <i class="bi bi-pen"></i></a>
-                </button>
-                <button class="btn btn-primary" (click)="deleteGameResult(gameResult)">
-                    <a class="dark" >Delete <i class="bi bi-trash"></i></a>
-                </button>
+            <td colspan="3" *ngIf="showControls && loggedIn()">
+                <a class="dark link large"  (click)="editGameResult(gameResult)">Edit <i class="bi bi-pen"></i></a>
+                <a class="dark link large" (click)="deleteGameResult(gameResult)">Delete <i class="bi bi-trash"></i></a>
             </td>
         </tr>
     </table>

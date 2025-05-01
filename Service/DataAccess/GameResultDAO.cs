@@ -44,11 +44,16 @@ namespace TecmoTourney.DataAccess
         }
 
 
-        public async Task<IEnumerable<GameResultDAOModel>> SearchAsync(int tournamentId, int? player1Id, int? player2Id)
+        public async Task<IEnumerable<GameResultDAOModel>> SearchAsync(int? tournamentId, int? player1Id, int? player2Id)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var sql = @"SELECT * FROM TC_GameResults WHERE TournamentId = @TournamentId and isDeleted = 0";
+                var sql = @"SELECT * FROM TC_GameResults WHERE isDeleted = 0 ";
+
+                if(tournamentId.HasValue)
+                {
+                    sql += " AND (tournamentId = @tournamentId)";
+                }
 
                 if (player1Id.HasValue)
                 {
@@ -94,7 +99,7 @@ namespace TecmoTourney.DataAccess
                 var sql = @"UPDATE TC_GameResults 
                             SET Player1Id = @Player1Id, Player2Id = @Player2Id, Player1Score = @Player1Score, Player2Score = @Player2Score, Player1PassingYards = @Player1PassingYards, Player2PassingYards = @Player2PassingYards, 
                                 Player1RushingYards = @Player1RushingYards, Player2RushingYards = @Player2RushingYards, TournamentId = @TournamentId, Player1GameTeamID = @Player1GameTeamID, Player2GameTeamID = @Player2GameTeamID, 
-                                GameTypeId = @GameTypeId, StatusId = @StatusId
+                                GameTypeId = @GameTypeId, StatusId = @StatusId, isDeleted = @IsDeleted
                             WHERE GameResultId = @GameResultId";
                 await connection.ExecuteAsync(sql, new
                 {
@@ -111,6 +116,7 @@ namespace TecmoTourney.DataAccess
                     gameResult.Player2GameTeamID,
                     gameResult.GameTypeId,
                     gameResult.StatusId,
+                    gameResult.IsDeleted,
                     GameResultId = gameResultId
                 });
             }

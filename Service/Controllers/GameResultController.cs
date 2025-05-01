@@ -39,9 +39,9 @@ namespace TecmoTourney.Controllers
 
         [HttpGet("search")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<GameResultModel>))]
-        public async Task<IActionResult> Search([FromQuery] int tournamentId, [FromQuery] int? player1Id, [FromQuery] int? player2Id)
+        public async Task<IActionResult> Search([FromQuery] int? tournamentId, [FromQuery] int? player1Id, [FromQuery] int? player2Id, [FromQuery] BracketLocation? bracketLocation)
         {
-            var results = await _gameResultOrchestration.SearchAsync(tournamentId, player1Id, player2Id);
+            var results = await _gameResultOrchestration.SearchAsync(tournamentId, player1Id, player2Id, bracketLocation);
             return results.ToActionResult();
         }
 
@@ -53,14 +53,23 @@ namespace TecmoTourney.Controllers
             return result.ToActionResult();
         }
 
-        //[HttpPut("{gameResultId}")]
-        //[ProducesResponseType(200, Type = typeof(List<GameResultModel>))]
-        //[ProducesResponseType(401)]
-        //public async Task<IActionResult> UpdateGameResult(int gameResultId, [FromBody] GameResultModel gameResult)
-        //{
-        //    var result = await _gameResultOrchestration.UpdateGameResultAsync(gameResultId, gameResult);
-        //    return result.ToActionResult();
-        //}
+        [HttpGet("gameUpdates/{tournamentId}")]
+        [ProducesResponseType(200, Type = typeof(List<TournamentBracketUpdateModel>))]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> UpdateGameResult(int tournamentId)
+        {
+            var result = await _gameResultOrchestration.GetGameUpdates(tournamentId);
+            return result.ToActionResult();
+        }
+
+        [HttpPut("gameUpdates/{tournamentBracketUpdateId}")]
+        [ProducesResponseType(200, Type = typeof(List<TournamentBracketUpdateModel>))]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> AcknowledgeBracketUpdate(int tournamentBracketUpdateId)
+        {
+            var result = await _gameResultOrchestration.AcknowledgeBracketUpdate(tournamentBracketUpdateId);
+            return result.ToActionResult();
+        }
 
         [HttpDelete("{gameResultId}")]
         [ProducesResponseType(200, Type = typeof(bool))]
@@ -68,6 +77,24 @@ namespace TecmoTourney.Controllers
         {
             var result = await _gameResultOrchestration.DeleteGameResultAsync(gameResultId);
             return result.ToActionResult();
+        }
+
+        [HttpPost("{tournamentId}/pointSpreads")]
+        [ProducesResponseType(200, Type = typeof(PointSpreadModel[]))]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> CreatePointSpreads(int tournamentId, IEnumerable<PointSpreadRequestModel> pointSpreads)
+        {
+            var results = await _gameResultOrchestration.CreatePointSpreadsAsync(tournamentId, pointSpreads);
+            return results.ToActionResult();
+        }
+
+        [HttpGet("{tournamentId}/pointSpreads")]
+        [ProducesResponseType(200, Type = typeof(PointSpreadModel[]))]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetPointSpreads(int tournamentId)
+        {
+            var results = await _gameResultOrchestration.GetPointSpreadsAsync(tournamentId);
+            return results.ToActionResult();
         }
     }
 }

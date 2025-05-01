@@ -1,0 +1,17 @@
+<app-section-header text="{{statType}}"></app-section-header>
+<table class="white-border">
+    <thead>
+        <th>Player</th>
+        <th>Avg</th>
+        <th>Needed To Pass</th>
+        <th></th>
+    </thead>
+    <tbody>
+        <tr *ngFor="let playerStat of playerStats">
+            <td><span class="link" (click)="selectGames(playerStat.games)">{{playerStat.playerName}}</span></td>
+            <td>{{playerStat.statValue}}</td>
+            <td>{{playerStat.neededToPass}}</td>
+            <td></td>
+        </tr>
+    </tbody>
+</table>

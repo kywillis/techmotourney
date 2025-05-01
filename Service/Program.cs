@@ -4,8 +4,15 @@ using TecmoTourney;
 using Microsoft.Extensions.Options;
 using System.Text.Json.Serialization;
 
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = AppContext.BaseDirectory
+});
 
-var builder = WebApplication.CreateBuilder(args);
+// Add appsettings.local.json
+builder.Configuration
+    .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: true);
 
 // Add services to the container.
 
@@ -14,7 +21,6 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
-
 
 // Bind ApplicationConfig settings
 builder.Services.Configure<ApplicationConfig>(builder.Configuration.GetSection("ApplicationConfig"));
@@ -27,7 +33,8 @@ builder.Services.AddCors(options =>
         builder => builder
             .WithOrigins("http://localhost:4200") // Angular app URL
             .AllowAnyHeader()
-            .AllowAnyMethod());
+            .AllowAnyMethod()
+            .AllowCredentials());
 });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -37,14 +44,17 @@ builder.Services.AddSwaggerGen();
 //builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 
-
 // Add the orchestrations to the dependency injection container
 builder.Services.AddDataAccessServices();
 builder.Services.AddOrchestrationServices();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Serve Angular files from wwwroot (or another folder if needed)
+app.UseDefaultFiles(); // Looks for index.html
+app.UseStaticFiles();  // Serves static assets like JS, CSS
+app.MapFallbackToFile("index.html");
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -55,6 +65,6 @@ app.UseHttpsRedirection();
 app.UseCors("AllowSpecificOrigin");
 app.UseAuthorization();
 
+// API routes
 app.MapControllers();
-
 app.Run();

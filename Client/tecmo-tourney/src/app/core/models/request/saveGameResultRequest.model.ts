@@ -8,5 +8,4 @@ export interface ISaveGameResultRequest {
   tournamentId: number;
   status: GameStatus;
   gameType: GameType;
-  bracketGameId: number | null;
 }

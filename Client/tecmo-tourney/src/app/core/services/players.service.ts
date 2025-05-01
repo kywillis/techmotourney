@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { IPlayer } from '../models/player.model';
 import { CreatePlayerRequest } from '../models/request/createPlayerRequest.model';
 import { ConfigService } from './config.service';
+import { IPlayerSummary } from '../models/playerSummary.model';
 
 @Injectable({
   providedIn: 'root'
@@ -28,6 +29,10 @@ export class PlayersService {
 
   getPlayers(tournamentId: number): Observable<IPlayer[]> {
     return this.http.get<IPlayer[]>(`${this.apiUrl}/players/tournament/${tournamentId}`);
+  }
+
+  getAllPlayerSummaries(): Observable<IPlayerSummary[]> {
+    return this.http.get<IPlayerSummary[]>(`${this.apiUrl}/players/summaries`);
   }
 
   updatePlayer(playerId: number, request: CreatePlayerRequest): Observable<IPlayer> {

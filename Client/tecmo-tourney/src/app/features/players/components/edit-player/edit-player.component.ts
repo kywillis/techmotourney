@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, ViewChild, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IPlayer } from 'src/app/core/models/player.model';
 import { CreatePlayerRequest } from 'src/app/core/models/request/createPlayerRequest.model';
@@ -6,9 +6,10 @@ import { PlayersService } from 'src/app/core/services/players.service';
 import { MessageComponent } from 'src/app/shared/components/message/message.component';
 
 @Component({
-  selector: 'app-edit-player',
-  templateUrl: './edit-player.component.html',
-  styleUrl: './edit-player.component.less'
+    selector: 'app-edit-player',
+    templateUrl: './edit-player.component.html',
+    styleUrl: './edit-player.component.less',
+    standalone: false
 })
 export class EditPlayerComponent {
   @Output() playerUpdated: EventEmitter<void> = new EventEmitter();

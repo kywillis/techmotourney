@@ -1,20 +1,130 @@
 /* You can add global styles to this file, and also import other style files */
-@text-color: #efefef;
+@text-color: #FFFFFF;
 @link-color: #d8dcad;
-@dark-color: #23224d;
+@dark-color: #A6E7FF;
+@highlite-color: #FB599A;
+@background: #1863D6;
+@success: #068000;
 .body{
-    background-color: #202020;
+    background-color: @background;
     color: @text-color;
-
+    font-family: 'Press Start 2P', cursive !important;
 }
+
+select{
+  background: @text-color;
+  color: @background;
+  border-radius: 4px;
+  border: darken(@background, 50%) 1px solid;
+  padding: 4px;
+}
+
+.error{
+  color:@highlite-color;
+}
+.gameCnt{
+  margin:10px 0 5px 0;
+  padding-bottom: 5px;
+  border-bottom: #606060 1px solid;
+}
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+textarea {
+  padding: 10px 15px;
+  margin: 8px 0;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  font-family: sans-serif;
+  color: #333;
+  background-color: #f8f8f8;
+  transition: border-color 0.3s ease;
+}
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+input[type="tel"]:focus,
+input[type="url"]:focus,
+textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+input[type="text"]::placeholder,
+input[type="email"]::placeholder,
+input[type="password"]::placeholder,
+input[type="number"]::placeholder,
+input[type="search"]::placeholder,
+input[type="tel"]::placeholder,
+input[type="url"]::placeholder,
+textarea::placeholder {
+  color: #aaa;
+}
+
+input[type="text"]:disabled,
+input[type="email"]:disabled,
+input[type="password"]:disabled,
+input[type="number"]:disabled,
+input[type="search"]:disabled,
+input[type="tel"]:disabled,
+input[type="url"]:disabled,
+textarea:disabled {
+  background-color: #eee;
+  border-color: #ddd;
+  color: #888;
+  cursor: not-allowed;
+}
+
+/* Optional: Error state styling */
+input[type="text"].error,
+input[type="email"].error,
+input[type="password"].error,
+input[type="number"].error,
+input[type="search"].error,
+input[type="tel"].error,
+input[type="url"].error,
+textarea.error {
+    border-color: red;
+}
+
+.fullTable{
+    width: 100%;
+}
+
+::-webkit-scrollbar {
+  width: 10px; /* Width of the entire scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Color of the tracking area */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888; /* Color of the draggable thumb */
+  border-radius: 5px; /* Rounded corners */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: @link-color; /* Color of the thumb on hover */
+}
+
+
 
 a
 {
-    color: @link-color;
-    text-decoration: none;
+    color: @dark-color !important;
+    text-decoration: none !important;
     &.dark{
         color: @dark-color;
-
     }
 }
 
@@ -23,19 +133,847 @@ a:hover
 {
     color: lighten(@link-color, 20%);
 }
-
-nav a {
-    display: block;
-    padding: 10px 0;    
+.link {
+    display: inline-block;
+    position: relative;
+    margin-right:15px;
   }
+  
+.link::before {
+    content: "\25B6"; /* Right-pointing triangle */
+    display: inline-block;
+    margin-right: 4px;
+    vertical-align: middle;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
 
-.main{
-    width: 80%;
+.link.large:hover::before {
+    opacity: 1;
+    transform: translateY(-2px); /* Adjust for vertical alignment */
+    
+}
+.link:hover::before {
+    opacity: 1;
+    transform: translateY(-2px); /* Adjust for vertical alignment */
+    
+}
+
+.link:hover{
+    cursor: pointer;
+}
+  
+.statsHeader{
+  margin:10px 0 5px 0;
+  border-bottom: 4px solid @highlite-color;
+  font-size: 1.2em;
+  display: inline-block;
+}
+
+.mainContainer{
+    width: 90%;
     margin: 20px auto;
 }
 .nav{
     padding: 0;
     margin: 0;
+    a {
+        display: block !important;
+        padding: 10px 0  !important;    
+      }
 }
 html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; font-size: 1em !important;}
+
+.stats-table{
+    caption-side: bottom;
+    width:100%;
+}
+.mat-mdc-tab-body-content{
+    overflow: hidden !important;
+}
+
+.mat-mdc-tab-label { /* Assuming .my-app-container is a parent */
+    color: red !important;
+}
+.mdc-tab__text-label{
+    color:@link-color!important;
+    font-size: 1.75em;
+}
+.mdc-tab.mat-mdc-tab.mat-mdc-focus-indicator:hover {
+    background-color: @background !important;
+    .mdc-tab__text-label{
+        color: @highlite-color;        
+    }
+}
+.mat-mdc-tab-list {
+    border-bottom: 2px solid green !important;
+}
+.sectionHeader{
+    font-size: 1.7em;
+    margin: 15px 5px;
+}
+.star {
+    position: relative;
+    top:-3px;
+    &.pink{
+        color:@highlite-color;
+    }
+}
+.sectionHeaderLabel{
+    padding:0 10px;
+}
+
+.white-border{
+    border-collapse: separate;
+    border-radius: 14px;
+    border-color: @text-color !important;
+    padding: 10px;
+    border-style: solid;
+    width: 100%;
+}
+
+.mdc-tab-indicator .mdc-tab-indicator__content,
+.mat-mdc-tab .mdc-tab-indicator__content--underline{
+    border-top-width: 3px !important;
+    border-color: @highlite-color !important;
+}
+
+@helmetSprite: "/assets/helmets.png";
+@facesSprite: "/assets/faces.png";
+
+// Dimensions – adjust as necessary
+@smallWidth:  16px;
+@smallHeight: 16px;
+@bigWidth:    32px;
+@bigHeight:   32px;
+
+/* Shared sprite background */
+.helmet-small,
+.helmet-big {
+  background: url(@helmetSprite) no-repeat;
+  display: inline-block;
+}
+
+/* Small helmets */
+.helmet-small {
+    width: @smallWidth;
+    height: @smallHeight;
+    
+    &-49ers          { background-position: -224px   -16px; } 
+    &-bears          { background-position: -208px    0; }    
+    &-bengals        { background-position: -16px     0; }    
+    &-bills          { background-position:  0        0; }    
+    &-broncos        { background-position: -32px     0; }    
+    &-browns         { background-position: -16px    -16px; }    
+    &-buccaneers     { background-position: -208px   -64px; }    
+    &-cardinals      { background-position: -192px   -48px; } 
+    &-chargers       { background-position: -32px    -48px; } 
+    &-chiefs         { background-position: -32px    -16px; } 
+    &-colts          { background-position: 0        -16px; }    
+    &-cowboys        { background-position: -192px    -64px; } 
+    &-dolphins       { background-position: 0        -32px; }    
+    &-eagles         { background-position: -192px   -32px; } 
+    &-falcons        { background-position: -225px   -64px; } 
+    &-giants         { background-position: -192px    -16px; } 
+    &-jets           { background-position:  0       -64px; } 
+    &-lions          { background-position: -208px    -16px; } 
+    &-packers        { background-position: -208px    -32px; } 
+    &-patriots       { background-position:  0        -48px; } 
+    &-raiders        { background-position: -32px    -32px; }    
+    &-rams           { background-position: -225px   -32px; } 
+    &-ravens         { background-position: -80px    -32px; } 
+    &-redskins       { background-position: -192px     0; }    
+    &-saints         { background-position: -225px   -48px; } 
+    &-seahawks       { background-position: -32px    -64px; } 
+    &-steelers       { background-position: -16px    -48px; } 
+    &-oilers         { background-position: -16px    -32px; } 
+    &-vikings        { background-position: -208px   -48px; } 
+  }
+  
+.modal-content{
+    background-color: @background !important;
+}
+
+.modal-dialog {
+    max-width: 60% !important; /* Adjust width as needed */
+    width: auto !important; /* Ensures responsiveness */
+  }
+
+  .player-face {
+    width: 64px;
+    height: 64px;
+    background-image: url(@facesSprite);
+    background-repeat: no-repeat;
+    margin: 0 auto;
+  }
+  
+  .player-face-1 {
+    background-position: -8px -8px; /* Top-left face */
+  }
+  
+  .player-face-2 {
+    background-position: -182px -8px;
+  }
+  
+  .player-face-3 {
+    background-position: -356px -8px;
+  }
+
+  .player-face-4 {
+    background-position: -530px -8px;
+  }
+  
+  .player-face-5 {
+    background-position: -704px -8px;
+  }
+  
+  .player-face-6 {
+    background-position: -878px -8px;
+  }
+  
+  .player-face-7 {
+    background-position: -1052px -8px;
+  }
+  
+  .player-face-8 {
+    background-position: -8px -76px;
+  }
+
+  .player-face-9 {
+    background-position: -182px -76px;
+  }
+  
+  .player-face-10 {
+    background-position: -356px -76px;
+  }
+  
+  .player-face-11 {
+    background-position: -530px -76px;
+  }
+  
+  .player-face-12 {
+    background-position: -704px -76px;
+  }
+  
+  .player-face-13 {
+    background-position: -878px -76px;
+  }
+  
+  .player-face-14 {
+    background-position: -1052px -76px;
+  }
+  
+  .player-face-15 {
+    background-position: -8px -146px;
+  }
+  
+  .player-face-16 {
+    background-position: -182px -146px;
+  }
+  
+  .player-face-17 {
+    background-position: -356px -146px;
+  }
+  
+  .player-face-18 {
+    background-position: -530px -146px;
+  }
+  
+  .player-face-19 {
+    background-position: -704px -146px;
+  }
+  
+  .player-face-20 {
+    background-position: -878px -146px;
+  }
+  
+  .player-face-21 {
+    background-position: -1052px -146px;
+  }
+  
+  .player-face-22 {
+    background-position: -8px -212px;
+  }
+  
+  .player-face-23 {
+    background-position: -182px -212px;
+  }
+  
+  .player-face-24 {
+    background-position: -356px -212px;
+  }
+  
+  .player-face-25 {
+    background-position: -530px -212px;
+  }
+  
+  .player-face-26 {
+    background-position: -704px -212px;
+  }
+  
+  .player-face-27 {
+    background-position: -878px -212px;
+  }
+  
+  .player-face-28 {
+    background-position: -1052px -212px;
+  }
+  
+  .player-face-29 {
+    background-position: -8px -280px;
+  }
+  
+  .player-face-30 {
+    background-position: -182px -280px;
+  }
+  
+  .player-face-31 {
+    background-position: -356px -280px;
+  }
+  
+  .player-face-32 {
+    background-position: -530px -280px;
+  }
+  
+  .player-face-33 {
+    background-position: -704px -280px;
+  }
+  
+  .player-face-34 {
+    background-position: -878px -280px;
+  }
+  
+  .player-face-35 {
+    background-position: -1052px -280px;
+  }
+  
+  .player-face-36 {
+    background-position: -8px -347px;
+  }
+  
+  .player-face-37 {
+    background-position: -182px -347px;
+  }
+  
+  .player-face-38 {
+    background-position: -356px -347px;
+  }
+  
+  .player-face-39 {
+    background-position: -530px -347px;
+  }
+  
+  .player-face-40 {
+    background-position: -704px -347px;
+  }
+  .player-face-41 {
+    background-position: -878px -347px;
+  }
+  
+  .player-face-42 {
+    background-position: -1052px -347px;
+  }
+  
+  .player-face-43 {
+    background-position: -8px -415px;
+  }
+  
+  .player-face-44 {
+    background-position: -182px -415px;
+  }
+  
+  .player-face-45 {
+    background-position: -356px -415px;
+  }
+  
+  .player-face-46 {
+    background-position: -530px -415px;
+  }
+  
+  .player-face-47 {
+    background-position: -704px -415px;
+  }
+  
+  .player-face-48 {
+    background-position: -878px -415px;
+  }
+  
+  .player-face-49 {
+    background-position: -1052px -415px;
+  }
+  
+  .player-face-50 {
+    background-position: -8px -483px;
+  }
+  
+  .player-face-51 {
+    background-position: -182px -483px;
+  }
+  
+  .player-face-52 {
+    background-position: -356px -483px;
+  }
+  
+  .player-face-53 {
+    background-position: -530px -483px;
+  }
+  
+  .player-face-54 {
+    background-position: -704px -483px;
+  }
+  
+  .player-face-55 {
+    background-position: -878px -483px;
+  }
+  
+  .player-face-56 {
+    background-position: -1052px -483px;
+  }
+  
+  .player-face-57 {
+    background-position: -8px -552px;
+  }
+  
+  .player-face-58 {
+    background-position: -182px -552px;
+  }
+  
+  .player-face-59 {
+    background-position: -356px -552px;
+  }
+  
+  .player-face-60 {
+    background-position: -530px -552px;
+  }
+  
+  .player-face-61 {
+    background-position: -704px -552px;
+  }
+  
+  .player-face-62 {
+    background-position: -878px -552px;
+  }
+  
+  .player-face-63 {
+    background-position: -1052px -552px;
+  }
+  
+  .player-face-64 {
+    background-position: -8px -620px;
+  }
+  
+  .player-face-65 {
+    background-position: -182px -620px;
+  }
+  
+  .player-face-66 {
+    background-position: -356px -620px;
+  }
+  
+  .player-face-67 {
+    background-position: -530px -620px;
+  }
+  
+  .player-face-68 {
+    background-position: -704px -620px;
+  }
+  
+  .player-face-69 {
+    background-position: -878px -620px;
+  }
+  
+  .player-face-70 {
+    background-position: -1052px -620px;
+  }
+  
+  .player-face-71 {
+    background-position: -8px -689px;
+  }
+  
+  .player-face-72 {
+    background-position: -182px -689px;
+  }
+  
+  .player-face-73 {
+    background-position: -356px -689px;
+  }
+  
+  .player-face-74 {
+    background-position: -530px -689px;
+  }
+  
+  .player-face-75 {
+    background-position: -704px -689px;
+  }
+  
+  .player-face-76 {
+    background-position: -878px -689px;
+  }
+  
+  .player-face-77 {
+    background-position: -1052px -689px;
+  }
+  
+  .player-face-78 {
+    background-position: -8px -759px;
+  }
+  
+  .player-face-79 {
+    background-position: -182px -759px;
+  }
+  
+  .player-face-80 {
+    background-position: -356px -759px;
+  }
+  
+  .player-face-81 {
+    background-position: -530px -759px;
+  }
+  
+  .player-face-82 {
+    background-position: -704px -759px;
+  }
+  
+  .player-face-83 {
+    background-position: -878px -759px;
+  }
+  
+  .player-face-84 {
+    background-position: -1052px -759px;
+  }
+  
+  .player-face-85 {
+    background-position: -8px -827px;
+  }
+  
+  .player-face-86 {
+    background-position: -182px -827px;
+  }
+  
+  .player-face-87 {
+    background-position: -356px -827px;
+  }
+  
+  .player-face-88 {
+    background-position: -530px -827px;
+  }
+  
+  .player-face-89 {
+    background-position: -704px -827px;
+  }
+  
+  .player-face-90 {
+    background-position: -878px -827px;
+  }
+  
+  .player-face-91 {
+    background-position: -1052px -827px;
+  }
+  
+  .player-face-92 {
+    background-position: -8px -894px;
+  }
+  
+  .player-face-93 {
+    background-position: -182px -894px;
+  }
+  
+  .player-face-94 {
+    background-position: -356px -894px;
+  }
+  
+  .player-face-95 {
+    background-position: -530px -894px;
+  }
+  
+  .player-face-96 {
+    background-position: -704px -894px;
+  }
+  
+  .player-face-97 {
+    background-position: -878px -894px;
+  }
+  
+  .player-face-98 {
+    background-position: -1052px -894px;
+  }
+  
+  .player-face-99 {
+    background-position: -8px -962px;
+  }
+  
+  .player-face-100 {
+    background-position: -182px -962px;
+  }
+  .player-face-101 {
+    background-position: -356px -962px;
+  }
+  
+  .player-face-102 {
+    background-position: -530px -962px;
+  }
+  
+  .player-face-103 {
+    background-position: -704px -962px;
+  }
+  
+  .player-face-104 {
+    background-position: -878px -962px;
+  }
+  
+  .player-face-105 {
+    background-position: -1052px -962px;
+  }
+  
+  .player-face-106 {
+    background-position: -8px -1030px;
+  }
+  
+  .player-face-107 {
+    background-position: -182px -1030px;
+  }
+  
+  .player-face-108 {
+    background-position: -356px -1030px;
+  }
+  
+  .player-face-109 {
+    background-position: -530px -1030px;
+  }
+  
+  .player-face-110 {
+    background-position: -704px -1030px;
+  }
+  
+  .player-face-111 {
+    background-position: -878px -1030px;
+  }
+  
+  .player-face-112 {
+    background-position: -1052px -1030px;
+  }
+  
+  .player-face-113 {
+    background-position: -8px -1098px;
+  }
+  
+  .player-face-114 {
+    background-position: -182px -1098px;
+  }
+  
+  .player-face-115 {
+    background-position: -356px -1098px;
+  }
+  
+  .player-face-116 {
+    background-position: -530px -1098px;
+  }
+  
+  .player-face-117 {
+    background-position: -704px -1098px;
+  }
+  
+  .player-face-118 {
+    background-position: -878px -1098px;
+  }
+  
+  .player-face-119 {
+    background-position: -1052px -1098px;
+  }
+  
+  .player-face-120 {
+    background-position: -8px -1166px;
+  }
+  
+  .player-face-121 {
+    background-position: -182px -1166px;
+  }
+  
+  .player-face-122 {
+    background-position: -356px -1166px;
+  }
+  
+  .player-face-123 {
+    background-position: -530px -1166px;
+  }
+  
+  .player-face-124 {
+    background-position: -704px -1166px;
+  }
+  
+  .player-face-125 {
+    background-position: -878px -1166px;
+  }
+  
+  .player-face-126 {
+    background-position: -1052px -1166px;
+  }
+  
+  .player-face-127 {
+    background-position: -8px -1234px;
+  }
+  
+  .player-face-128 {
+    background-position: -182px -1234px;
+  }
+  
+  .player-face-129 {
+    background-position: -356px -1234px;
+  }
+  
+  .player-face-130 {
+    background-position: -530px -1234px;
+  }
+  
+  .player-face-131 {
+    background-position: -704px -1234px;
+  }
+  
+  .player-face-132 {
+    background-position: -878px -1234px;
+  }
+  
+  .player-face-133 {
+    background-position: -1052px -1234px;
+  }
+  
+  .player-face-134 {
+    background-position: -8px -1302px;
+  }
+  
+  .player-face-135 {
+    background-position: -182px -1302px;
+  }
+  
+  .player-face-136 {
+    background-position: -356px -1302px;
+  }
+  
+  .player-face-137 {
+    background-position: -530px -1302px;
+  }
+  
+  .player-face-138 {
+    background-position: -704px -1302px;
+  }
+  
+  .player-face-139 {
+    background-position: -878px -1302px;
+  }
+  
+  .player-face-140 {
+    background-position: -1052px -1302px;
+  }
+  
+  .player-face-141 {
+    background-position: -8px -1370px;
+  }
+  
+  .player-face-142 {
+    background-position: -182px -1370px;
+  }
+  
+  .player-face-143 {
+    background-position: -356px -1370px;
+  }
+  
+  .player-face-144 {
+    background-position: -530px -1370px;
+  }
+  
+  .player-face-145 {
+    background-position: -704px -1370px;
+  }
+  
+  .player-face-146 {
+    background-position: -878px -1370px;
+  }
+  
+  .player-face-147 {
+    background-position: -1052px -1370px;
+  }
+  
+  .player-face-148 {
+    background-position: -8px -1438px;
+  }
+  
+  .player-face-149 {
+    background-position: -182px -1438px;
+  }
+  
+  .player-face-150 {
+    background-position: -356px -1438px;
+  }
+  
+  .player-face-151 {
+    background-position: -530px -1438px;
+  }
+  
+  .player-face-152 {
+    background-position: -704px -1438px;
+  }
+  
+  .player-face-153 {
+    background-position: -878px -1438px;
+  }
+  
+  .player-face-154 {
+    background-position: -1052px -1438px;
+  }
+  
+  .player-face-155 {
+    background-position: -8px -1506px;
+  }
+  
+  .player-face-156 {
+    background-position: -182px -1506px;
+  }
+  
+  .player-face-157 {
+    background-position: -356px -1506px;
+  }
+  
+  .player-face-158 {
+    background-position: -530px -1506px;
+  }
+  
+  .player-face-159 {
+    background-position: -704px -1506px;
+  }
+  
+  .player-face-160 {
+    background-position: -878px -1506px;
+  }
+  
+  .player-face-161 {
+    background-position: -1052px -1506px;
+  }
+  
+  .player-face-162 {
+    background-position: -8px -1577px;
+  }
+  
+  .player-face-163 {
+    background-position: -182px -1577px;
+  }
+  
+  .player-face-164 {
+    background-position: -356px -1577px;
+  }
+  
+  .player-face-165 {
+    background-position: -530px -1616px;
+  }
+  
+  .player-face-166 {
+    background-position: -704px -1616px;
+  }
+  
+  .player-face-167 {
+    background-position: -878px -1616px;
+  }
+  
+  .player-face-168 {
+    background-position: -1052px -1616px;
+  }

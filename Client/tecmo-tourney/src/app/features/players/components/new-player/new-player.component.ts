@@ -5,9 +5,10 @@ import { PlayersService } from 'src/app/core/services/players.service';
 import { MessageComponent } from 'src/app/shared/components/message/message.component';
 
 @Component({
-  selector: 'app-new-player',
-  templateUrl: './new-player.component.html',
-  styleUrls: ['./new-player.component.less']
+    selector: 'app-new-player',
+    templateUrl: './new-player.component.html',
+    styleUrls: ['./new-player.component.less'],
+    standalone: false
 })
 export class NewPlayerComponent implements OnInit {
 	@Output() newPlayerCreated: EventEmitter<void> = new EventEmitter();

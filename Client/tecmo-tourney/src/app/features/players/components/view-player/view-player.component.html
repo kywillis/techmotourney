@@ -1,0 +1,132 @@
+<div *ngIf="!loading">
+    <div *ngIf="!player">Player not found</div>
+    <div *ngIf="player">        
+        <div class="row statsTop">
+            <div class="col-2"><div class="player-face player-face-{{player!.profilePic}}"></div></div>
+            <div class="col-9">
+                <div class="row stats">
+                    <div class="col-4">
+                        <div *ngIf="player" class="playerName">{{player!.fullName}}</div>
+                        <div>Condition: <span class=""></span>{{condition}}</div>
+                        <div>
+                            <div class="statsYearSelectionLabel">Showing Stats For: </div>
+                            <select [(ngModel)]="selectedTournamentId" (change)="onTournamentChange()">
+                                <option selected="selected" value="-1">All Tournaments</option>
+                                <option *ngFor="let tournament of tournaments" [value]="tournament.tournamentId">
+                                  {{ tournament.name }}
+                                </option>
+                              </select>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div><span class="statLabel" style="margin-right:15px;">REC:</span><span>{{record}}</span></div>
+                        <div><span class="statLabel">AVG RUSH YDS:</span> {{avgRushYards}}</div>
+                        <div><span class="statLabel">AVG PASS YDS:</span> {{avgPassYards}}</div>
+                    </div>
+                    <div class="col-4">
+                        <div>&nbsp;</div>
+                        <div><span class="statLabel">AVG PT FOR:</span> {{avgPtsFor}}</div>
+                        <div><span class="statLabel">AVG PT AGAINST:</span> {{avgPtsAgsint}}</div>
+                    </div>
+                </div>  
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-2"></div>
+            <div class="col-8">{{player!.profile}}</div>
+            <div class="col-2"></div>
+        </div>        
+        <app-section-header text="Matchups & Teams"></app-section-header>
+        <div class="row section">
+            <div class="col-6">
+                <span class="statsHeader">Best matchups</span>
+                <table class="fullTable">
+                    <thead>
+                        <tr>
+                            <th class="margin">Opponent</th>
+                            <th>Record</th>
+                            <th>Avg Dif</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let matchup of bestMatchups">
+                            <td><span class="link" (click)="showStatDetails(matchup.opponentId, playerStatDetailsType.Opponent, matchup.opponentName)">{{matchup.opponentName}}</span></td>
+                            <td>{{matchup.wins}} - {{matchup.losses}} </td>
+                            <td>{{matchup.avgDiff}}</td>
+                        </tr>
+                        <tr *ngIf="!tournamentId">
+                            <td colspan="3" class="note">min {{minMatchupsThreshold}} matchups</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-6">
+                <span class="statsHeader">Worst matchup</span>
+                <table class="fullTable">
+                    <thead>
+                        <tr>
+                            <th class="margin">Opponent</th>
+                            <th>Record</th>
+                            <th>Avg Dif</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let matchup of worstMatchups">
+                            <td><span class="link" (click)="showStatDetails(matchup.opponentId, playerStatDetailsType.Opponent, matchup.opponentName)">{{matchup.opponentName}}</span></td>
+                            <td>{{matchup.wins}} - {{matchup.losses}} </td>
+                            <td>{{matchup.avgDiff}}</td>
+                        </tr>
+                        <tr *ngIf="!tournamentId">
+                            <td colspan="3" class="note">min {{minMatchupsThreshold}} matchups</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row section">
+            <div class="col-6">
+                <span class="statsHeader">Teams Played With</span>
+                <table class="fullTable">
+                    <thead>
+                        <tr>
+                            <th class="margin">Team</th>
+                            <th>Record</th>
+                            <th>Avg Dif</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let matchup of teamPlayedWith">
+                            <td><span class="link" (click)="showStatDetails(matchup.teamId, playerStatDetailsType.TeamPlayedWith, matchup.teamName)">{{matchup.teamName}}</span></td>
+                            <td>{{matchup.wins}} - {{matchup.losses}} </td>
+                            <td>{{matchup.avgDiff}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-6">
+                <span class="statsHeader">Teams Played Against</span>
+                <table class="fullTable">
+                    <thead>
+                        <tr>
+                            <th class="margin">Team</th>
+                            <th>Record</th>
+                            <th>Avg Dif</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let matchup of teamPlayedAgainst">
+                            <td> <span class="link" (click)="showStatDetails(matchup.teamId, playerStatDetailsType.TeamPlayedAgainst, matchup.teamName)">{{matchup.teamName}}</span></td>
+                            <td>{{matchup.wins}} - {{matchup.losses}} </td>
+                            <td>{{matchup.avgDiff}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <app-modal #resultsModal title="{{modalTitle}}">
+            <div *ngFor="let game of filteredresults" class="resultCnt">
+                <app-view-game-result [playerIdSpotLight]="player.playerId" [showControls]="false" [showDatePlayed]="true" [showStatus]="false"  [gameResult]="game"></app-view-game-result>
+            </div>
+        </app-modal>
+    </div>
+</div>

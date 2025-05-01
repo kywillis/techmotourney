@@ -26,3 +26,24 @@ export enum PrelimTieBreaker {
     RushingYardsAllowed = "RushingYardsAllowed",
     CoinFlip = "CoinFlip"
   }
+
+  export enum StatType {
+    Games = 'Games',
+    HighestScore = 'Highest Score',
+    TotalOffensiveYards = 'Total Offensive Yards',
+    TopPassingYards = 'Top Passing Yards',
+    TopRushingYards = 'Top Rushing Yards',
+    FewestPointsAllowed = 'Fewest Points Allowed'
+  }
+
+  export enum BracketLocation {
+    Winners = 'winners',
+    Losers = 'losers',
+    Champinship = 'champinship'
+  }
+
+  export enum PlayerStatDetailsType{
+    TeamPlayedWith = 1,
+    TeamPlayedAgainst = 2,
+    Opponent = 3,
+  }

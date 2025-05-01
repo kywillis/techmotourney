@@ -3,7 +3,8 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: 'enumFriendlyName',
+    name: 'enumFriendlyName',
+    standalone: false
 })
 export class EnumFriendlyNamePipe implements PipeTransform {
     transform(value: string): string {

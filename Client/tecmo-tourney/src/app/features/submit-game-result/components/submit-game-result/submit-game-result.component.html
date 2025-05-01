@@ -1,0 +1,8 @@
+
+@if(!gameSaved)
+{
+    <app-edit-game-result #createGameResult (gameResultSaved)="gameResultSaved()" [gameResults]="gameResults" [tournamentId]="tournamentId"></app-edit-game-result>
+}
+@else{
+    <h3>Game Saved</h3>
+}

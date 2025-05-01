@@ -1,9 +1,10 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 
 @Component({
-  selector: 'app-message',
-  templateUrl: './message.component.html',
-  styleUrl: './message.component.less'
+    selector: 'app-message',
+    templateUrl: './message.component.html',
+    styleUrl: './message.component.less',
+    standalone: false
 })
 export class MessageComponent {
   private _message: string = '';

@@ -4,9 +4,10 @@ import { ResultsService } from 'src/app/core/services/results.service';
 import { MessageComponent } from 'src/app/shared/components/message/message.component';
 
 @Component({
-  selector: 'app-delete-game-result',
-  templateUrl: './delete-game-result.component.html',
-  styleUrl: './delete-game-result.component.less'
+    selector: 'app-delete-game-result',
+    templateUrl: './delete-game-result.component.html',
+    styleUrl: './delete-game-result.component.less',
+    standalone: false
 })
 export class DeleteGameResultComponent {
   @ViewChild("message") messageComponent!: MessageComponent;

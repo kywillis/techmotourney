@@ -1,24 +1,26 @@
-import { Component, OnInit, EventEmitter, Output, ViewChild } from '@angular/core';
-import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Component, OnInit, EventEmitter, Output, ViewChild, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ResultsService } from 'src/app/core/services/results.service';
+import { forkJoin } from 'rxjs';
 import { PlayersService } from 'src/app/core/services/players.service';
 import { GameTeamsService } from 'src/app/core/services/gameTeams.service';
 import { IPlayer } from 'src/app/core/models/player.model';
 import { IGameResult } from 'src/app/core/models/gameResult.model';
 import { ISaveGameResultRequest } from 'src/app/core/models/request/saveGameResultRequest.model';
-//import { IGameResultStatsModel } from 'src/app/core/models/gameResultStats.model';
 import { GameStatus, GameType } from 'src/app/enums';
-import { forkJoin } from 'rxjs';
 import { MessageComponent } from '../message/message.component';
 import { IGameResultPlayer } from 'src/app/core/models/gameResultPlayer.model';
 
 @Component({
-  selector: 'app-edit-game-result',
-  templateUrl: './edit-game-result.component.html',
-  styleUrls: ['./edit-game-result.component.less']
+    selector: 'app-edit-game-result',
+    templateUrl: './edit-game-result.component.html',
+    styleUrls: ['./edit-game-result.component.less'],
+    standalone: false
 })
 export class EditGameResultComponent implements OnInit {
   @Output() gameResultSaved: EventEmitter<void> = new EventEmitter();
+  @Input() gameResults : IGameResult[] = [];
+  @Input() tournamentId : number = 0;
   @ViewChild("message") messageComponent!: MessageComponent;
   
   gameResult? : IGameResult;
@@ -50,21 +52,28 @@ export class EditGameResultComponent implements OnInit {
         rushingYards: [null, Validators.required],
       }),
       tournamentId: [null, Validators.required],
-      bracketGameId: [null, Validators.required],
       status: [null, Validators.required],
       gameType: [null, Validators.required]
     }, { validators: [this.playersTeamsValidator()] });
   }
 
   ngOnInit() {
-    this.gameTeamsService.getAll().subscribe({
-      next: (teams) => {
+    forkJoin({
+      teams: this.gameTeamsService.getAll()
+    }).subscribe(({teams}) => {      
+        teams.sort((a, b) => a.teamName.localeCompare(b.teamName));
         this.teams = teams;
-      },
-      error: (error) => {
-        console.error('Error loading teams', error);
-      }
     });
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['gameResults'] && this.gameResults.length) {
+      this.setGame(this.gameResults[0], this.players);
+    }
+
+    if (changes['tournamentId']) {
+      this.loadPlayers();
+    }
   }
 
   playersTeamsValidator() {
@@ -98,8 +107,7 @@ export class EditGameResultComponent implements OnInit {
       player2: this.createPlayerStats(formValues.player2),
       tournamentId: formValues.tournamentId,
       status: formValues.status,
-      gameType: formValues.gameType,
-      bracketGameId: formValues.bracketGameId
+      gameType: formValues.gameType
     };
 
     this.resultsService.createResult(request).subscribe(
@@ -135,20 +143,40 @@ export class EditGameResultComponent implements OnInit {
     return team ? team.name : '';
   }
 
-  setGame(gameResult: IGameResult, players: IPlayer[]) : void{
+  loadPlayers(){
+    players: this.playersService.getPlayers(this.tournamentId).subscribe((players)=>{
+      players.sort((a, b) => a.fullName.localeCompare(b.fullName));
+        this.players = players;
+    });
+
+  }
+
+  setGame(gameResult: IGameResult, players: IPlayer[]): void {
     this.gameResult = gameResult;
-    players.sort((a, b) => a.fullName.localeCompare(b.fullName, undefined, { sensitivity: 'base' }));
+    
+    if(gameResult.player1){
+      const team1 = this.teams.find(t => t.teamName === gameResult.player1.teamName);
+      this.gameResult.player1.gameTeamId = team1 ? team1.gameTeamId : null;
+    }
+    
+    if(gameResult.player2){
+      const team2 = this.teams.find(t => t.teamName === gameResult.player2.teamName);
+      this.gameResult.player2.gameTeamId = team2 ? team2.gameTeamId : null;
+    }
+    
+    players.sort((a, b) =>
+      a.fullName.localeCompare(b.fullName, undefined, { sensitivity: 'base' })
+    );
     this.players = players;
     this.gameResultForm.reset();
-
-  this.gameResultForm.patchValue({
-    player1: this.getPlayerFormValues(gameResult.player1),
-    player2: this.getPlayerFormValues(gameResult.player2),
-    tournamentId: gameResult.tournamentId,
-    bracketGameId: gameResult.bracketGameId,
-    status: gameResult.status,
-    gameType: gameResult.gameType
-  });
+  
+    this.gameResultForm.patchValue({
+      player1: this.getPlayerFormValues(this.gameResult.player1),
+      player2: this.getPlayerFormValues(this.gameResult.player2),
+      tournamentId: this.gameResult.tournamentId,
+      status: this.gameResult.status,
+      gameType: this.gameResult.gameType
+    });
   }
 
   get player1Controls() {

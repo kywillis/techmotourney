@@ -18,5 +18,6 @@
         public int GameTypeId { get; set; }
         public bool IsDeleted { get; set; }
         public int? BracketGameId { get; set; }
+        public DateTime DateAdded { get; set; }
     }
 }

@@ -36,13 +36,25 @@ namespace TecmoTourney.Controllers
         /// <summary>
         /// Get all players
         /// </summary>
-        /// <param name="tournamentId">Tournament ID</param>
         /// <returns>List of players</returns>
         [HttpGet()]
         [ProducesResponseType(200, Type = typeof(List<PlayerModel>))]
         public async Task<IActionResult> GetAllPlayers()
         {
             var result = await _playerOrchestration.GetAllPlayersAsync();
+            return result.ToActionResult();
+        }
+
+        /// <summary>
+        /// Get all player summeries
+        /// </summary>
+        /// <param name="tournamentId">Tournament ID</param>
+        /// <returns>List of player summaries</returns>
+        [HttpGet("summaries")]
+        [ProducesResponseType(200, Type = typeof(List<PlayerSummaryModel>))]
+        public async Task<IActionResult> GetAllPlayerSummaries()
+        {
+            var result = await _playerOrchestration.GetAllPlayersSummariesAsync();
             return result.ToActionResult();
         }
 

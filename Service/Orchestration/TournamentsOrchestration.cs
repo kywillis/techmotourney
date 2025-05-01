@@ -23,14 +23,18 @@ namespace TecmoTourney.Orchestration
         private readonly IPlayerDAO _playerDAO;
         private readonly IMapper _mapper;
         private readonly IGameResultDAO _gameResultDAO;
+        private readonly IPointSpreadDAO _pointSpreadDAOcs;
 
-        public TournamentsOrchestration(ITournamentsDAO tournamentsDAO, IPlayerTournamentDAO playerTournamentDAO, IGameResultDAO gameResultDAO, IPlayerDAO playerDAO, IMapper mapper)
+        private List<PointSpread> _existingPointSpeads = new List<PointSpread>() { };
+
+        public TournamentsOrchestration(ITournamentsDAO tournamentsDAO, IPlayerTournamentDAO playerTournamentDAO, IGameResultDAO gameResultDAO, IPlayerDAO playerDAO, IMapper mapper, IPointSpreadDAO pointSpreadDAOcs)
         {
             _gameResultDAO = gameResultDAO;
             _playerTournamentDAO = playerTournamentDAO;
             _tournamentsDAO = tournamentsDAO;
             _playerDAO = playerDAO;
             _mapper = mapper;
+            _pointSpreadDAOcs = pointSpreadDAOcs;
         }
 
         public async Task<Operation<List<TournamentModel>, ApiError>> ListAllAsync() 
@@ -70,6 +74,27 @@ namespace TecmoTourney.Orchestration
             }
         }
 
+        /// <summary>
+        /// returns the first active tournament found, there should only be one
+        /// </summary>
+        /// <returns></returns>
+        public async Task<Operation<TournamentModel, ApiError>> GetActive()
+        {
+            try
+            {
+                var all = await _tournamentsDAO.ListAllAsync();
+                var active = all.FirstOrDefault(t => t.StatusId != (int)TournamentStatus.Deleted || t.StatusId != (int)TournamentStatus.Completed);
+                if(active == null)
+                    return new ApiError("no in progress tournament found", HttpStatusCode.BadRequest);
+
+                return _mapper.Map<TournamentModel>(active);
+            }
+            catch (Exception e)
+            {
+                return new ApiError($"error getting getting active tournament {e.ToString()}", HttpStatusCode.InternalServerError);
+            }
+        }
+
         public async Task<Operation<TournamentModel, ApiError>> GetById(int tournamentId)
         {
             try
@@ -95,7 +120,7 @@ namespace TecmoTourney.Orchestration
                 foreach (var player in existingPlayers)
                 {
                     if (!tournament.PlayerIds.Contains(player.PlayerId))
-                        await _playerTournamentDAO.DeleteByPlayerAndTournamentIdAsync(tournamentId, player.PlayerId);
+                        await _playerTournamentDAO.DeleteByPlayerAndTournamentIdAsync(player.PlayerId, tournamentId);
                 }
 
                 foreach (var playerId in tournament.PlayerIds)
@@ -129,6 +154,7 @@ namespace TecmoTourney.Orchestration
         {
             try
             {
+                var temp = generateMissingPointSpeads(bracketData);
                 var existingTournament = await _tournamentsDAO.GetById(tournamentId);
                 if (existingTournament == null)
                     return new ApiError($"no tournament with id {tournamentId} found", HttpStatusCode.BadRequest);
@@ -199,21 +225,12 @@ namespace TecmoTourney.Orchestration
                     team1.PlayerId = standing.PlayerId;
                     team1.Player = standing.PlayerName;
 
-                    if (bracketMatchups.Count > 1)
+                    if (bracketMatchups.Count > 1 && bracketMatchups[1] != null)
                     {
                         var team2 = bracketMatchups[1]!;
                         standing = standings.First(s => s.Seed == team2.Seed);
                         team2.PlayerId = standing.PlayerId;
                         team2.Player = standing.PlayerName;
-                        var newGame = new GameResultDAOModel() { 
-                                        GameTypeId = (int)GameType.Tournament,
-                                        Player1Id = team1.PlayerId,
-                                        Player2Id = team2.PlayerId,
-                                        StatusId = (int)GameStatus.Waiting,
-                                        TournamentId = tournament.TournamentId
-                                    };
-                        newGame = await _gameResultDAO.CreateGameResultAsync(newGame);
-                        team2.GameId = team1.GameId = newGame.GameResultId;
                     }
                 }
                 
@@ -260,7 +277,7 @@ namespace TecmoTourney.Orchestration
                         Wins = GameUtils.GetPlayerStat(prelimGames, player.PlayerId, GameStat.Wins),
                         Loses = GameUtils.GetPlayerStat(prelimGames, player.PlayerId, GameStat.Losses),
                         TournamentId = tournamentId,
-                        Seed = seed++
+                        Seed = 0
                     });
                 }
 
@@ -288,6 +305,11 @@ namespace TecmoTourney.Orchestration
                             previousStanding.PreliminariesTieBreakerUsed = tieBreakerUsed;
                         }
                     }
+                }
+                
+                for (int i = 1; i <= standings.Count; i++)
+                {
+                    standings[i-1].Seed = i;
                 }
                 return standings.ToList();
             }
@@ -440,5 +462,54 @@ namespace TecmoTourney.Orchestration
                 return new ApiError($"error setting up tournament preliminaries: {e.ToString()}", HttpStatusCode.InternalServerError);
             }
         }
+
+        private IEnumerable<PointSpread> generateMissingPointSpeads(string rawBracketData)
+        {
+            List<PointSpread> pointSpreads = new List<PointSpread>();
+            var bracketData = JsonConvert.DeserializeObject<TournamentBracketModel>(rawBracketData);
+            return pointSpreads;
+        }
+
+        public async Task<Operation<bool, ApiError>> Reset(int tournamentId, ResetTournamentRequestModel request)
+        {
+            try
+            {
+                if (!request.Password.Equals("Browns98"))
+                    return new ApiError("reset password incorrect", HttpStatusCode.Forbidden);
+
+                if (tournamentId != request.TournamentId)
+                    return new ApiError("tournament ids in request do not match", HttpStatusCode.BadRequest);
+
+                var tournament = await _tournamentsDAO.GetById(tournamentId);
+                if (tournament == null)
+                    return new ApiError($"no tournament found with id {tournamentId}", HttpStatusCode.BadRequest);
+
+                await _tournamentsDAO.UpdateTournamentStatusAsync(tournamentId, (int)TournamentStatus.Waiting);
+                await _tournamentsDAO.UpdateTournamentBracketDataAsync(tournamentId, string.Empty);
+
+                var games = await _gameResultDAO.ListResultsByTournamentAsync(tournamentId);
+                foreach (var game in games)
+                {
+                    game.IsDeleted = true;
+                    await _gameResultDAO.UpdateGameResultAsync(game.GameResultId, game);
+                }
+
+                await _pointSpreadDAOcs.DeleteByTournamentIdAsync(tournamentId);
+                return true;
+            }
+            catch (Exception e)
+            {
+                return new ApiError( $"error resetting tournament: {e.Message}", HttpStatusCode.InternalServerError);;
+            }
+        }
+    }
+
+    public class PointSpread
+    {
+        public int Player1ID { get; set; }
+        public int Player2ID { get; set; }
+        public int TournamentId { get; set; }
+        public int BracketLocation { get; set; }
+        public bool InProgress { get; set; }
     }
 }

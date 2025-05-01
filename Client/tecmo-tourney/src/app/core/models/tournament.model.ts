@@ -5,7 +5,8 @@ export interface ITournament {
     name: string;
     location: string;
     status: TournamentStatus;
-    startDate: string;
-    endDate: string;
-    tournamentBracket: any;
+    startDate: Date;
+    endDate: Date;
+    bracketData: any;
+    bracketImage: string;
   }

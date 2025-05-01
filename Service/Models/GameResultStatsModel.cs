@@ -8,7 +8,7 @@ namespace TecmoTourney.Models
         public string PlayerName { get; set; } = string.Empty;
         public int? GameTeamId { get; set; }
         public int? BracketGameId { get; set; }
-        public string GameTeam { get; set; } = string.Empty ;
+        public string TeamName { get; set; } = string.Empty ;
         public int Score { get; set; }
         public int PassingYards { get; set; }
         public int RushingYards { get; set; }

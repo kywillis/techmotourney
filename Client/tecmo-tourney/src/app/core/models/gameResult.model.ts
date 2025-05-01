@@ -8,6 +8,5 @@ export interface IGameResult {
     player2: IGameResultPlayer;
     date: Date;
     status: GameStatus;
-    gameType: GameType;
-    bracketGameId: number | null;
+    gameType: GameType
   }

@@ -1,49 +1,53 @@
 
+<app-section-header text="Tournaments"></app-section-header>
 <div *ngIf="loading" class="text-center">
     <div class="spinner-border" role="status">
         <span class="sr-only"></span>
     </div>
 </div>
-<div class="row">
-    <div class="col-10"></div>
-    <div class="col-2">
-        <button class="btn btn-primary" (click)="openNewTournament()">
-            <a class="dark" >New <i class="bi bi-plus"></i></a>
-        </button>
-    </div>
-</div>
 <div *ngIf="!loading">
-    <table class="table table-dark thead-light table-striped players">
+    <div class="row">
+        <div class="col-8"></div>
+        <div class="col-4" style="text-align:right;">        
+            <div *ngIf="loggedin()" class="btn btn-primary" (click)="openNewTournament()">New Tournament</div>
+        </div>
+    </div>
+    <table class="stats-table players">
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Status</th>
-                <th>Start Date</th>
-                <th></th>
+                <th style="width: 40%;">Name</th>
+                <th>Date</th>
                 <th></th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
             <tr *ngFor="let tournament of tournaments">
-                <td class="name">{{tournament.name}}</td>
-                <td class="status">{{tournament.status}}</td>
-                <td class="date">{{tournament.startDate}}</td>
-                <td class="view">
-                    <button class="btn btn-primary">
-                        <a class="dark" [routerLink]="['/tournaments', tournament.tournamentId]">Go <i
-                                class="bi bi-arrow-right"></i></a>
-                    </button>
+                <td class="name"><span class="link" (click)="goToTournament(tournament.tournamentId)">{{tournament.name}}</span></td>
+                <td class="date">{{tournament.startDate | date:'M/d/yy' }}</td>
+                <td class="edit">
+                    <span *ngIf="loggedin()" class="link" (click)="openEditTournament(tournament)">Edit</span>
                 </td>
-                <td class="edit"><button class="btn btn-primary" (click)="openEditTournament(tournament)">
-                    <a class="dark" >Edit <i class="bi bi-pen"></i></a>
-                </button></td>
-                <td class="delete"><button class="btn btn-primary" (click)="openDeleteTournament(tournament)">
-                    <a class="dark" >Delete <i class="bi bi-trash"></i></a>
-                </button></td>
+                <td class="delete">
+                    <span *ngIf="loggedin()" class="link" (click)="openDeleteTournament(tournament)">Delete </span>
+                </td>
             </tr>
         </tbody>
     </table>
+    <div class="adminCnt">
+        <span *ngIf="!showAdmin" (click)="toggleLogin()">Show</span>
+        <span *ngIf="showAdmin" (click)="toggleLogin()">Hide</span>
+        <div *ngIf="showAdmin">
+            <div *ngIf="!loggedin()">
+                <input type="text" [(ngModel)]="password" />
+                <button class="btn btn-main" (click)="login()">Go</button>
+                <div *ngIf="loginResult != ''">{{loginResult}}</div>
+            </div>
+            <div *ngIf="loggedin()">
+                <button class="btn btn-main" (click)="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
 </div>
 <app-modal #deleteTournamentModal title="Delete Tournament">
     <app-delete-tournament #deleteTournament (tournamentDeleted)="tournamentDeleted()"></app-delete-tournament>

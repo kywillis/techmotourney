@@ -6,7 +6,7 @@ namespace TecmoTourney.DataAccess.Interfaces
 {
     public interface IPlayerDAO
     {
-        Task<IEnumerable<PlayerDAOModel>> ListPlayersAsync(int? tourneyId = null);
+        Task<IEnumerable<PlayerDAOModel>> ListPlayersAsync(int? tourneyId = null, bool includeDeleted = false);
         Task<PlayerDAOModel?> GetPlayerAsync(int id);
         Task<PlayerDAOModel> AddPlayerAsync(PlayerDAOModel player);
         Task<PlayerDAOModel> UpdatePlayerAsync(int id, PlayerDAOModel player);

@@ -13,7 +13,7 @@ namespace TecmoTourney.DataAccess.Interfaces
         Task<IEnumerable<GameResultDAOModel>> ListResultsByTournamentAsync(int tourneyId, bool includeDeledted = false);
         Task<IEnumerable<GameResultDAOModel>> ListResultsByBracketGameIDsAsync(IEnumerable<int> bracketGameIds);
 
-        Task<IEnumerable<GameResultDAOModel>> SearchAsync(int tournamentId, int? player1Id, int? player2Id);
+        Task<IEnumerable<GameResultDAOModel>> SearchAsync(int? tournamentId, int? player1Id, int? player2Id);
         Task UpdateGameResultAsync(int gameResultId, GameResultDAOModel gameResult);
     }
 }

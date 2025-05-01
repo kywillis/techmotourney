@@ -11,20 +11,31 @@ namespace TecmoTourney.DataAccess
     {
         public TournamentBracketUpdateDAO(ApplicationConfig config) : base(config) { }
 
-        public async Task<IEnumerable<TournamentBracketUpdateDAOModel>> GetByTournamentIdAsync(int tournamentId)
+        public async Task<IEnumerable<TournamentBracketUpdateDAOModel>> GetByTournamentIdAsync(int tournamentId, int statusId)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
                 var sql = @"SELECT p.* 
                             FROM TC_TournamentBracketUpdates p                            
-                            WHERE (TournamentID = @TournamentID)";
-                return await connection.QueryAsync<TournamentBracketUpdateDAOModel>(sql, new { tournamentId });
+                            WHERE (TournamentID = @TournamentID and statusId = @statusId)";
+                return await connection.QueryAsync<TournamentBracketUpdateDAOModel>(sql, new { tournamentId, statusId });
+            }
+        }
+
+        public async Task<TournamentBracketUpdateDAOModel?> GetByUpdateIdAsync(int tournamentBracketUpdateId)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = @"SELECT p.* 
+                            FROM TC_TournamentBracketUpdates p                            
+                            WHERE (TournamentBracketUpdateID = @tournamentBracketUpdateId)";
+                return await connection.QueryFirstOrDefaultAsync<TournamentBracketUpdateDAOModel>(sql, new { tournamentBracketUpdateId });
             }
         }
 
         public async Task<TournamentBracketUpdateDAOModel> Save(TournamentBracketUpdateDAOModel updateModel)
         {
-            if(updateModel.TournamentBracketUpdateId > 1)
+            if(updateModel.TournamentBracketUpdateId > 0)
                 return await update(updateModel);
             else 
                 return await insert(updateModel);
@@ -35,12 +46,12 @@ namespace TecmoTourney.DataAccess
             using (var connection = new SqlConnection(_connectionString))
             {
                 var sql = @"insert into TC_TournamentBracketUpdates 
-                        (TournamentID, BracketGameID, StatusID) 
+                        (TournamentID, GameResultId, StatusID) 
                             values 
-                        (@TournamentID, @BracketGameID, @StatusID)                    
+                        (@TournamentID, @GameResultId, @StatusID)                    
 
                         SELECT CAST(SCOPE_IDENTITY() as int) ";
-                var id = await connection.QuerySingleAsync<int>(sql, new { update.TournamentBracketUpdateId, update.TournamentId, update.BracketGameId, update.StatusID });
+                var id = await connection.ExecuteAsync(sql, new { update.TournamentBracketUpdateId, update.TournamentId, update.GameResultId, update.StatusID });
                 update.TournamentBracketUpdateId = id;
                 return update;
             }
@@ -51,11 +62,11 @@ namespace TecmoTourney.DataAccess
             {
                 var sql = @"Update TC_TournamentBracketUpdates set 
                     TournamentID = @TournamentID,
-                    BracketGameID = @BracketGameID,
+                    GameResultId = @GameResultId,
                     StatusID = @StatusID,
-                    DateUpdated = getDate(),
+                    DateUpdated = getDate()
                     WHERE TournamentBracketUpdateID = @TournamentBracketUpdateID";
-                await connection.QuerySingleAsync<int>(sql, new { update.TournamentBracketUpdateId, update.TournamentId, update.BracketGameId, update.StatusID });
+                await connection.ExecuteAsync(sql, new { update.TournamentBracketUpdateId, update.TournamentId, update.GameResultId, update.StatusID });
                 return update;
             }
         }

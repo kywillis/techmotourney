@@ -11,14 +11,16 @@ namespace TecmoTourney.DataAccess
     {
         public PlayerDAO(ApplicationConfig config) : base(config) { }
 
-        public async Task<IEnumerable<PlayerDAOModel>> ListPlayersAsync(int? tourneyId = null)
+        public async Task<IEnumerable<PlayerDAOModel>> ListPlayersAsync(int? tourneyId = null, bool includeDeleted = false)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var sql = @"SELECT p.* 
+                var includeDeletedValue = includeDeleted ? 1 : 0;
+                var sql = @$"SELECT distinct p.* 
                             FROM TC_Players p
                             Left Outer JOIN TC_PlayerTournaments pt ON p.PlayerId = pt.PlayerId
-                            WHERE (@TourneyId is null or pt.TournamentId = @TourneyId) and p.IsDeleted = 0";
+                            WHERE (@TourneyId is null or pt.TournamentId = @TourneyId) and 
+                            (p.IsDeleted = 0 or 1 = {includeDeletedValue})";
                 return await connection.QueryAsync<PlayerDAOModel>(sql, new { TourneyId = tourneyId });
             }
         }
@@ -50,7 +52,7 @@ namespace TecmoTourney.DataAccess
             {
                 var sql = "UPDATE TC_Players SET FullName = @FullName, EmailAddress = @EmailAddress, ProfilePic = @ProfilePic WHERE PlayerId = @Id";
 
-                if(string.IsNullOrEmpty(player.ProfilePic))
+                if(player.ProfilePic < 1)
                     sql = "UPDATE TC_Players SET FullName = @FullName, EmailAddress = @EmailAddress, ProfilePic = null WHERE PlayerId = @Id";
 
                 await connection.ExecuteAsync(sql, new { player.FullName, player.EmailAddress, player.ProfilePic, Id = id });

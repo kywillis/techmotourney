@@ -10,11 +10,14 @@ namespace TecmoTourney.Orchestration.Interfaces
     {
         Task<Operation<List<TournamentModel>, ApiError>> ListAllAsync();
         Task<Operation<TournamentModel, ApiError>> AddTournamentAsync(UpdateTournamentRequestModel tournament);
+        Task<Operation<TournamentModel, ApiError>> GetActive();
         Task<Operation<TournamentModel, ApiError>> GetById(int tournamentId);
         Task<Operation<TournamentModel, ApiError>> UpdateTournamentAsync(int tournamentId, UpdateTournamentRequestModel tournament);
         Task<Operation<bool, ApiError>> DeleteTournamentAsync(int tournamentId);
         Task<Operation<TournamentModel, ApiError>> ChangeStatusAsync(ChangeTournamentStatusRequest request);
         Task<Operation<TournamentModel, ApiError>> UpdateBracketDataAsync(int tournamentId, string bracketData);
         Task<Operation<List<TournamentStandingModel>, ApiError>> GetStandingsAsync(int tournamentId, TournamentStatus status);
+
+        Task<Operation<bool, ApiError>> Reset(int tournamentId, ResetTournamentRequestModel model);
     }
 }

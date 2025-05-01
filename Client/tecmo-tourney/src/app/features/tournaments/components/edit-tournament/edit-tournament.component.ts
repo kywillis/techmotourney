@@ -8,9 +8,10 @@ import { TournamentsService } from 'src/app/core/services/tournaments.service';
 import { MessageComponent } from 'src/app/shared/components/message/message.component';
 
 @Component({
-  selector: 'app-edit-tournament',
-  templateUrl: './edit-tournament.component.html',
-  styleUrl: './edit-tournament.component.less'
+    selector: 'app-edit-tournament',
+    templateUrl: './edit-tournament.component.html',
+    styleUrl: './edit-tournament.component.less',
+    standalone: false
 })
 export class EditTournamentComponent implements OnInit {
   @ViewChild("message") messageComponent!: MessageComponent;
@@ -118,7 +119,8 @@ export class EditTournamentComponent implements OnInit {
       let tournament = {
         name: this.name,
         playerIds: this.selectedPlayers.map(player => player.playerId),
-        tournamentId: (this.tournament) ? this.tournament.tournamentId : -1
+        tournamentId: (this.tournament) ? this.tournament.tournamentId : -1,
+        bracketData: ''
       } as ISaveTournamentRequest;
 
       const method = tournament.tournamentId > 0 

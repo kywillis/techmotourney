@@ -1,3 +1,4 @@
+<app-section-header text="Players"></app-section-header>
 <div *ngIf="loading" class="text-center">
     <div class="spinner-border" role="status">
         <span class="sr-only"></span>
@@ -5,40 +6,40 @@
 </div>
 <!-- <div class="message" *ngIf="message">{{message}}</div> -->
 <div class="row">
-    <div class="col-10"></div>
-    <div class="col-2">
-        <button class="btn btn-primary" (click)="openNewPlayer()">
-            <a class="dark" >New <i class="bi bi-plus"></i></a>
-        </button>
+    <div class="col-8"></div>
+    <div class="col-4" style="text-align:right;">
+        <div *ngIf="loggedIn()" class="btn btn-primary" (click)="openNewPlayer()"> New Player</div>
     </div>
 </div>
 <div *ngIf="!loading">
-    <table class="table table-dark thead-light table-striped players">
+    <table class="stats-table players">
         <thead>
             <tr>
                 <th>Name</th>
-                <th>Email</th>
-                <th></th>
+                <th>Record</th>
+                <th>Tournaments</th>
                 <th></th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
-            <tr *ngFor="let player of players">
-                <td class="name">{{player.fullName}}</td>
-                <td class="email">{{player.emailAddress}}</td>
-                <td class="view">
-                    <button class="btn btn-primary">
-                        <a class="dark" [routerLink]="['/players', player.playerId]">Go <i
-                                class="bi bi-arrow-right"></i></a>
-                    </button>
+            <tr *ngFor="let summary of summaries">
+                <td class="name">
+                    <div class="faceCnt">
+                        <div style="display: inline-block;" class="player-face player-face-{{summary!.profilePic}}"></div>
+                        <div class="link" (click)="showPlayer(summary.playerId)"> {{summary.fullName}} </div>
+                    </div>
                 </td>
-                <td class="edit"><button class="btn btn-primary" (click)="openEditPlayer(player)">
-                    <a class="dark" >Edit <i class="bi bi-pen"></i></a>
-                </button></td>
-                <td class="delete"><button class="btn btn-primary" (click)="openDeletePlayer(player)">
-                    <a class="dark" >Delete <i class="bi bi-trash"></i></a>
-                </button></td>
+                <td class="email">{{summary.wins}} - {{summary.loses}}</td>
+                <td class="tournamentIds">
+                   {{summary.tournamentIds.length}}
+                </td>
+                <td class="edit">
+                    <span *ngIf="loggedIn()" class="link" (click)="openEditPlayer(summary)">Edit</span>
+                </td>
+                <td class="delete">
+                    <span *ngIf="loggedIn()" class="link" (click)="openDeletePlayer(summary)">Delete</span>
+                </td>
             </tr>
         </tbody>
     </table>

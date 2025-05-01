@@ -35,7 +35,7 @@ namespace TecmoTourney.DataAccess
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var sql = "SELECT * FROM TC_Tournaments";
+                var sql = "SELECT * FROM TC_Tournaments order by enddate desc";
                 return await connection.QueryAsync<TournamentDAOModel>(sql);
             }
         }

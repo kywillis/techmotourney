@@ -49,4 +49,17 @@
         New = 1,
         Complete = 2
     }
- }
+
+    public enum BracketLocation
+    {
+        Winners = 1,
+        Losers = 2,
+        Championship = 3,
+    }
+
+    public enum PointSpreadStatus
+    {
+        Waiting = 1,
+        Complete = 2
+    }
+}

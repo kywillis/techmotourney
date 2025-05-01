@@ -7,6 +7,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { DeletePlayerComponent } from './components/delete-player/delete-player.component';
 import { EditPlayerComponent } from './components/edit-player/edit-player.component';
+import { ViewPlayerComponent } from './components/view-player/view-player.component';
 
 
 @NgModule({
@@ -14,7 +15,8 @@ import { EditPlayerComponent } from './components/edit-player/edit-player.compon
     PlayersComponent,
     NewPlayerComponent,
     DeletePlayerComponent,
-    EditPlayerComponent
+    EditPlayerComponent,
+    ViewPlayerComponent
   ],
   imports: [
     CommonModule,
