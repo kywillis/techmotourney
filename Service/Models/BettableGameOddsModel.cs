@@ -6,7 +6,9 @@ namespace TecmoTourney.Models
         public decimal Spread { get; set; }
         public int? FavoredPlayerId { get; set; }
         public decimal? OverUnder { get; set; }
-        public int? MoneyLinePlayer1 { get; set; }
-        public int? MoneyLinePlayer2 { get; set; }
+        public decimal? MoneyLinePlayer1 { get; set; }
+        public decimal? MoneyLinePlayer2 { get; set; }
+        /// <summary>Optional LLM / analyst write-up when present.</summary>
+        public string Summary { get; set; } = string.Empty;
     }
 }

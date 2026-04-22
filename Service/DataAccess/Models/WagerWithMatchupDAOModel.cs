@@ -7,7 +7,7 @@ namespace TecmoTourney.DataAccess.Models
     {
         public int WagerId { get; set; }
         public int PlayerId { get; set; }
-        public int GameResultId { get; set; }
+        public int? GameResultId { get; set; }
         public int TournamentId { get; set; }
         public WagerMarketType MarketType { get; set; }
         public WagerSide Side { get; set; }
@@ -20,10 +20,10 @@ namespace TecmoTourney.DataAccess.Models
         public string Player2Name { get; set; } = string.Empty;
         public int MatchPlayer1Id { get; set; }
         public int MatchPlayer2Id { get; set; }
-        public int OddsSpread { get; set; }
+        public decimal OddsSpread { get; set; }
         public int? OddsFavoredPlayerId { get; set; }
-        public int? OddsMoneyLinePlayer1 { get; set; }
-        public int? OddsMoneyLinePlayer2 { get; set; }
+        public decimal? OddsMoneyLinePlayer1 { get; set; }
+        public decimal? OddsMoneyLinePlayer2 { get; set; }
         public decimal? OddsOverUnder { get; set; }
     }
 }

@@ -11,7 +11,8 @@ namespace TecmoTourney
     public enum GameStatus
     {
         Waiting = 0,
-        Completed = 1
+        Completed = 1,
+        InProgress = 2,
     }
     public enum GameType
     {
@@ -55,6 +56,8 @@ namespace TecmoTourney
         Winners = 1,
         Losers = 2,
         Championship = 3,
+        /// <summary>Preliminary-round games (TC_GameOdds.BracketTypeId for prelim matchups).</summary>
+        Preliminary = 4,
     }
 
     public enum PointSpreadStatus
@@ -106,7 +109,13 @@ namespace TecmoTourney
         BalanceAdd = 6,
         BalanceSetToZero = 7,
         /// <summary>Admin refunded a pending wager (any game state).</summary>
-        AdminCancelWager = 8
+        AdminCancelWager = 8,
+
+        /// <summary>Game or odds row removed; pending wagers cancelled/refunded; settled wagers detached from game.</summary>
+        GameResultRemoved = 9,
+
+        /// <summary>Undo prior settlement balance effect before re-grading when game result changes.</summary>
+        ReverseSettlement = 10
     }
 
     public enum WagerBalanceAction

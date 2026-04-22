@@ -20,21 +20,79 @@
         </tr>
         <tr>
             <td><span class="link" (click)="showPlayer(gameResult.player2.playerId)">{{gameResult.player2.playerName}}</span><span class="nc-badge" *ngIf="gameResult.seedingExemptPlayerId === gameResult.player2.playerId" title="Doesn't count for seeding">NC</span></td>
-            <td><div *ngIf="gameResult.player1.teamName != ''" class="helmet-small helmet-small-{{gameResult.player2.teamName | lowercase}}"></div>{{gameResult.player2.teamName}}</td>
+            <td><div *ngIf="gameResult.player2.teamName != ''" class="helmet-small helmet-small-{{gameResult.player2.teamName | lowercase}}"></div>{{gameResult.player2.teamName}}</td>
             <td>{{gameResult.player2.rushingYards}}</td>
             <td>{{gameResult.player2.passingYards}}</td>
             <td>{{gameResult.player2.rushingYards + gameResult.player2.passingYards}}</td>
             <td><span [ngClass]="{ 'win': spotlightWon(gameResult, gameResult.player2.score)}">{{gameResult.player2.score}}</span></td>
         </tr>
-        <tr>
-            <td colspan="3">
-                <div *ngIf="showStatus && gameResult.status != GameStatus.Completed">{{gameResult.status}}</div>                
-                <div class="date" *ngIf="showDatePlayed">{{gameResult.date | date:'EEE h:mm a, MMMM d, y' }}</div>
-                <div class="exempt-status" *ngIf="gameResult.seedingExemptPlayerId">★ Doesn't count for {{ getSeedingExemptPlayerName() }} ★</div>
+        <tr *ngIf="showWageringBand && wageringSnapshot" class="wagering-row">
+            <td colspan="6">
+                <div class="wager-lines">
+                    {{ wageringSnapshot.player1Name }} {{ spreadDisplayForPlayer(wageringSnapshot.player1Id) }}
+                    ·
+                    {{ wageringSnapshot.player2Name }} {{ spreadDisplayForPlayer(wageringSnapshot.player2Id) }}
+                    <ng-container *ngIf="wageringSnapshot.odds.overUnder != null">
+                        · O/U {{ wageringSnapshot.odds.overUnder | number : '1.0-1' }}
+                    </ng-container>
+                    <span class="wager-ml">
+                        · ML {{ formatAmerican(wageringSnapshot.odds.moneyLinePlayer1) }} /
+                        {{ formatAmerican(wageringSnapshot.odds.moneyLinePlayer2) }}
+                    </span>
+                </div>
             </td>
-            <td colspan="3" *ngIf="showControls && loggedIn()">
-                <a class="dark link large"  (click)="editGameResult(gameResult)">Edit <i class="bi bi-pen"></i></a>
-                <a class="dark link large" (click)="deleteGameResult(gameResult)">Delete <i class="bi bi-trash"></i></a>
+        </tr>
+        <tr class="status-control-tr">
+            <td colspan="6">
+                <div
+                    class="status-control-row"
+                    *ngIf="
+                        (showWageringBand && wageringSnapshot) ||
+                        showStatus ||
+                        (showControls && loggedIn())
+                    "
+                >
+                    <div class="status-control-slot status-control-badge">
+                        <span
+                            *ngIf="showStatus"
+                            class="game-status-badge"
+                            [ngClass]="{
+                                'game-status-badge--waiting': gameResult.status === GameStatus.Waiting,
+                                'game-status-badge--in-progress': gameResult.status === GameStatus.InProgress,
+                                'game-status-badge--completed': gameResult.status === GameStatus.Completed
+                            }"
+                        >
+                            {{ statusDisplayLabel() }}
+                        </span>
+                    </div>
+                    <div class="status-control-slot status-control-preview">
+                        <a
+                            *ngIf="showWageringBand && wageringSnapshot"
+                            class="dark link large"
+                            (click)="openWageringModal()"
+                            [attr.title]="wageringHasSummary ? 'Wagering details & summary' : 'Wagering details & match history'"
+                        >Preview</a>
+                    </div>
+                    <div class="status-control-slot status-control-edit">
+                        <a
+                            *ngIf="showControls && loggedIn()"
+                            class="dark link large"
+                            (click)="editGameResult(gameResult)"
+                            >Edit <i class="bi bi-pen"></i></a
+                        >
+                    </div>
+                    <div class="status-control-slot status-control-delete">
+                        <a
+                            *ngIf="showControls && loggedIn()"
+                            class="dark link large"
+                            (click)="deleteGameResult(gameResult)"
+                        >Delete <i class="bi bi-trash"></i></a>
+                    </div>
+                </div>
+                <div class="date" *ngIf="showDatePlayed">{{ gameResult.date | date : 'EEE h:mm a, MMMM d, y' }}</div>
+                <div class="exempt-status" *ngIf="gameResult.seedingExemptPlayerId">
+                    ★ Doesn't count for {{ getSeedingExemptPlayerName() }} ★
+                </div>
             </td>
         </tr>
     </table>

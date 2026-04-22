@@ -4,6 +4,8 @@ export interface BettableGameOdds {
   overUnder: number | null;
   moneyLinePlayer1: number | null;
   moneyLinePlayer2: number | null;
+  /** Present when the house posted an LLM/analyst blurb. */
+  summary?: string;
 }
 
 /** Pending dollars per side; matches API marketDepth (camelCase). */
@@ -32,6 +34,10 @@ export interface BettableGame {
   player2Name: string;
   player1ProfilePic: number;
   player2ProfilePic: number;
+  /** Server GameStatus name (Waiting, InProgress, Completed). */
+  gameStatus?: string;
+  /** True when API allows new wagers on this game. */
+  isOpenForBetting?: boolean;
   odds: BettableGameOdds;
   gameStartedAt: string | null;
   /** Set for completed games from the games board API */

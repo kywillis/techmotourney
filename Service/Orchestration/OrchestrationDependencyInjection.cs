@@ -15,6 +15,10 @@ namespace TecmoTourney.Orchestration
             services.AddScoped<IWagerOrchestration, WagerOrchestration>();
             services.AddScoped<IWagerAdminOrchestration, WagerAdminOrchestration>();
             services.AddScoped<IGameOddsGenerationService, GameOddsGenerationService>();
+            services.AddScoped<IWagerDetachmentService, WagerDetachmentService>();
+            services.AddScoped<IWagerSettlementService, WagerSettlementService>();
+            services.AddScoped<ITournamentBracketReconciliationService, TournamentBracketReconciliationService>();
+            services.AddScoped<IGameStationOrchestration, GameStationOrchestration>();
         }
     }
 }

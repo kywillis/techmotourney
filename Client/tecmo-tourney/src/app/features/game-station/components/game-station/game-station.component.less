@@ -1,0 +1,327 @@
+@import '../../../../../styles.less';
+
+.game-station {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1rem 1.25rem 2rem;
+  min-height: 60vh;
+}
+
+.gs-header {
+  margin-bottom: 1.25rem;
+}
+
+.gs-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+}
+
+.gs-sub {
+  margin: 0;
+  color: @dark-color;
+  opacity: 0.85;
+  font-size: 1.05rem;
+}
+
+.gs-muted {
+  color: @dark-color;
+  opacity: 0.7;
+}
+
+.gs-banner {
+  margin-bottom: 1rem;
+}
+
+.gs-section {
+  margin-bottom: 1.75rem;
+}
+
+/** Triple the default gap before the “In progress” block (was 1.75rem). */
+.gs-section-waiting {
+  margin-bottom: (1.75rem * 3);
+}
+
+.gs-section-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  border-bottom: 2px solid darken(@background, 12%);
+  padding-bottom: 0.35rem;
+}
+
+.gs-empty {
+  margin: 0.5rem 0 0;
+  color: @dark-color;
+  opacity: 0.65;
+  font-style: italic;
+}
+
+.gs-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.gs-row {
+  position: relative;
+  width: 100%;
+  display: block;
+  text-align: center;
+  padding: 0.85rem 2.5rem 0.85rem 1rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid darken(@background, 15%);
+  border-radius: 8px;
+  background: @background;
+  cursor: pointer;
+  min-height: 3.5rem;
+  font-size: 1.05rem;
+  overflow: visible;
+
+  &:hover {
+    background: darken(@background, 4%);
+  }
+}
+
+.gs-row-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  text-align: center;
+  overflow: visible;
+}
+
+.gs-players {
+  font-weight: 600;
+}
+
+.gs-players--with-faces {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.5rem;
+  overflow: visible;
+}
+
+.gs-player-label {
+  min-width: 0;
+}
+
+.gs-vs-inline {
+  font-weight: 600;
+  opacity: 0.75;
+  padding: 0 0.1rem;
+}
+
+/* Full 64×64 tile box so sprite backgrounds are not cropped (was 40×40). */
+.gs-list-face {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  margin: 0;
+  overflow: visible;
+  transform: scale(0.72);
+  transform-origin: center center;
+}
+
+.gs-teams-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.45rem;
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+.gs-team-side {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.gs-team-sep {
+  opacity: 0.65;
+  user-select: none;
+}
+
+/* Reserve space for 2× helmet-small (16px → 32px). */
+.gs-helmet-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.gs-helmet-wrap .helmet-small {
+  transform: scale(2);
+  transform-origin: center center;
+}
+
+.gs-meta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  opacity: 0.65;
+  text-align: center;
+  width: 100%;
+}
+
+.gs-started-at {
+  cursor: help;
+  border-bottom: 1px dotted fade(@text-color, 45%);
+}
+
+.gs-meta-sep {
+  opacity: 0.55;
+  user-select: none;
+}
+
+.gs-chevron {
+  position: absolute;
+  right: 0.65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.5rem;
+  line-height: 1;
+  opacity: 0.45;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.gs-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.gs-back {
+  font-size: 1.1rem;
+  padding: 0.25rem 0;
+}
+
+.gs-status-pill {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 1rem;
+  background: #fff;
+  color: @background;
+  border: 2px solid #c62828;
+}
+
+.gs-matchup {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  overflow: visible;
+}
+
+@media (min-width: 520px) {
+  .gs-matchup {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 1.25rem;
+  }
+
+  .gs-vs {
+    align-self: center;
+    padding-bottom: 1.75rem;
+  }
+}
+
+.gs-player-block {
+  flex: 1;
+  min-width: 0;
+  overflow: visible;
+}
+
+.gs-player-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.35rem;
+  min-height: 3.5rem;
+  overflow: visible;
+}
+
+.gs-player-name-row--p1 {
+  justify-content: flex-start;
+}
+
+.gs-player-name-row--p2 {
+  justify-content: flex-end;
+}
+
+/* Match list tiles: full 64×64 sprite box so backgrounds are not cropped. */
+.gs-station-face {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  margin: 0;
+  overflow: visible;
+  transform: scale(0.9);
+  transform-origin: center center;
+}
+
+.gs-player-name {
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 0;
+}
+
+.gs-select {
+  font-size: 1.1rem;
+  min-height: 3rem;
+}
+
+.gs-vs {
+  text-align: center;
+  font-weight: 700;
+  opacity: 0.6;
+  font-size: 1.1rem;
+}
+
+.gs-actions {
+  margin-top: 1.5rem;
+}
+
+.gs-actions--stacked {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.gs-primary {
+  width: 100%;
+  min-height: 3.25rem;
+  font-size: 1.15rem;
+}
+
+/** Secondary action below primary; healthy separation from Save teams / Start game */
+.gs-secondary-btn {
+  width: 100%;
+  min-height: 3.25rem;
+  font-size: 1.15rem;
+  margin-top: 6.25rem; /* 5× prior 1.25rem */
+}
+
+.gs-secondary-btn:disabled {
+  opacity: 0.65;
+}

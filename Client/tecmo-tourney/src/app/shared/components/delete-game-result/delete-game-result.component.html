@@ -4,10 +4,10 @@
 
     Are you sure you want to delete {{gameTitle}}
 
-    <div class="deleteBtn">
-        <button class="btn btn-primary" (click)="delete()">
+    <div class="deleteBtn action-with-spinner">
+        <button class="btn btn-primary" (click)="delete()" [disabled]="deleting">
             <a class="dark" >Confirm Deletion <i class="bi bi-trash"></i></a>
         </button>
-
+        <span *ngIf="deleting" class="spinner-border spinner-border-sm ms-2" role="status" aria-label="Loading"></span>
     </div>
 </div>

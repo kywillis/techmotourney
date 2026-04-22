@@ -3,9 +3,10 @@ import { RouterModule, Routes } from '@angular/router';
 import { ViewPlayerComponent } from './components/view-player/view-player.component';
 import { PlayersComponent } from './components/players/players.component';
 
-const routes: Routes = [ 
+/** Paths are relative to parent `players` (lazy load) → /players/:id */
+const routes: Routes = [
   {
-    path: 'players/:id',
+    path: ':id',
     component: ViewPlayerComponent
   },
   {

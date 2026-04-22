@@ -11,6 +11,7 @@ using TecmoTourney.DataAccess;
 using System.Numerics;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Newtonsoft.Json;
+using TecmoTourney.Bracket;
 
 namespace TecmoTourney.Orchestration 
 {
@@ -25,10 +26,21 @@ namespace TecmoTourney.Orchestration
         private readonly IGameResultDAO _gameResultDAO;
         private readonly IGameOddsDAO _gameOddsDAO;
         private readonly IGameOddsGenerationService _gameOddsGenerationService;
+        private readonly IWagerDetachmentService _wagerDetachmentService;
+        private readonly ITournamentBracketReconciliationService _tournamentBracketReconciliationService;
 
         private List<BracketMatchup> _existingPointSpeads = new List<BracketMatchup>() { };
 
-        public TournamentsOrchestration(ITournamentsDAO tournamentsDAO, IPlayerTournamentDAO playerTournamentDAO, IGameResultDAO gameResultDAO, IPlayerDAO playerDAO, IMapper mapper, IGameOddsDAO gameOddsDAO, IGameOddsGenerationService gameOddsGenerationService)
+        public TournamentsOrchestration(
+            ITournamentsDAO tournamentsDAO,
+            IPlayerTournamentDAO playerTournamentDAO,
+            IGameResultDAO gameResultDAO,
+            IPlayerDAO playerDAO,
+            IMapper mapper,
+            IGameOddsDAO gameOddsDAO,
+            IGameOddsGenerationService gameOddsGenerationService,
+            IWagerDetachmentService wagerDetachmentService,
+            ITournamentBracketReconciliationService tournamentBracketReconciliationService)
         {
             _gameResultDAO = gameResultDAO;
             _playerTournamentDAO = playerTournamentDAO;
@@ -37,6 +49,8 @@ namespace TecmoTourney.Orchestration
             _mapper = mapper;
             _gameOddsDAO = gameOddsDAO;
             _gameOddsGenerationService = gameOddsGenerationService;
+            _wagerDetachmentService = wagerDetachmentService;
+            _tournamentBracketReconciliationService = tournamentBracketReconciliationService;
         }
 
         public async Task<Operation<List<TournamentModel>, ApiError>> ListAllAsync() 
@@ -194,7 +208,7 @@ namespace TecmoTourney.Orchestration
             }
         }
 
-        public async Task<Operation<TournamentModel, ApiError>> ChangeStatusAsync(ChangeTournamentStatusRequest request)
+        public async Task<Operation<ChangeTournamentStatusResponseModel, ApiError>> ChangeStatusAsync(ChangeTournamentStatusRequest request)
         {
             try
             {
@@ -219,40 +233,126 @@ namespace TecmoTourney.Orchestration
             }
         }
 
-        private async Task<Operation<TournamentModel, ApiError>> startTournament(ChangeTournamentStatusRequest request, TournamentDAOModel tournament)
+        private async Task<Operation<ChangeTournamentStatusResponseModel, ApiError>> startTournament(ChangeTournamentStatusRequest request, TournamentDAOModel tournament)
         {
             try
             {
-                var teams = await _playerTournamentDAO.GetByTournamentIdAsync(tournament.TournamentId);
-                await _tournamentsDAO.UpdateTournamentStatusAsync(tournament.TournamentId, (int)TournamentStatus.Tournament);
-                TournamentBracketModel bracketModel = new TournamentBracketModel();
-                bracketModel.PopulateBracket(teams.Count());
-                var standings = (await GetStandingsAsync(tournament.TournamentId, TournamentStatus.Preliminaries)).Data!;
+                var tournamentId = tournament.TournamentId;
 
-                foreach (var bracketMatchups in bracketModel.Teams)
+                var standingsOp = await GetStandingsAsync(tournamentId, TournamentStatus.Preliminaries);
+                if (!standingsOp.IsSuccess)
+                    return standingsOp.Failure!;
+                var standingsList = standingsOp.Data ?? [];
+                var n = standingsList.Count;
+                if (n < 4 || n > 32)
+                    return new ApiError("Tournament must have between 4 and 32 players (after prelims) to start the bracket.", HttpStatusCode.BadRequest);
+
+                await ClearBracketPhaseAsync(tournamentId);
+
+                var orderedBySeed = standingsList.OrderBy(s => s.Seed).ToList();
+                var matchupRanks = DoubleEliminationBracket.GetFirstRoundWinnersBracketMatchupRanks(n);
+                var savedGames = new List<GameResultDAOModel>();
+                var baseTime = DateTime.UtcNow;
+                var ordinal = 0;
+                foreach (var (rankA, rankB) in matchupRanks)
                 {
-                    var team1 = bracketMatchups[0]!;
-                    var standing = standings.First(s => s.Seed == team1.Seed);
-                    team1.PlayerId = standing.PlayerId;
-                    team1.Player = standing.PlayerName;
-
-                    if (bracketMatchups.Count > 1 && bracketMatchups[1] != null)
+                    var sa = orderedBySeed[rankA];
+                    var sb = orderedBySeed[rankB];
+                    ordinal++;
+                    var game = new GameResultDAOModel
                     {
-                        var team2 = bracketMatchups[1]!;
-                        standing = standings.First(s => s.Seed == team2.Seed);
-                        team2.PlayerId = standing.PlayerId;
-                        team2.Player = standing.PlayerName;
-                    }
+                        TournamentId = tournamentId,
+                        Player1Id = sa.PlayerId,
+                        Player2Id = sb.PlayerId,
+                        StatusId = (int)GameStatus.Waiting,
+                        GameTypeId = (int)GameType.Tournament,
+                        IsDeleted = false,
+                        DateAdded = baseTime.AddTicks(ordinal * 10L),
+                    };
+                    savedGames.Add(await _gameResultDAO.CreateGameResultAsync(game));
                 }
-                
-                await _tournamentsDAO.UpdateTournamentBracketDataAsync(tournament.TournamentId, JsonConvert.SerializeObject(bracketModel));
-                var savedTournament = await _tournamentsDAO.GetById(tournament.TournamentId);
 
-                return _mapper.Map<TournamentModel>(savedTournament);
+                var oddsStatus = await _gameOddsGenerationService.EnsureOddsForNewGameResultsAsync(savedGames);
+                await _tournamentsDAO.UpdateTournamentStatusAsync(tournamentId, (int)TournamentStatus.Tournament);
+
+                var reconcileOp = await _tournamentBracketReconciliationService.ReconcileAsync(tournamentId, standingsList);
+                if (!reconcileOp.IsSuccess)
+                    return reconcileOp.Failure!;
+                var recOdds = reconcileOp.Data!.OddsGeneration;
+                var mergedOdds = new OddsGenerationStatusModel
+                {
+                    Attempted = oddsStatus.Attempted || recOdds.Attempted,
+                    Success = (!oddsStatus.Attempted || oddsStatus.Success) && (!recOdds.Attempted || recOdds.Success),
+                    Message = MergeBracketStartOddsMessages(oddsStatus, recOdds),
+                };
+
+                var savedTournament = await _tournamentsDAO.GetById(tournamentId);
+                return new ChangeTournamentStatusResponseModel
+                {
+                    Tournament = _mapper.Map<TournamentModel>(savedTournament),
+                    OddsGeneration = mergedOdds,
+                };
             }
             catch (Exception e)
             {
                 return new ApiError($"error updating tournament to running: {e.ToString()}", HttpStatusCode.InternalServerError);
+            }
+        }
+
+        private static string? MergeBracketStartOddsMessages(OddsGenerationStatusModel first, OddsGenerationStatusModel second)
+        {
+            if ((!first.Attempted || first.Success) && (!second.Attempted || second.Success))
+                return null;
+            var parts = new List<string>();
+            if (first.Attempted && !first.Success && !string.IsNullOrWhiteSpace(first.Message))
+                parts.Add(first.Message);
+            if (second.Attempted && !second.Success && !string.IsNullOrWhiteSpace(second.Message))
+                parts.Add(second.Message);
+            return parts.Count == 0 ? null : string.Join(" ", parts);
+        }
+
+        /// <summary>
+        /// Detach wagers (pending refunded, settled kept with GameResultId cleared), delete odds for bracket games, soft-delete those game rows, clear legacy bracket JSON, set Preliminaries.
+        /// </summary>
+        private async Task ClearBracketPhaseAsync(int tournamentId)
+        {
+            var bracketGames = (await _gameResultDAO.ListResultsByTournamentAsync(tournamentId, false))
+                .Where(g => g.GameTypeId == (int)GameType.Tournament)
+                .ToList();
+
+            if (bracketGames.Count > 0)
+            {
+                var ids = bracketGames.Select(g => g.GameResultId).ToList();
+                await _wagerDetachmentService.DetachWagersForGameResultsAsync(ids, actorPlayerId: null);
+                await _gameOddsDAO.DeleteByGameResultIdsAsync(ids);
+                foreach (var game in bracketGames)
+                {
+                    game.IsDeleted = true;
+                    await _gameResultDAO.UpdateGameResultAsync(game.GameResultId, game);
+                }
+            }
+
+            await _tournamentsDAO.UpdateTournamentStatusAsync(tournamentId, (int)TournamentStatus.Preliminaries);
+            await _tournamentsDAO.UpdateTournamentBracketDataAsync(tournamentId, string.Empty);
+        }
+
+        public async Task<Operation<bool, ApiError>> ResetTournamentPhaseAsync(int tournamentId, ResetTournamentRequestModel request)
+        {
+            try
+            {
+                if (tournamentId != request.TournamentId)
+                    return new ApiError("tournament ids in request do not match", HttpStatusCode.BadRequest);
+
+                var tournament = await _tournamentsDAO.GetById(tournamentId);
+                if (tournament == null)
+                    return new ApiError($"no tournament found with id {tournamentId}", HttpStatusCode.BadRequest);
+
+                await ClearBracketPhaseAsync(tournamentId);
+                return true;
+            }
+            catch (Exception e)
+            {
+                return new ApiError($"error resetting tournament phase: {e.Message}", HttpStatusCode.InternalServerError);
             }
         }
 
@@ -427,7 +527,7 @@ namespace TecmoTourney.Orchestration
         /// </summary>
         /// <param name="tournament"></param>
         /// <returns></returns>
-        private async Task<Operation<TournamentModel, ApiError>> startPrelims(TournamentDAOModel tournament)
+        private async Task<Operation<ChangeTournamentStatusResponseModel, ApiError>> startPrelims(TournamentDAOModel tournament)
         {
             try
             {
@@ -474,10 +574,14 @@ namespace TecmoTourney.Orchestration
                     savedGames.Add(await _gameResultDAO.CreateGameResultAsync(game));
                 }
 
-                await _gameOddsGenerationService.EnsureOddsForNewGameResultsAsync(savedGames);
+                var oddsStatus = await _gameOddsGenerationService.EnsureOddsForNewGameResultsAsync(savedGames);
 
                 var savedTournament = await _tournamentsDAO.GetById(tournament.TournamentId);
-                return _mapper.Map<TournamentModel>(savedTournament);
+                return new ChangeTournamentStatusResponseModel
+                {
+                    Tournament = _mapper.Map<TournamentModel>(savedTournament),
+                    OddsGeneration = oddsStatus
+                };
             }
             catch (Exception e)
             {
@@ -506,7 +610,10 @@ namespace TecmoTourney.Orchestration
                 await _tournamentsDAO.UpdateTournamentStatusAsync(tournamentId, (int)TournamentStatus.Waiting);
                 await _tournamentsDAO.UpdateTournamentBracketDataAsync(tournamentId, string.Empty);
 
-                var games = await _gameResultDAO.ListResultsByTournamentAsync(tournamentId);
+                var games = (await _gameResultDAO.ListResultsByTournamentAsync(tournamentId)).ToList();
+                var gameIds = games.Select(g => g.GameResultId).ToList();
+                await _wagerDetachmentService.DetachWagersForGameResultsAsync(gameIds, actorPlayerId: null);
+
                 foreach (var game in games)
                 {
                     game.IsDeleted = true;
@@ -520,6 +627,14 @@ namespace TecmoTourney.Orchestration
             {
                 return new ApiError( $"error resetting tournament: {e.Message}", HttpStatusCode.InternalServerError);;
             }
+        }
+
+        public async Task<Operation<RecalculateBracketResponseModel, ApiError>> RecalculateBracketAsync(int tournamentId)
+        {
+            var standingsOp = await GetStandingsAsync(tournamentId, TournamentStatus.Preliminaries);
+            if (!standingsOp.IsSuccess)
+                return standingsOp.Failure!;
+            return await _tournamentBracketReconciliationService.ReconcileAsync(tournamentId, standingsOp.Data!);
         }
     }
 

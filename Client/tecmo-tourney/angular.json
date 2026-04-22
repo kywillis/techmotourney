@@ -39,7 +39,8 @@
               "src/styles.less",
               "@angular/material/prebuilt-themes/azure-blue.css",
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
-              "node_modules/jquery-bracket/dist/jquery.bracket.min.css",
+              "node_modules/bootstrap-icons/font/bootstrap-icons.css",
+              "node_modules/jquery-bracket/dist/jquery.bracket.min.css"
             ],
             "scripts": [
               "node_modules/jquery/dist/jquery.js",

@@ -122,13 +122,11 @@ namespace TecmoTourney.Controllers
 
         [HttpGet("players")]
         [ProducesResponseType(200, Type = typeof(List<AdminPlayerBalanceListItemModel>))]
-        [ProducesResponseType(400)]
         [ProducesResponseType(403)]
-        [ProducesResponseType(404)]
-        public async Task<IActionResult> GetPlayersForBalanceAdmin([FromQuery] int tournamentId)
+        public async Task<IActionResult> GetPlayersForBalanceAdmin()
         {
             if (RequireAdmin() is { } err) return err;
-            var result = await _wagerAdminOrchestration.ListPlayersForBalanceAdminAsync(tournamentId);
+            var result = await _wagerAdminOrchestration.ListPlayersForBalanceAdminAsync();
             return result.ToActionResult();
         }
 
@@ -211,7 +209,7 @@ namespace TecmoTourney.Controllers
         }
 
         [HttpPost("game-result")]
-        [ProducesResponseType(200, Type = typeof(GameResultModel))]
+        [ProducesResponseType(200, Type = typeof(SaveGameResultResponseModel))]
         [ProducesResponseType(400)]
         [ProducesResponseType(403)]
         public async Task<IActionResult> SaveGameResult([FromBody] SaveGameResultRequestModel body)

@@ -82,14 +82,28 @@
   &.open {
     color: var(--link);
   }
+}
 
-  &.won {
-    color: #6ecf6e;
-  }
+.wager-card.settled .status {
+  display: inline-block;
+  margin-top: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.5rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  background: #fff;
+  border: 2px solid #c62828;
+  border-radius: 999px;
+  line-height: 1.2;
+}
 
-  &.lost {
-    color: var(--highlight);
-  }
+.wager-card.settled .status.won {
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.wager-card.settled .status.lost {
+  color: #c62828;
 }
 
 .view-game {

@@ -13,10 +13,14 @@ namespace TecmoTourney.Controllers
     public class GameResultController : ControllerBase
     {
         private readonly IGameResultOrchestration _gameResultOrchestration;
+        private readonly IWagerOrchestration _wagerOrchestration;
 
-        public GameResultController(IGameResultOrchestration gameResultOrchestration)
+        public GameResultController(
+            IGameResultOrchestration gameResultOrchestration,
+            IWagerOrchestration wagerOrchestration)
         {
             _gameResultOrchestration = gameResultOrchestration;
+            _wagerOrchestration = wagerOrchestration;
         }
 
         [HttpGet("tournament/{tournamentId}")]
@@ -26,6 +30,15 @@ namespace TecmoTourney.Controllers
         {
             var results = await _gameResultOrchestration.ListResultsByTournamentAsync(tournamentId, includeDeleted);
             return results.ToActionResult();
+        }
+
+        /// <summary>Public wagering snapshots for every game in the tournament that has odds (empty list if none).</summary>
+        [HttpGet("tournament/{tournamentId:int}/wagering-snapshots")]
+        [ProducesResponseType(200, Type = typeof(List<PublicWageringSnapshotModel>))]
+        public async Task<IActionResult> GetWageringSnapshotsByTournament(int tournamentId)
+        {
+            var result = await _wagerOrchestration.GetPublicWageringSnapshotsByTournamentAsync(tournamentId);
+            return result.ToActionResult();
         }
 
         [HttpGet("player/{playerId}")]
@@ -46,9 +59,24 @@ namespace TecmoTourney.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType(200, Type = typeof(GameResultModel))]
+        [ProducesResponseType(200, Type = typeof(SaveGameResultResponseModel))]
         public async Task<IActionResult> SaveGameResult([FromBody] SaveGameResultRequestModel gameResult)
         {
+            var result = await _gameResultOrchestration.SaveGameResultAsync(gameResult);
+            return result.ToActionResult();
+        }
+
+        [HttpPut("{gameResultId:int}")]
+        [ProducesResponseType(200, Type = typeof(SaveGameResultResponseModel))]
+        [ProducesResponseType(400)]
+        public async Task<IActionResult> UpdateGameResult(int gameResultId, [FromBody] SaveGameResultRequestModel gameResult)
+        {
+            if (gameResult.GameResultId.HasValue && gameResult.GameResultId.Value != gameResultId)
+            {
+                return BadRequest("GameResultId in the request body must match the URL.");
+            }
+
+            gameResult.GameResultId = gameResultId;
             var result = await _gameResultOrchestration.SaveGameResultAsync(gameResult);
             return result.ToActionResult();
         }
@@ -79,15 +107,6 @@ namespace TecmoTourney.Controllers
             return result.ToActionResult();
         }
 
-        [HttpPost("{tournamentId}/pointSpreads")]
-        [ProducesResponseType(200, Type = typeof(GameOddsModel[]))]
-        [ProducesResponseType(404)]
-        public async Task<IActionResult> CreatePointSpreads(int tournamentId, IEnumerable<GameOddsRequestModel> pointSpreads)
-        {
-            var results = await _gameResultOrchestration.CreatePointSpreadsAsync(tournamentId, pointSpreads);
-            return results.ToActionResult();
-        }
-
         [HttpGet("{tournamentId}/pointSpreads")]
         [ProducesResponseType(200, Type = typeof(GameOddsModel[]))]
         [ProducesResponseType(404)]
@@ -95,6 +114,16 @@ namespace TecmoTourney.Controllers
         {
             var results = await _gameResultOrchestration.GetPointSpreadsAsync(tournamentId);
             return results.ToActionResult();
+        }
+
+        /// <summary>Public read-only lines, optional summary, and pending market depth for a game.</summary>
+        [HttpGet("games/{gameResultId:int}/wagering-snapshot")]
+        [ProducesResponseType(200, Type = typeof(PublicWageringSnapshotModel))]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetWageringSnapshot(int gameResultId)
+        {
+            var result = await _wagerOrchestration.GetPublicWageringSnapshotAsync(gameResultId);
+            return result.ToActionResult();
         }
     }
 }

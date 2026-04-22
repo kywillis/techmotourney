@@ -1,4 +1,9 @@
 /* Tecmo Wager – global styles */
+html {
+  /* ~30% larger type site-wide (rem-based rules inherit from root). */
+  font-size: 130%;
+}
+
 :root {
   --bg: #1863D6;
   --text: #ffffff;
@@ -15,7 +20,8 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: 'Press Start 2P', cursive;
-  font-size: 10px;
+  /* 0.625rem ≈ 10px at 16px root; scales with html font-size (was fixed 10px). */
+  font-size: 0.625rem;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;

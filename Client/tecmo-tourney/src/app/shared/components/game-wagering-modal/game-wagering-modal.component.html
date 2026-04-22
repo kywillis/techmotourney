@@ -1,0 +1,108 @@
+<div *ngIf="!embedded" class="modal-header matchup-preview-modal-header">
+  <div class="matchup-preview-title-wrap">
+    <app-section-header text="Matchup Preview"></app-section-header>
+  </div>
+  <button type="button" class="btn-close" aria-label="Close" (click)="dismissChrome()"></button>
+</div>
+<div class="game-wagering-modal" [ngClass]="{ 'modal-body': !embedded, 'game-wagering-modal--embedded': embedded }">
+  <div class="matchup-names matchup-names-with-faces">
+    <span class="matchup-side matchup-side-p1">
+      <span [class]="player1FaceClass"></span>
+      <strong>{{ snapshot.player1Name }}</strong>
+    </span>
+    <span class="matchup-vs">vs</span>
+    <span class="matchup-side matchup-side-p2">
+      <strong>{{ snapshot.player2Name }}</strong>
+      <span [class]="player2FaceClass"></span>
+    </span>
+  </div>
+
+  <section class="section" *ngIf="snapshot.odds.summary?.trim()">
+    <span class="statsHeader">Summary</span>
+    <div class="summary-body">{{ snapshot.odds.summary }}</div>
+  </section>
+
+  <section class="section">
+    <span class="statsHeader">Lines</span>
+    <div class="table-responsive">
+    <table class="table table-sm lines-table">
+      <tbody>
+        <tr>
+          <th>Spread</th>
+          <td>
+            {{ snapshot.player1Name }} {{ spreadDisplayForPlayer(snapshot.player1Id) }} /
+            {{ snapshot.player2Name }} {{ spreadDisplayForPlayer(snapshot.player2Id) }}
+          </td>
+        </tr>
+        <tr *ngIf="snapshot.odds.overUnder != null">
+          <th>Over / under</th>
+          <td class="odds-value-nowrap">{{ snapshot.odds.overUnder | number : '1.0-1' }}</td>
+        </tr>
+        <tr>
+          <th>Money line</th>
+          <td class="odds-value-nowrap">
+            {{ snapshot.player1Name }} {{ formatAmerican(snapshot.odds.moneyLinePlayer1) }} ·
+            {{ snapshot.player2Name }} {{ formatAmerican(snapshot.odds.moneyLinePlayer2) }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="section">
+    <span class="statsHeader">Pending action (market depth)</span>
+    <p class="small text-muted mb-2">Totals staked on open wagers for this game.</p>
+    <div class="table-responsive">
+    <table class="table table-sm depth-table">
+      <tbody>
+        <tr>
+          <th>Spread</th>
+          <td>
+            {{ snapshot.player1Name }} {{ formatMoney(snapshot.marketDepth.spreadPlayer1) }} ·
+            {{ snapshot.player2Name }} {{ formatMoney(snapshot.marketDepth.spreadPlayer2) }}
+          </td>
+        </tr>
+        <tr>
+          <th>O/U</th>
+          <td class="odds-value-nowrap">
+            Over {{ formatMoney(snapshot.marketDepth.over) }} · Under {{ formatMoney(snapshot.marketDepth.under) }}
+          </td>
+        </tr>
+        <tr>
+          <th>Money line</th>
+          <td class="odds-value-nowrap">
+            {{ snapshot.player1Name }} {{ formatMoney(snapshot.marketDepth.moneyLinePlayer1) }} ·
+            {{ snapshot.player2Name }} {{ formatMoney(snapshot.marketDepth.moneyLinePlayer2) }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="section">
+    <span class="statsHeader">Prior matchups</span>
+    <div *ngIf="h2hLoading" class="text-muted">Loading…</div>
+    <div *ngIf="!h2hLoading && h2hGames.length === 0" class="text-muted">No prior completed games between these players.</div>
+    <ul class="h2h-list" *ngIf="!h2hLoading && h2hGames.length > 0">
+      <li *ngFor="let g of h2hGames" class="h2h-row">
+        <span class="h2h-date">{{ g.date | date : 'mediumDate' }}</span>
+        <span class="h2h-matchup">
+          <span class="h2h-side">
+            <span *ngIf="g.player1.teamName" class="helmet-small helmet-small-{{ g.player1.teamName | lowercase }}"></span>
+            {{ g.player1.playerName }} <strong>{{ g.player1.score }}</strong>
+          </span>
+          <span class="h2h-vs">—</span>
+          <span class="h2h-side">
+            <span *ngIf="g.player2.teamName" class="helmet-small helmet-small-{{ g.player2.teamName | lowercase }}"></span>
+            {{ g.player2.playerName }} <strong>{{ g.player2.score }}</strong>
+          </span>
+        </span>
+      </li>
+    </ul>
+  </section>
+</div>
+<div *ngIf="!embedded" class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="closeChrome()">Close</button>
+</div>

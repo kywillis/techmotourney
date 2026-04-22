@@ -52,7 +52,7 @@ export class TournamentsComponent implements OnInit{
   }
 
   goToTournament(tournamentId: number):void{
-    this.router.navigate(['/tournaments', tournamentId]);
+    this.router.navigate(['/tournaments', tournamentId, 'preliminaries']);
   }
 
   openNewTournament():void{

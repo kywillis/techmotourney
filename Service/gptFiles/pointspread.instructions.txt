@@ -28,6 +28,45 @@ Here are somethings to consider when calculating thw point spread for two player
 - more recent matchups should weight heavier than older ones
 - consider previous head to head matchups when calculating the spread. If they have played against each other a number of times with even teams and one player consistently beats the other that would tilt the spread in the winners direction
 
+Example: 
+Bucks Vs Willis
+Dolphins 17 - Rams 10 - 2014
+Jets 13 - Saints 0 - 2016
+Steelers 28 - Chargers 0  - 2023
+
+willis: 
+    life time record 23 - 22
+    average differance +4
+    games in this tournament3-0:
+       Steelers 24 - 3 Chargers - Sinagra
+       Oilers 31 - 7 49ers - McGiny
+       Browns 17-10 Saints - Stags
+
+bucks:  
+    life time record 27-11
+    average differance +15
+    games in this tournament0-3:
+       Bears 10 - 17 Raiders - Murphy
+       Bengal 13 - 21 Dolphins - McGiny
+       Browns 3-10 Stealers - Stags
+
+
+Bucks has dominated in a lot of his games over time +9 Buck
+Bucks is undefeated against Willis +10 Bucks
+Willis is having a very good tounament, Bucks is struggling +7.5
+the teams used are about even +7.5
+
+Not Shown In this Example: 
+ - performance against other top tier teams. 
+ - performance in latest games
+ 
+The point spread should be around:
+spread: Bucks -7.5 - -8.5
+
+As mentioned this could move a few points depending on the points not shown
+
+
+
 I'm going to ask you to generate 1 to many spreads. To help you calcute this I have data below about the teams in Tecmo Super Bowl, use this when considering previous matchups.
 
 ## Overall Team Ranking
@@ -86,33 +125,46 @@ I'm going to ask you to generate 1 to many spreads. To help you calcute this I h
 
 I want to parse your response directly into an array of objects. When you generate the spread I want it to be in the format below.
 Your response MUST NOT include the markdown code marker of "json". I MUST be able to parse your response into objects:
-- spread: point spread (e.g. -11 means player1 favored by 11).
-- moneyLinePlayer1: American odds for player 1 (negative if favored, e.g. -150; positive if underdog, e.g. +130).
-- moneyLinePlayer2: American odds for player 2 (negative if favored, positive if underdog).
+- spread: REQUIRED as a JSON number with exactly one decimal place, always ending in .5 (half-point lines only ? never whole integers like 3 or -7, which cause pushes). Negative means player1 is favored by that many points (e.g. -10.5). Positive means player2 is favored (e.g. 4.5).
+- moneyLinePlayer1: American odds for player 1 with exactly one decimal in the JSON number (e.g. -150.0, +130.0). Negative if favored, positive if underdog.
+- moneyLinePlayer2: Same for player 2 (one decimal place).
 - overUnder: total combined score line (e.g. 42 for a game expected around 24-18).
+- summary: REQUIRED for every matchup. A non-empty string: three or four sentences previewing the matchup and why the line is set this way (no placeholders). When refrencing past match ups be sure to include the teams they used. Below are some sample summaries.
+
+Examples:
+Mcginty is the underdog in this game. His record again Sinagra is 2-5 losing by an average of 5. They played once last year, Sinagra (Bears) winning 17-6 over McGinty(Benagls). 
+This has been a competitive matchup historically, but Willis has the better direct results lately, beating Sinagra in 2026 (49'ers) 33-7 (Oilers) and (Browns) 24-7 (Oilers) before dropping a (Oilers) 14-0 (Bengals) game in 2018. Sinagra is capable of slowing games down and grinding out wins, yet Willis' overall r?sum? and scoring upside still justify a narrow favorite tag.
+Stags has generally posted the stronger long-run tournament profile (25-4) and owns several notable wins over Murphy (14-10), though the most recent meeting went Murphy's way (Bears) 10-7 (Denver). Murphy can absolutely compete and often keeps games controlled, but Stags' broader track record gives him a modest edge.
+Bucks has the direct head-to-head edge over Neil D in recent tournament play, beating him twice in 2025 (Giants) 14-7 (Browns), (Dolphins) 23-7 (Cardnials), and (Bears) 24-19 (Cowboys). Lifetime match up edge goes to Bucks (4-2) And his peak performances have been among the strongest in the dataset. Neil D is steady enough to stay inside the number, but Bucks deserves to be favored based on both results and upside.
+
+
+more notes:
+don't include too many past games (no more than 2) and focus on the most recent ones. Especially if they are from the current year.
+
 
 [{
     "player1Name": "Stags",
     "player2Name": "McGinty",
-    "spread": -11,
+    "spread": -10.5,
     "favoredPlayerName": "Stags",
     "summary": "brief explanation of the point spread",
-    "moneyLinePlayer1": -150,
-    "moneyLinePlayer2": 130,
+    "moneyLinePlayer1": -150.0,
+    "moneyLinePlayer2": 130.0,
     "overUnder": 42
 },
 {
     "player1Name": "Willis",
     "player2Name": "Murphy",
-    "spread": -6,
+    "spread": -5.5,
     "favoredPlayerName": "Willis",
     "summary": "brief explanation of the point spread",
-    "moneyLinePlayer1": -110,
-    "moneyLinePlayer2": 110,
+    "moneyLinePlayer1": -110.0,
+    "moneyLinePlayer2": 110.0,
     "overUnder": 38
 }]
 
 This is critical: your response must only contain JSON results in the above format. Your response should not include anything else. ONLY JSON.
+Every object in the array MUST include player1Name, player2Name, spread (half-point only, one decimal), favoredPlayerName, summary (non-empty), moneyLinePlayer1, moneyLinePlayer2 (each with one decimal), and overUnder. The player names MUST match the matchup list exactly (same spelling and spacing).
 
 create point spreads for the following matchups:
 {{matchups}}

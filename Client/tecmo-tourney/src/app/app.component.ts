@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, NavigationStart, Router } from '@angular/router';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { filter, map } from 'rxjs/operators';
 
 @Component({
@@ -11,9 +12,19 @@ import { filter, map } from 'rxjs/operators';
 export class AppComponent implements OnInit {
   showNavigation = true;
 
-  constructor(private router: Router, private route: ActivatedRoute) {}
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private modal: NgbModal
+  ) {}
 
   ngOnInit(): void {
+    this.router.events
+      .pipe(filter((e): e is NavigationStart => e instanceof NavigationStart))
+      .subscribe(() => {
+        this.modal.dismissAll('router-navigation');
+      });
+
     this.router.events
       .pipe(
         filter(event => event instanceof NavigationEnd),

@@ -3,6 +3,23 @@
     <a routerLink="/tournaments" routerLinkActive="active">tournaments</a>
     <a routerLink="/players" routerLinkActive="active">players</a>
     <span class="nav-spacer"></span>
+    <button
+      *ngIf="isAdmin"
+      type="button"
+      class="btn btn-link nav-activity-link p-0"
+      (click)="openActivityLog()"
+      aria-label="Activity log"
+      [attr.title]="hasUnreadError ? 'Activity log (unread errors)' : 'Activity log'"
+    >
+      <span class="nav-activity-wrap">
+        <span class="material-icons nav-activity-icon" aria-hidden="true">history</span>
+        <span
+          *ngIf="hasUnreadError"
+          class="nav-activity-unread"
+          aria-hidden="true"
+        ></span>
+      </span>
+    </button>
     <a
       *ngIf="!hasSession"
       routerLink="/login"
@@ -16,5 +33,83 @@
         <span *ngIf="isAdmin" class="nav-auth-label">Admin</span>
         <span *ngIf="!isAdmin" class="nav-auth-label text-muted">Signed in</span>
         <button type="button" class="btn btn-link nav-signout p-0" (click)="signOut()">Sign out</button>
+        <div
+          ngbDropdown
+          *ngIf="
+            isAdmin &&
+            showTournamentAdminMenu &&
+            (tournamentMenuFlags.resetEntire ||
+              tournamentMenuFlags.restartPhase ||
+              tournamentMenuFlags.fillFakePrelimResults ||
+              tournamentMenuFlags.recalculateBracket)
+          "
+          placement="bottom-end"
+          class="nav-tournament-menu d-inline-block"
+        >
+          <button
+            type="button"
+            class="btn btn-link nav-hamburger p-0"
+            ngbDropdownToggle
+            aria-label="Tournament admin menu"
+            aria-haspopup="true"
+          >
+            <span class="material-icons" aria-hidden="true">menu</span>
+          </button>
+          <div ngbDropdownMenu class="dropdown-menu-end nav-tournament-dropdown">
+            <button
+              *ngIf="tournamentMenuFlags.resetEntire"
+              type="button"
+              ngbDropdownItem
+              (click)="onTournamentMenuResetEntire()"
+            >
+              Reset Entire Tournament
+            </button>
+            <button
+              *ngIf="tournamentMenuFlags.restartPhase"
+              type="button"
+              ngbDropdownItem
+              (click)="onTournamentMenuRestartPhase()"
+            >
+              Reset to Preliminaries
+            </button>
+            <button
+              *ngIf="tournamentMenuFlags.fillFakePrelimResults"
+              type="button"
+              ngbDropdownItem
+              (click)="onTournamentMenuFillFakePrelimResults()"
+            >
+              Fill fake prelim results (debug)
+            </button>
+            <button
+              *ngIf="tournamentMenuFlags.recalculateBracket"
+              type="button"
+              ngbDropdownItem
+              (click)="onTournamentMenuRecalculateBracket()"
+            >
+              Recalculate bracket
+            </button>
+          </div>
+        </div>
     </ng-container>
 </nav>
+
+<ng-template #activityLogTpl let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title mb-0">Activity log</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <p *ngIf="activityEntries.length === 0" class="text-muted mb-0">No messages yet.</p>
+    <ul class="list-unstyled mb-0 activity-log-list">
+      <li *ngFor="let e of activityEntries" class="mb-2">
+        <small class="text-muted">{{ e.at | date:'short' }}</small>
+        <span
+          [class.text-danger]="e.level === 'error'"
+          [class.text-success]="e.level === 'success'"
+          class="activity-log-text"
+        >
+          {{ e.text }}</span>
+      </li>
+    </ul>
+  </div>
+</ng-template>

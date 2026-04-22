@@ -18,6 +18,7 @@ namespace TecmoTourney.DataAccess
             services.AddScoped<IWagerDAO, WagerDAO>();
             services.AddScoped<IWagerAuditDAO, WagerAuditDAO>();
             services.AddScoped<IWagerSettingsDAO, WagerSettingsDAO>();
+            services.AddScoped<IGameResultSaveAuditDAO, GameResultSaveAuditDAO>();
         }
     }
 }

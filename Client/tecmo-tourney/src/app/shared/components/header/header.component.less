@@ -50,3 +50,121 @@
   font-size: 0.75rem;
   margin-right: 0.35rem;
 }
+
+.nav-activity-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-decoration: none;
+  color: inherit;
+  padding: 0.15rem;
+  border-radius: 4px;
+}
+
+.nav-activity-link:hover {
+  opacity: 0.85;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-activity-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-activity-icon {
+  font-size: 1.35rem;
+}
+
+.nav-activity-unread {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #dc3545;
+  border: 2px solid var(--bs-body-bg, #fff);
+  box-sizing: content-box;
+}
+
+.activity-log-list .activity-log-text {
+  display: block;
+  margin-top: 0.15rem;
+}
+
+.nav-hamburger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-decoration: none;
+  color: inherit;
+  padding: 0.15rem;
+  border-radius: 4px;
+}
+
+.nav-hamburger:hover {
+  opacity: 0.85;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-hamburger .material-icons {
+  font-size: 1.5rem;
+}
+
+.nav-tournament-menu {
+  margin-left: 0.15rem;
+}
+
+/* Match app .link hover arrow (styles.less); panel: white, red border, blue type */
+@tournament-menu-blue: #1863d6;
+@tournament-menu-border-red: #dc3545;
+
+.nav-tournament-dropdown.dropdown-menu {
+  min-width: 14rem;
+  background: #fff;
+  border: 2px solid @tournament-menu-border-red;
+  border-radius: 4px;
+  padding: 0.35rem 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.nav-tournament-dropdown .dropdown-item {
+  position: relative;
+  display: block;
+  color: @tournament-menu-blue;
+  background-color: transparent;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.65rem;
+  line-height: 1.4;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+
+.nav-tournament-dropdown .dropdown-item::before {
+  content: '\25B6';
+  display: inline-block;
+  margin-right: 4px;
+  vertical-align: middle;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+  color: #fff;
+}
+
+.nav-tournament-dropdown .dropdown-item:hover,
+.nav-tournament-dropdown .dropdown-item:focus {
+  background-color: @tournament-menu-blue;
+  color: #fff;
+}
+
+.nav-tournament-dropdown .dropdown-item:hover::before,
+.nav-tournament-dropdown .dropdown-item:focus::before {
+  opacity: 1;
+  transform: translateY(-2px);
+  color: #fff;
+}

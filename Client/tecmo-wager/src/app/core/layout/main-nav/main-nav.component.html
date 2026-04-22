@@ -16,10 +16,6 @@
       <span class="header-brand">Tecmo Wager</span>
     </div>
     <div class="header-center">
-      <span
-        class="header-tournament"
-        [attr.title]="displayTournamentName() || null"
-      >{{ displayTournamentName() || '\u2014' }}</span>
       @if (isAdmin() && pendingPlayersCount() > 0) {
         <div class="header-admin-alerts" role="navigation" aria-label="Admin alerts">
           <a routerLink="/admin/pending-players" class="header-mini-banner" (click)="closeMenu()">

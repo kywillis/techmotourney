@@ -8,6 +8,8 @@ import { ITournamentStanding } from '../models/tournamentStandingModel';
 import { TournamentStatus } from 'src/app/enums';
 import { IChangeTournamentStatusRequest } from '../models/request/changeTournamentStatusRequest.model';
 import { IResetTournamentRequest } from '../models/request/resetTournamentRequest.model';
+import { IChangeTournamentStatusResponse } from '../models/change-tournament-status-response.model';
+import { IRecalculateBracketResponse } from '../models/recalculate-bracket-response.model';
 
 @Injectable({
   providedIn: 'root'
@@ -59,8 +61,30 @@ export class TournamentsService {
     return this.http.delete<void>(`${this.apiUrl}/tournaments/${tournamentId}`);
   }
 
-  setStatus(statusRequest: IChangeTournamentStatusRequest): Observable<ITournament>{
-    return this.http.put<ITournament>(`${this.apiUrl}/tournaments/${statusRequest.tournamentId}/status`, statusRequest);
+  setStatus(statusRequest: IChangeTournamentStatusRequest): Observable<IChangeTournamentStatusResponse> {
+    return this.http
+      .put<IChangeTournamentStatusResponse>(
+        `${this.apiUrl}/tournaments/${statusRequest.tournamentId}/status`,
+        statusRequest
+      )
+      .pipe(
+        map((res) => ({
+          ...res,
+          tournament: this.parseBracketData(res.tournament)
+        }))
+      );
+  }
+
+  private parseBracketData(tournament: ITournament): ITournament {
+    const t = { ...tournament };
+    if (t?.bracketData != null && t.bracketData !== '' && typeof t.bracketData === 'string') {
+      try {
+        t.bracketData = JSON.parse(t.bracketData);
+      } catch {
+        /* leave as string */
+      }
+    }
+    return t;
   }
 
   getTournamentStandings(tournamentId: number, status: TournamentStatus): Observable<ITournamentStanding[]> {
@@ -69,5 +93,20 @@ export class TournamentsService {
 
   resetTournament(tournamentId: number, request: IResetTournamentRequest): Observable<boolean> {
     return this.http.post<boolean>(`${this.apiUrl}/tournaments/${tournamentId}/reset`, request);
+  }
+
+  /** Clears bracket games, wagers, and odds; bracket JSON; status → Preliminaries. Prelims unchanged. */
+  resetTournamentPhase(tournamentId: number, request: IResetTournamentRequest): Observable<boolean> {
+    return this.http.post<boolean>(
+      `${this.apiUrl}/tournaments/${tournamentId}/reset-tournament-phase`,
+      request
+    );
+  }
+
+  recalculateBracket(tournamentId: number): Observable<IRecalculateBracketResponse> {
+    return this.http.post<IRecalculateBracketResponse>(
+      `${this.apiUrl}/tournaments/${tournamentId}/recalculate-bracket`,
+      {}
+    );
   }
 }

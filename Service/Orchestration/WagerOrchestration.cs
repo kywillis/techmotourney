@@ -1,4 +1,6 @@
 using System.Net;
+using System.Collections.Generic;
+using System.Linq;
 using AutoMapper;
 using TecmoTourney.DataAccess.Interfaces;
 using TecmoTourney.DataAccess.Models;
@@ -106,8 +108,8 @@ namespace TecmoTourney.Orchestration
                 case WagerMarketType.Spread:
                     var mag = Math.Abs(w.OddsSpread);
                     var fav = w.OddsFavoredPlayerId;
-                    var lineP1 = mag;
-                    var lineP2 = mag;
+                    decimal lineP1 = mag;
+                    decimal lineP2 = mag;
                     if (fav.HasValue)
                     {
                         if (fav.Value == w.MatchPlayer1Id)
@@ -148,7 +150,7 @@ namespace TecmoTourney.Orchestration
             }
         }
 
-        private static string FormatPlayerMoneyLinePick(string playerName, int? americanOdds)
+        private static string FormatPlayerMoneyLinePick(string playerName, decimal? americanOdds)
         {
             var oddsStr = FormatAmericanOdds(americanOdds);
             return string.IsNullOrEmpty(oddsStr)
@@ -184,22 +186,28 @@ namespace TecmoTourney.Orchestration
             }
         }
 
-        private static decimal ProfitFromAmericanOddsStake(decimal stake, int american)
+        private static decimal ProfitFromAmericanOddsStake(decimal stake, decimal american)
         {
             if (american > 0)
                 return stake * american / 100m;
             return stake * 100m / (-american);
         }
 
-        private static string FormatSignedSpreadLine(int line) =>
-            line > 0 ? $"+{line}" : line.ToString();
+        private static string FormatSignedSpreadLine(decimal line)
+        {
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            return line > 0
+                ? $"+{line.ToString("0.0", inv)}"
+                : line.ToString("0.0", inv);
+        }
 
-        private static string FormatAmericanOdds(int? line)
+        private static string FormatAmericanOdds(decimal? line)
         {
             if (!line.HasValue)
                 return string.Empty;
             var v = line.Value;
-            return v > 0 ? $"+{v}" : v.ToString();
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            return v > 0 ? $"+{v.ToString("0.0", inv)}" : v.ToString("0.0", inv);
         }
 
         /// <summary>Fills player names from game/players when SQL join did not map into the row.</summary>
@@ -220,15 +228,19 @@ namespace TecmoTourney.Orchestration
 
             foreach (var w in list)
             {
+                if (!w.GameResultId.HasValue)
+                    continue;
+
+                var gid = w.GameResultId.Value;
                 var needNames = string.IsNullOrWhiteSpace(w.Player1Name) || string.IsNullOrWhiteSpace(w.Player2Name);
                 var needMatchIds = w.MatchPlayer1Id == 0 || w.MatchPlayer2Id == 0;
                 if (!needNames && !needMatchIds)
                     continue;
 
-                if (!gameCache.TryGetValue(w.GameResultId, out var game))
+                if (!gameCache.TryGetValue(gid, out var game))
                 {
-                    game = await _gameResultDAO.GetGameResultAsync(w.GameResultId);
-                    gameCache[w.GameResultId] = game;
+                    game = await _gameResultDAO.GetGameResultAsync(gid);
+                    gameCache[gid] = game;
                 }
 
                 if (game == null)
@@ -321,9 +333,11 @@ namespace TecmoTourney.Orchestration
                 var model = await BuildBettableGameModelAsync(g, odds, settings);
                 if (g.StatusId == (int)GameStatus.Completed)
                 {
-                    model.Player1Score = g.Player1Score;
-                    model.Player2Score = g.Player2Score;
                     completed.Add(model);
+                }
+                else if (g.StatusId == (int)GameStatus.InProgress)
+                {
+                    inProgress.Add(model);
                 }
                 else if (g.StatusId == (int)GameStatus.Waiting)
                 {
@@ -351,8 +365,6 @@ namespace TecmoTourney.Orchestration
             var game = await _gameResultDAO.GetGameResultAsync(gameResultId);
             if (game == null || game.IsDeleted)
                 return new ApiError("Game not found", HttpStatusCode.NotFound);
-            if (game.StatusId != (int)GameStatus.Waiting || game.GameStartedAt.HasValue)
-                return new ApiError("Game is not available for betting", HttpStatusCode.BadRequest);
             var odds = await _gameOddsDAO.GetByGameResultIdAsync(gameResultId);
             if (odds == null)
                 return new ApiError("Odds not set for this game", HttpStatusCode.NotFound);
@@ -372,6 +384,99 @@ namespace TecmoTourney.Orchestration
             var settings = await _wagerSettingsDAO.GetAsync();
             var model = await BuildBettableGameModelAsync(game, odds, settings);
             return model;
+        }
+
+        public async Task<Operation<PublicWageringSnapshotModel, ApiError>> GetPublicWageringSnapshotAsync(int gameResultId)
+        {
+            var game = await _gameResultDAO.GetGameResultAsync(gameResultId);
+            if (game == null || game.IsDeleted)
+                return new ApiError("Game not found", HttpStatusCode.NotFound);
+            var odds = await _gameOddsDAO.GetByGameResultIdAsync(gameResultId);
+            if (odds == null)
+                return new ApiError("Odds not set for this game", HttpStatusCode.NotFound);
+
+            var settings = await _wagerSettingsDAO.GetAsync();
+            var p1 = await _playerDAO.GetPlayerAsync(game.Player1Id);
+            var p2 = await _playerDAO.GetPlayerAsync(game.Player2Id);
+            var pendingWagers = (await _wagerDAO.GetByGameResultIdAsync(gameResultId))
+                .Where(w => w.Status == WagerStatus.Pending)
+                .ToList();
+
+            return BuildPublicWageringSnapshot(game, odds, p1, p2, pendingWagers, settings.MaxMarketImbalance);
+        }
+
+        public async Task<Operation<List<PublicWageringSnapshotModel>, ApiError>> GetPublicWageringSnapshotsByTournamentAsync(
+            int tournamentId)
+        {
+            var settings = await _wagerSettingsDAO.GetAsync();
+            var oddsList = (await _gameOddsDAO.GetByTournamentIdAsync(tournamentId)).ToList();
+            var gamesById = (await _gameResultDAO.ListResultsByTournamentAsync(tournamentId, false))
+                .Where(g => !g.IsDeleted)
+                .ToDictionary(g => g.GameResultId);
+
+            var pendingByGame = (await _wagerDAO.GetByTournamentIdAsync(tournamentId))
+                .Where(w => w.Status == WagerStatus.Pending && w.GameResultId.HasValue)
+                .GroupBy(w => w.GameResultId!.Value)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            var playerCache = new Dictionary<int, PlayerDAOModel?>();
+            var list = new List<PublicWageringSnapshotModel>();
+            var seenGameIds = new HashSet<int>();
+
+            foreach (var odds in oddsList)
+            {
+                if (!odds.GameResultId.HasValue)
+                    continue;
+                var gid = odds.GameResultId.Value;
+                if (!seenGameIds.Add(gid))
+                    continue;
+                if (!gamesById.TryGetValue(gid, out var game))
+                    continue;
+
+                if (!playerCache.ContainsKey(game.Player1Id))
+                    playerCache[game.Player1Id] = await _playerDAO.GetPlayerAsync(game.Player1Id);
+                if (!playerCache.ContainsKey(game.Player2Id))
+                    playerCache[game.Player2Id] = await _playerDAO.GetPlayerAsync(game.Player2Id);
+                var p1 = playerCache[game.Player1Id];
+                var p2 = playerCache[game.Player2Id];
+
+                pendingByGame.TryGetValue(gid, out var pending);
+                pending ??= new List<WagerDAOModel>();
+
+                list.Add(BuildPublicWageringSnapshot(game, odds, p1, p2, pending, settings.MaxMarketImbalance));
+            }
+
+            return list;
+        }
+
+        private static PublicWageringSnapshotModel BuildPublicWageringSnapshot(
+            GameResultDAOModel game,
+            GameOddsDAOModel odds,
+            PlayerDAOModel? p1,
+            PlayerDAOModel? p2,
+            List<WagerDAOModel> pendingWagers,
+            decimal maxMarketImbalance)
+        {
+            return new PublicWageringSnapshotModel
+            {
+                GameResultId = game.GameResultId,
+                Player1Id = game.Player1Id,
+                Player2Id = game.Player2Id,
+                Player1Name = string.IsNullOrWhiteSpace(p1?.FullName) ? $"Player {game.Player1Id}" : p1!.FullName.Trim(),
+                Player2Name = string.IsNullOrWhiteSpace(p2?.FullName) ? $"Player {game.Player2Id}" : p2!.FullName.Trim(),
+                Player1ProfilePic = p1?.ProfilePic ?? 0,
+                Player2ProfilePic = p2?.ProfilePic ?? 0,
+                Odds = new PublicWageringOddsModel
+                {
+                    Spread = odds.Spread,
+                    FavoredPlayerId = odds.FavoredPlayerId,
+                    OverUnder = odds.OverUnder,
+                    MoneyLinePlayer1 = odds.MoneyLinePlayer1,
+                    MoneyLinePlayer2 = odds.MoneyLinePlayer2,
+                    Summary = odds.Summary?.Trim() ?? string.Empty
+                },
+                MarketDepth = BuildMarketDepth(pendingWagers, maxMarketImbalance)
+            };
         }
 
         private static BettableGameMarketDepthModel BuildMarketDepth(
@@ -412,7 +517,7 @@ namespace TecmoTourney.Orchestration
 
         private static decimal MaxStakeForMoneyLineSide(WagerSide side, GameOddsDAOModel odds)
         {
-            int? line = side switch
+            decimal? line = side switch
             {
                 WagerSide.Player1ML => odds.MoneyLinePlayer1,
                 WagerSide.Player2ML => odds.MoneyLinePlayer2,
@@ -423,7 +528,7 @@ namespace TecmoTourney.Orchestration
             var l = line.Value;
             if (l > 0)
                 return Math.Floor(MaxWinMoneyLine * 100m / l);
-            return Math.Floor(MaxWinMoneyLine * Math.Abs((decimal)l) / 100m);
+            return Math.Floor(MaxWinMoneyLine * Math.Abs(l) / 100m);
         }
 
         private async Task<BettableGameModel> BuildBettableGameModelAsync(
@@ -450,9 +555,17 @@ namespace TecmoTourney.Orchestration
                     FavoredPlayerId = odds.FavoredPlayerId,
                     OverUnder = odds.OverUnder,
                     MoneyLinePlayer1 = odds.MoneyLinePlayer1,
-                    MoneyLinePlayer2 = odds.MoneyLinePlayer2
-                }
+                    MoneyLinePlayer2 = odds.MoneyLinePlayer2,
+                    Summary = odds.Summary?.Trim() ?? string.Empty
+                },
+                GameStatus = ((GameStatus)game.StatusId).ToString(),
+                IsOpenForBetting = game.StatusId == (int)GameStatus.Waiting && !game.GameStartedAt.HasValue
             };
+            if (game.StatusId == (int)GameStatus.Completed)
+            {
+                model.Player1Score = game.Player1Score;
+                model.Player2Score = game.Player2Score;
+            }
             var pendingWagers = (await _wagerDAO.GetByGameResultIdAsync(game.GameResultId))
                 .Where(w => w.Status == WagerStatus.Pending)
                 .ToList();

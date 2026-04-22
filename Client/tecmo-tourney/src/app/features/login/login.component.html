@@ -2,7 +2,7 @@
   <h1 class="login-title">Admin sign in</h1>
   <p class="login-hint">Use the same Google account as Tecmo Wager. Only users marked admin can edit tournaments.</p>
   <div #googleButton class="google-button-wrap"></div>
-  <p *ngIf="errorMessage" class="text-danger login-error">{{ errorMessage }}</p>
+  <p *ngIf="errorMessage" class="login-error form-validation-message">{{ errorMessage }}</p>
   <p *ngIf="loading" class="login-loading">Signing in…</p>
   <p class="login-back"><a routerLink="/home">← Back to home</a></p>
 </div>

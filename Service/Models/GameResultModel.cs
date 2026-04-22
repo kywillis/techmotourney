@@ -11,6 +11,8 @@ namespace TecmoTourney.Models
         public int BracketGameId { get; set; }
         public int MatchUpIndex { get; set; }
         public DateTime Date { get; set; }
+        /// <summary>When the match was marked in progress at the station (UTC).</summary>
+        public DateTime? GameStartedAt { get; set; }
         /// <summary>If set, this game does not count toward this player's preliminary seeding.</summary>
         public int? SeedingExemptPlayerId { get; set; }
     }

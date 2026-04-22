@@ -7,6 +7,7 @@ import { EditTournamentComponent } from './components/edit-tournament/edit-tourn
 import { DeleteTournamentComponent } from './components/delete-tournament/delete-tournament.component';
 import { TournamentsComponent } from './components/tournaments/tournaments.component'; // Import the missing component
 import { DisplayStatsComponent } from './components/display-stats/display-stats.component';
+import { TournamentBracketViewerComponent } from './components/tournament-bracket-viewer/tournament-bracket-viewer.component';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { FormsModule } from '@angular/forms'; 
 import { MatTabsModule } from '@angular/material/tabs';
@@ -17,7 +18,8 @@ import { MatTabsModule } from '@angular/material/tabs';
     TournamentsComponent,    
     EditTournamentComponent,
     DeleteTournamentComponent,
-    DisplayStatsComponent
+    DisplayStatsComponent,
+    TournamentBracketViewerComponent
   ],
   imports: [
     CommonModule,

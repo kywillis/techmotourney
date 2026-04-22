@@ -2,46 +2,23 @@
 // TecmoTourney.Orchestration.GameResultOrchestration
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
-using OpenAI.Chat;
 using TecmoTourney;
 using TecmoTourney.DataAccess.Interfaces;
 using TecmoTourney.DataAccess.Models;
 using TecmoTourney.Models;
 using TecmoTourney.Models.Requests;
-using TecmoTourney.Orchestration;
 using TecmoTourney.Orchestration.Interfaces;
 using TecmoTourney.ResultPattern;
+using System.Text.Json;
 
+namespace TecmoTourney.Orchestration
+{
 public class GameResultOrchestration : IGameResultOrchestration
 {
-    private class OddsGenerationResponse
-    {
-        public string Player1Name { get; set; } = string.Empty;
-
-        public string Player2Name { get; set; } = string.Empty;
-
-        public int Spread { get; set; }
-
-        public string Summary { get; set; } = string.Empty;
-
-        public string FavoredPlayerName { get; set; } = string.Empty;
-
-        public int? MoneyLinePlayer1 { get; set; }
-
-        public int? MoneyLinePlayer2 { get; set; }
-
-        public decimal? OverUnder { get; set; }
-    }
-
     private const int _winnersGroup = 0;
 
     private const int _losersGroup = 1;
@@ -62,15 +39,36 @@ public class GameResultOrchestration : IGameResultOrchestration
 
     private readonly IGameOddsDAO _gameOddsDAO;
 
+    private readonly IGameOddsGenerationService _gameOddsGenerationService;
+
+    private readonly IWagerDetachmentService _wagerDetachmentService;
+
+    private readonly ITournamentsOrchestration _tournamentsOrchestration;
+
+    private readonly ITournamentBracketReconciliationService _tournamentBracketReconciliationService;
+
     private readonly IMapper _mapper;
+
+    private readonly IGameResultSaveAuditDAO _gameResultSaveAuditDAO;
+
+    private readonly IWagerSettlementService _wagerSettlementService;
 
     private static IEnumerable<GameTeamDAOModel> _gameTeams = new List<GameTeamDAOModel>();
 
-    private readonly IHostEnvironment _environment;
-
-    private readonly IConfiguration _configuration;
-
-    public GameResultOrchestration(IGameResultDAO gameResultDAO, ITournamentsDAO tournamentsDAO, IPlayerDAO playerDAO, IGameTeamDAO gameTeamDAO, IMapper mapper, ITournamentBracketUpdateDAO tournamentBracketUpdateDAO, IGameOddsDAO gameOddsDAO, IHostEnvironment environment, IConfiguration configuration)
+    public GameResultOrchestration(
+        IGameResultDAO gameResultDAO,
+        ITournamentsDAO tournamentsDAO,
+        IPlayerDAO playerDAO,
+        IGameTeamDAO gameTeamDAO,
+        IMapper mapper,
+        ITournamentBracketUpdateDAO tournamentBracketUpdateDAO,
+        IGameOddsDAO gameOddsDAO,
+        IGameOddsGenerationService gameOddsGenerationService,
+        IWagerDetachmentService wagerDetachmentService,
+        ITournamentsOrchestration tournamentsOrchestration,
+        ITournamentBracketReconciliationService tournamentBracketReconciliationService,
+        IGameResultSaveAuditDAO gameResultSaveAuditDAO,
+        IWagerSettlementService wagerSettlementService)
     {
         _tournamentsDAO = tournamentsDAO;
         _gameTeamDAO = gameTeamDAO;
@@ -79,9 +77,12 @@ public class GameResultOrchestration : IGameResultOrchestration
         _mapper = mapper;
         _tournamentBracketUpdateDAO = tournamentBracketUpdateDAO;
         _gameOddsDAO = gameOddsDAO;
-        _environment = environment;
-        _configuration = configuration;
-        string key = _configuration["ApplicationConfig:gptKey"];
+        _gameOddsGenerationService = gameOddsGenerationService;
+        _wagerDetachmentService = wagerDetachmentService;
+        _tournamentsOrchestration = tournamentsOrchestration;
+        _tournamentBracketReconciliationService = tournamentBracketReconciliationService;
+        _gameResultSaveAuditDAO = gameResultSaveAuditDAO;
+        _wagerSettlementService = wagerSettlementService;
     }
 
     public async Task<Operation<bool, ApiError>> AcknowledgeBracketUpdate(int tournamentBracketUpdateId)
@@ -108,6 +109,8 @@ public class GameResultOrchestration : IGameResultOrchestration
     {
         try
         {
+            await _wagerDetachmentService.DetachWagersForGameResultAsync(id, actorPlayerId: null);
+            await _gameOddsDAO.DeleteByGameResultIdAsync(id);
             await _gameResultDAO.DeleteGameResultAsync(id);
             return true;
         }
@@ -242,10 +245,12 @@ public class GameResultOrchestration : IGameResultOrchestration
         }
     }
 
-    public async Task<Operation<GameResultModel, ApiError>> SaveGameResultAsync(SaveGameResultRequestModel gameResult)
+    public async Task<Operation<SaveGameResultResponseModel, ApiError>> SaveGameResultAsync(SaveGameResultRequestModel gameResult)
     {
         try
         {
+            await ApplyTieStatAccumulationIfRequestedAsync(gameResult);
+
             List<string> errors = await ValidateGameResultAsync(null, gameResult);
             if (errors.Any())
             {
@@ -253,7 +258,8 @@ public class GameResultOrchestration : IGameResultOrchestration
             }
             GameResultDAOModel gameResultDAOModel = _mapper.Map<GameResultDAOModel>(gameResult);
             GameResultDAOModel savedGameResultDAOModel;
-            if (!gameResult.GameResultId.HasValue || gameResult.GameResultId < 1)
+            var isNewGame = !gameResult.GameResultId.HasValue || gameResult.GameResultId < 1;
+            if (isNewGame)
             {
                 savedGameResultDAOModel = await _gameResultDAO.CreateGameResultAsync(gameResultDAOModel);
             }
@@ -262,12 +268,12 @@ public class GameResultOrchestration : IGameResultOrchestration
                 await _gameResultDAO.UpdateGameResultAsync(gameResultDAOModel.GameResultId, gameResultDAOModel);
                 savedGameResultDAOModel = await _gameResultDAO.GetGameResultAsync(gameResultDAOModel.GameResultId);
             }
-            await _tournamentBracketUpdateDAO.Save(new TournamentBracketUpdateDAOModel
-            {
-                GameResultId = savedGameResultDAOModel.GameResultId,
-                StatusID = 1,
-                TournamentId = savedGameResultDAOModel.TournamentId
-            });
+            //await _tournamentBracketUpdateDAO.Save(new TournamentBracketUpdateDAOModel
+            //{
+            //    GameResultId = savedGameResultDAOModel.GameResultId,
+            //    StatusID = 1,
+            //    TournamentId = savedGameResultDAOModel.TournamentId
+            //});
             GameResultModel game = _mapper.Map<GameResultModel>(savedGameResultDAOModel);
             if (gameResult.GameType == GameType.Tournament)
             {
@@ -275,7 +281,48 @@ public class GameResultOrchestration : IGameResultOrchestration
             }
             await populatePlayerNames(game);
             await populateTeamNames(game);
-            return game;
+
+            OddsGenerationStatusModel oddsStatus;
+            if (isNewGame)
+            {
+                oddsStatus = await _gameOddsGenerationService.EnsureOddsForNewGameResultsAsync(
+                    new List<GameResultDAOModel> { savedGameResultDAOModel });
+            }
+            else
+            {
+                oddsStatus = new OddsGenerationStatusModel { Attempted = false, Success = true };
+            }
+
+            RecalculateBracketResponseModel? bracketRec = null;
+            if (gameResult.GameType == GameType.Tournament &&
+                savedGameResultDAOModel.StatusId == (int)GameStatus.Completed)
+            {
+                var standingsOp = await _tournamentsOrchestration.GetStandingsAsync(
+                    savedGameResultDAOModel.TournamentId,
+                    TournamentStatus.Preliminaries);
+                if (standingsOp.IsSuccess && standingsOp.Data != null)
+                {
+                    var recOp = await _tournamentBracketReconciliationService.ReconcileAsync(
+                        savedGameResultDAOModel.TournamentId,
+                        standingsOp.Data);
+                    if (recOp.IsSuccess && recOp.Data != null)
+                        bracketRec = recOp.Data;
+                }
+            }
+
+            if (bracketRec?.OddsGeneration != null && bracketRec.OddsGeneration.Attempted)
+                oddsStatus = bracketRec.OddsGeneration;
+
+            await _wagerSettlementService.SettleWagersAfterGameSaveAsync(savedGameResultDAOModel);
+
+            await TryInsertSaveAuditAsync(gameResult, savedGameResultDAOModel.GameResultId);
+
+            return new SaveGameResultResponseModel
+            {
+                GameResult = game,
+                OddsGeneration = oddsStatus,
+                BracketReconciliation = bracketRec
+            };
         }
         catch (Exception ex)
         {
@@ -284,12 +331,67 @@ public class GameResultOrchestration : IGameResultOrchestration
         }
     }
 
+    private async Task ApplyTieStatAccumulationIfRequestedAsync(SaveGameResultRequestModel gameResult)
+    {
+        if (!gameResult.AccumulateStatsFromTieLeg || !gameResult.GameResultId.HasValue || gameResult.GameResultId.Value < 1)
+            return;
+
+        var existing = await _gameResultDAO.GetGameResultAsync(gameResult.GameResultId.Value);
+        if (existing == null)
+            return;
+
+        gameResult.Player1.PassingYards += existing.Player1PassingYards;
+        gameResult.Player2.PassingYards += existing.Player2PassingYards;
+        gameResult.Player1.RushingYards += existing.Player1RushingYards;
+        gameResult.Player2.RushingYards += existing.Player2RushingYards;
+    }
+
+    private static string? Truncate(string? value, int maxLen)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+        var t = value.Trim();
+        return t.Length <= maxLen ? t : t.Substring(0, maxLen);
+    }
+
+    private async Task TryInsertSaveAuditAsync(SaveGameResultRequestModel gameResult, int gameResultId)
+    {
+        try
+        {
+            var isTie = gameResult.Status == GameStatus.Completed
+                && gameResult.Player1.PlayerId > 0
+                && gameResult.Player2.PlayerId > 0
+                && gameResult.Player1.Score == gameResult.Player2.Score;
+
+            var json = JsonSerializer.Serialize(gameResult, new JsonSerializerOptions
+            {
+                WriteIndented = false,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+
+            await _gameResultSaveAuditDAO.InsertAsync(new GameResultSaveAuditDAOModel
+            {
+                GameResultId = gameResultId,
+                SaveSource = Truncate(gameResult.SaveSource, 128),
+                ClientCorrelationId = Truncate(gameResult.ClientCorrelationId, 64),
+                IsTieGame = isTie,
+                AccumulatedStats = gameResult.AccumulateStatsFromTieLeg,
+                RequestJson = json.Length > 400000 ? json.Substring(0, 400000) : json,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+        }
+        catch
+        {
+            // Audit must not block save
+        }
+    }
+
     public async Task<Operation<List<GameResultModel>, ApiError>> SearchAsync(int? tournamentId, int? player1Id, int? player2Id, BracketLocation? bracketLocation = null)
     {
         try
         {
             IEnumerable<GameResultDAOModel> gameResultDAOModels = await _gameResultDAO.SearchAsync(tournamentId, player1Id, player2Id);
-            if (bracketLocation.HasValue)
+            if (bracketLocation.HasValue && bracketLocation != BracketLocation.Preliminary)
             {
                 gameResultDAOModels = gameResultDAOModels.OrderBy((GameResultDAOModel g) => g.GameResultId);
                 gameResultDAOModels = ((bracketLocation != BracketLocation.Losers || gameResultDAOModels.Count() <= 1) ? gameResultDAOModels.Take(1) : gameResultDAOModels.Skip(1));
@@ -326,11 +428,13 @@ public class GameResultOrchestration : IGameResultOrchestration
             if (player != null)
             {
                 game.Player1.PlayerName = player.FullName;
+                game.Player1.ProfilePic = player.ProfilePic >= 1 ? player.ProfilePic : 1;
             }
             player = players.FirstOrDefault((PlayerDAOModel p) => p.PlayerId == game.Player2.PlayerId);
             if (player != null)
             {
                 game.Player2.PlayerName = player.FullName;
+                game.Player2.ProfilePic = player.ProfilePic >= 1 ? player.ProfilePic : 1;
             }
         }
     }
@@ -383,48 +487,15 @@ public class GameResultOrchestration : IGameResultOrchestration
         {
             errors.Add("Each player must use a different team.");
         }
+        if (gameResult.Status == GameStatus.Completed
+            && gameResult.Player1.PlayerId > 0
+            && gameResult.Player2.PlayerId > 0
+            && gameResult.Player1.Score == gameResult.Player2.Score
+            && !gameResult.AllowTieScore)
+        {
+            errors.Add("A completed game cannot end in a tie; scores must differ.");
+        }
         return errors;
-    }
-
-    public async Task<Operation<List<GameOddsModel>, ApiError>> CreatePointSpreadsAsync(int tournamentId, IEnumerable<GameOddsRequestModel> pointSpreads)
-    {
-        try
-        {
-            List<GameOddsModel> results = new List<GameOddsModel>();
-            if (!pointSpreads.Any())
-            {
-                return results;
-            }
-            IEnumerable<GameOddsDAOModel> allGameOdds = await _gameOddsDAO.GetByTournamentIdAsync(tournamentId);
-            List<GameOddsDAOModel> newGameOdds = new List<GameOddsDAOModel>();
-            foreach (GameOddsRequestModel request in pointSpreads)
-            {
-                if (!allGameOdds.Any((GameOddsDAOModel g) => ((g.Player1Id == request.Player1ID && g.Player2Id == request.Player2ID) || (g.Player1Id == request.Player2ID && g.Player2Id == request.Player1ID)) && g.BracketTypeId == (int)request.BracketType))
-                {
-                    GameOddsDAOModel gameOddsDAOModel = _mapper.Map<GameOddsDAOModel>(request);
-                    gameOddsDAOModel.FavoredPlayerId = null;
-                    newGameOdds.Add(gameOddsDAOModel);
-                }
-            }
-            if (newGameOdds.Any())
-            {
-                await generatePointSpread(newGameOdds);
-                foreach (GameOddsDAOModel gameOdds in newGameOdds)
-                {
-                    if (gameOdds.Spread > 0)
-                    {
-                        gameOdds.Spread *= -1;
-                    }
-                    await _gameOddsDAO.CreatePointSpreadsAsync(gameOdds);
-                }
-            }
-            return results;
-        }
-        catch (Exception ex)
-        {
-            Exception e = ex;
-            return new ApiError(e.Message, HttpStatusCode.InternalServerError);
-        }
     }
 
     public async Task<Operation<List<GameOddsModel>, ApiError>> GetPointSpreadsAsync(int tournamentId)
@@ -441,100 +512,5 @@ public class GameResultOrchestration : IGameResultOrchestration
         }
     }
 
-    private async Task<string> buildBaseAIText()
-    {
-        IEnumerable<GameResultDAOModel> allGames = await _gameResultDAO.SearchAsync(null, null, null);
-        IEnumerable<PlayerDAOModel> allPlayers = await _playerDAO.ListPlayersAsync(null, includeDeleted: true);
-        IEnumerable<GameTeamDAOModel> allTeams = await _gameTeamDAO.GetAll();
-        StringBuilder text = new StringBuilder("Player1, Player2, Player1 Team, Player 2 Team, Player 1 Score, Player 2 Score, Player 1 Rushing Yards, Player 2 Rushing Yards, Player1 Passing Yards, Player2 Passing Yards, Game Date, GameType\r\n");
-        foreach (GameResultDAOModel game in allGames)
-        {
-            PlayerDAOModel player1 = allPlayers.FirstOrDefault((PlayerDAOModel p) => p.PlayerId == game.Player1Id, new PlayerDAOModel());
-            PlayerDAOModel player2 = allPlayers.FirstOrDefault((PlayerDAOModel p) => p.PlayerId == game.Player2Id, new PlayerDAOModel());
-            GameTeamDAOModel team1 = allTeams.FirstOrDefault((GameTeamDAOModel t) => t.GameTeamId == game.Player1GameTeamID, new GameTeamDAOModel());
-            GameTeamDAOModel team2 = allTeams.FirstOrDefault((GameTeamDAOModel t) => t.GameTeamId == game.Player2GameTeamID, new GameTeamDAOModel());
-            StringBuilder stringBuilder = text;
-            StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(24, 12, stringBuilder);
-            handler.AppendFormatted(player1.FullName);
-            handler.AppendLiteral(", ");
-            handler.AppendFormatted(player2.FullName);
-            handler.AppendLiteral(", ");
-            handler.AppendFormatted(team1.TeamName);
-            handler.AppendLiteral(", ");
-            handler.AppendFormatted(team2.TeamName);
-            handler.AppendLiteral(", ");
-            handler.AppendFormatted(game.Player1Score);
-            handler.AppendLiteral(", ");
-            handler.AppendFormatted(game.Player2Score);
-            handler.AppendLiteral(", ");
-            handler.AppendFormatted(game.Player1RushingYards);
-            handler.AppendLiteral(", ");
-            handler.AppendFormatted(game.Player2RushingYards);
-            handler.AppendLiteral(", ");
-            handler.AppendFormatted(game.Player1PassingYards);
-            handler.AppendLiteral(", ");
-            handler.AppendFormatted(game.Player2PassingYards);
-            handler.AppendLiteral(", ");
-            handler.AppendFormatted(game.DateAdded);
-            handler.AppendLiteral(", ");
-            handler.AppendFormatted((GameType)game.GameTypeId);
-            handler.AppendLiteral("\r\n");
-            stringBuilder.Append(ref handler);
-        }
-        string filePath = Path.Combine(_environment.ContentRootPath, "gptFiles", "pointspread.instructions.txt");
-        return (await File.ReadAllTextAsync(filePath)).Replace("{{gamedata}}", text.ToString());
-    }
-
-    private async Task generatePointSpread(IEnumerable<GameOddsDAOModel> pointSpreads)
-    {
-        try
-        {
-            IEnumerable<PlayerDAOModel> allPlayers = await _playerDAO.ListPlayersAsync(null, includeDeleted: true);
-            string matchupList = string.Empty;
-            string aiInstructions = await buildBaseAIText();
-            foreach (GameOddsDAOModel gameOdds in pointSpreads)
-            {
-                matchupList = matchupList + allPlayers.First((PlayerDAOModel p) => p.PlayerId == gameOdds.Player1Id).FullName + " vs " + allPlayers.First((PlayerDAOModel p) => p.PlayerId == gameOdds.Player2Id).FullName + "\r\n";
-            }
-            aiInstructions = aiInstructions.Replace("{{matchups}}", matchupList);
-            string key = _configuration["ApplicationConfig:gptKey"];
-            ChatClient client = new ChatClient("gpt-4o", key);
-            List<ChatMessage> messages = new List<ChatMessage>(1)
-            {
-                new UserChatMessage(ChatMessageContentPart.CreateTextPart(aiInstructions))
-            };
-            ChatCompletion completion = client.CompleteChat(messages);
-            Enumerable.Empty<OddsGenerationResponse>();
-            IEnumerable<OddsGenerationResponse> respsonses;
-            try
-            {
-                respsonses = JsonConvert.DeserializeObject<IEnumerable<OddsGenerationResponse>>(completion.Content[0].Text);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            foreach (GameOddsDAOModel gameOdds in pointSpreads)
-            {
-                string player1Name = allPlayers.First((PlayerDAOModel p) => p.PlayerId == gameOdds.Player1Id).FullName;
-                string player2Name = allPlayers.First((PlayerDAOModel p) => p.PlayerId == gameOdds.Player2Id).FullName;
-                OddsGenerationResponse response = respsonses.FirstOrDefault((OddsGenerationResponse r) => r.Player2Name == player2Name && r.Player1Name == player1Name);
-                PlayerDAOModel favoredPlayer = allPlayers.FirstOrDefault((PlayerDAOModel p) => p.FullName == response.FavoredPlayerName);
-                if (response != null)
-                {
-                    gameOdds.FavoredPlayerId = favoredPlayer?.PlayerId;
-                    gameOdds.Spread = response.Spread;
-                    gameOdds.Summary = response.Summary;
-                    gameOdds.MoneyLinePlayer1 = response.MoneyLinePlayer1;
-                    gameOdds.MoneyLinePlayer2 = response.MoneyLinePlayer2;
-                    gameOdds.OverUnder = response.OverUnder;
-                }
-            }
-        }
-        catch (Exception ex2)
-        {
-            Exception e = ex2;
-            Console.WriteLine(e);
-        }
-    }
+}
 }

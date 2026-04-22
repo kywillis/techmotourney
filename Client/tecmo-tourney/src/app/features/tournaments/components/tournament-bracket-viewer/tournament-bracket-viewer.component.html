@@ -1,0 +1,225 @@
+<div class="bracket-viewer" *ngIf="!tooFewPlayers && !tooManyPlayers && entrantCount >= 4">
+  <div class="bracket-meta">
+    Double elimination · {{ entrantCount }} players · bracket size {{ bracketSize }}
+    <span *ngIf="!games?.length"> · matchups appear as games are scheduled</span>
+  </div>
+
+  <div
+    *ngIf="
+      tournamentStatus === TournamentStatus.Waiting ||
+      tournamentStatus === TournamentStatus.Preliminaries
+    "
+    class="bracket-tournament-not-started"
+    role="status"
+  >
+    <ng-container [ngSwitch]="tournamentStatus">
+      <span *ngSwitchCase="TournamentStatus.Waiting">
+        Tournament not started — begin preliminaries after moving this event out of Waiting (Tournaments page).
+      </span>
+      <span *ngSwitchCase="TournamentStatus.Preliminaries">
+        Bracket not open yet — complete preliminaries and use Start Tournament on the Preliminaries tab.
+      </span>
+    </ng-container>
+  </div>
+
+  <div class="bracket-scroll">
+    <div class="bracket-scroll-layout" #bracketConnectorsHost>
+      <svg class="bracket-connectors" #connectorSvg aria-hidden="true"></svg>
+    <div class="bracket-page-layout">
+    <div class="bracket-wb-lb-column">
+    <section class="bracket-section">
+      <h3 class="bracket-section-title">Winners bracket</h3>
+      <div class="bracket-rounds">
+        <div class="bracket-round bracket-round--wb" *ngFor="let col of wbColumns; let ri = index">
+          <div class="bracket-round-label">Round {{ ri + 1 }}</div>
+          <div
+            class="bracket-wb-game-wrap"
+            *ngFor="let m of col; let mi = index"
+            [attr.data-bracket-match-id]="m.def.id"
+            [style.marginTop.px]="wbMatchMarginsPx[ri][mi]"
+          >
+            <span
+              class="bracket-wb-match-label bracket-match-id-label"
+              [attr.title]="matchIdColumnTitle(m)"
+              >{{ matchGameResultIdDisplay(m) }}</span
+            >
+            <div class="bracket-game-stack">
+              <div class="bracket-wb-code-row">
+                <span class="bracket-match-code">{{ bracketCodeLabel(m) }}</span>
+                <ng-container *ngIf="wbLoserDropLabel(m) as dropLb">
+                  <span
+                    class="material-icons bracket-wb-arrow"
+                    aria-hidden="true"
+                    [attr.title]="wbLoserDropTitle(m)">arrow_forward</span>
+                  <span class="bracket-wb-dest-lb" [attr.title]="wbLoserDropTitle(m)">{{ dropLb }}</span>
+                </ng-container>
+              </div>
+              <div
+                class="bracket-match"
+                [class.bracket-match--in-progress]="m.status === GameStatus.InProgress"
+                role="button"
+                tabindex="0"
+                [attr.aria-label]="'Open bracket game ' + bracketCodeLabel(m)"
+                (click)="onMatchActivateMouse(m, $event)"
+                (keydown)="onMatchActivateKeydown(m, $event)"
+              >
+              <div [ngClass]="rowClasses('top', m)">
+                <span class="bracket-name" *ngIf="m.top.isBye">Bye</span>
+                <ng-container *ngIf="!m.top.isBye && m.top.participant">
+                  <span class="bracket-seed">{{ m.top.participant.seed }}.</span>
+                  <span class="bracket-player"
+                    >{{ m.top.participant.name }} ({{ formatSpreadParenthetical(m, 'top') }})</span
+                  >
+                </ng-container>
+                <span class="bracket-score">{{ formatScore(m, m.topScore) }}</span>
+              </div>
+              <div [ngClass]="rowClasses('bottom', m)">
+                <span class="bracket-name" *ngIf="m.bottom.isBye">Bye</span>
+                <ng-container *ngIf="!m.bottom.isBye && m.bottom.participant">
+                  <span class="bracket-seed">{{ m.bottom.participant.seed }}.</span>
+                  <span class="bracket-player"
+                    >{{ m.bottom.participant.name }} ({{ formatSpreadParenthetical(m, 'bottom') }})</span
+                  >
+                </ng-container>
+                <span class="bracket-score">{{ formatScore(m, m.bottomScore) }}</span>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bracket-section bracket-section--losers">
+      <h3 class="bracket-section-title">Losers bracket</h3>
+      <div class="bracket-rounds">
+        <div class="bracket-round" *ngFor="let col of lbColumns; let ri = index">
+          <div class="bracket-round-label">L{{ ri + 1 }}</div>
+          <div
+            class="bracket-lb-game-wrap"
+            *ngFor="let m of col; let mi = index"
+            [attr.data-bracket-match-id]="m.def.id"
+            [style.marginTop.px]="lbMatchMarginsPx[ri][mi]"
+          >
+            <span
+              class="bracket-wb-match-label bracket-match-id-label"
+              [attr.title]="matchIdColumnTitle(m)"
+              >{{ matchGameResultIdDisplay(m) }}</span
+            >
+            <div class="bracket-game-stack">
+              <div class="bracket-wb-code-row" *ngIf="bracketCodeLabel(m) || lbWinnerNextLabel(m)">
+                <span class="bracket-match-code">{{ bracketCodeLabel(m) }}</span>
+                <ng-container *ngIf="lbWinnerNextLabel(m) as lbNext">
+                  <span
+                    class="material-icons bracket-wb-arrow"
+                    aria-hidden="true"
+                    [attr.title]="lbWinnerNextTitle(m)">arrow_forward</span>
+                  <span class="bracket-wb-dest-lb" [attr.title]="lbWinnerNextTitle(m)">{{ lbNext }}</span>
+                </ng-container>
+              </div>
+              <div
+                class="bracket-match"
+                [class.bracket-match--in-progress]="m.status === GameStatus.InProgress"
+                role="button"
+                tabindex="0"
+                [attr.aria-label]="'Open bracket game ' + bracketCodeLabel(m)"
+                (click)="onMatchActivateMouse(m, $event)"
+                (keydown)="onMatchActivateKeydown(m, $event)"
+              >
+              <div [ngClass]="rowClasses('top', m)" class="bracket-row--lb">
+              <span class="bracket-name" *ngIf="m.top.isBye">Bye</span>
+              <ng-container *ngIf="!m.top.isBye && m.top.participant">
+                <span class="bracket-seed">{{ m.top.participant.seed }}.</span>
+                <span class="bracket-player"
+                  >{{ m.top.participant.name }} ({{ formatSpreadParenthetical(m, 'top') }})</span
+                >
+              </ng-container>
+              <span class="bracket-score">{{ formatScore(m, m.topScore) }}</span>
+            </div>
+            <div [ngClass]="rowClasses('bottom', m)" class="bracket-row--lb">
+              <span class="bracket-name" *ngIf="m.bottom.isBye">Bye</span>
+              <ng-container *ngIf="!m.bottom.isBye && m.bottom.participant">
+                <span class="bracket-seed">{{ m.bottom.participant.seed }}.</span>
+                <span class="bracket-player"
+                  >{{ m.bottom.participant.name }} ({{ formatSpreadParenthetical(m, 'bottom') }})</span
+                >
+              </ng-container>
+              <span class="bracket-score">{{ formatScore(m, m.bottomScore) }}</span>
+            </div>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <section class="bracket-section bracket-section--finals" *ngIf="gfMatches.length">
+      <h3 class="bracket-section-title">Finals</h3>
+      <div class="bracket-rounds bracket-rounds--gf">
+        <div class="bracket-gf-row">
+          <div class="bracket-round bracket-round--gf" *ngFor="let m of gfMatches">
+            <div class="bracket-round-label" *ngIf="m.def.round === 0">Final</div>
+            <div class="bracket-round-label" *ngIf="m.def.round === 1">Reset</div>
+            <div class="bracket-wb-game-wrap" [attr.data-bracket-match-id]="m.def.id">
+              <span
+                class="bracket-wb-match-label bracket-match-id-label"
+                [attr.title]="matchIdColumnTitle(m)"
+                >{{ matchGameResultIdDisplay(m) }}</span
+              >
+              <div class="bracket-game-stack">
+                <div class="bracket-match-code" *ngIf="bracketCodeLabel(m)">{{ bracketCodeLabel(m) }}</div>
+                <div
+                  class="bracket-match"
+                  [class.bracket-match--in-progress]="m.status === GameStatus.InProgress"
+                  role="button"
+                  tabindex="0"
+                  [attr.aria-label]="'Open bracket game ' + bracketCodeLabel(m)"
+                  (click)="onMatchActivateMouse(m, $event)"
+                  (keydown)="onMatchActivateKeydown(m, $event)"
+                >
+                  <div [ngClass]="rowClasses('top', m)">
+                    <ng-container *ngIf="m.top.participant">
+                      <span class="bracket-seed">{{ m.top.participant.seed }}.</span>
+                      <span class="bracket-player"
+                        >{{ m.top.participant.name }} ({{ formatSpreadParenthetical(m, 'top') }})</span
+                      >
+                    </ng-container>
+                    <span class="bracket-score">{{ formatScore(m, m.topScore) }}</span>
+                  </div>
+                  <div [ngClass]="rowClasses('bottom', m)">
+                    <ng-container *ngIf="m.bottom.participant">
+                      <span class="bracket-seed">{{ m.bottom.participant.seed }}.</span>
+                      <span class="bracket-player"
+                        >{{ m.bottom.participant.name }} ({{ formatSpreadParenthetical(m, 'bottom') }})</span
+                      >
+                    </ng-container>
+                    <span class="bracket-score">{{ formatScore(m, m.bottomScore) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bracket-champion" *ngIf="champion" aria-label="Tournament champion">
+            <span class="material-icons bracket-champion-icon" aria-hidden="true">emoji_events</span>
+            <span class="bracket-champion-name">{{ champion.name }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div>
+    </div>
+  </div>
+</div>
+
+<div class="bracket-placeholder" *ngIf="entrantCount === 0">
+  Bracket will appear once tournament standings and players are available.
+</div>
+
+<div class="bracket-placeholder bracket-placeholder--warn" *ngIf="tooFewPlayers">
+  Double elimination requires at least 4 players ({{ entrantCount }} in standings).
+</div>
+
+<div class="bracket-placeholder bracket-placeholder--warn" *ngIf="tooManyPlayers">
+  Bracket viewer supports at most 32 players ({{ entrantCount }} in standings).
+</div>

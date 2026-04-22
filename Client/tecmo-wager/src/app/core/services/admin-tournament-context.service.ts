@@ -9,7 +9,9 @@ const STORAGE_KEY = 'tecmo-wager.admin-tournament-id';
 export class AdminTournamentContextService {
   private wagerApi = inject(WagerApiService);
 
-  private initialized = false;
+  /** In-flight or completed first load; every caller awaits this so selection is ready before return. */
+  private loadPromise: Promise<void> | null = null;
+
   private readonly all = signal<Tournament[]>([]);
   private readonly selectedId = signal<number | null>(null);
   private readonly selectedName = signal('');
@@ -18,10 +20,17 @@ export class AdminTournamentContextService {
   readonly tournamentId = this.selectedId.asReadonly();
   readonly tournamentName = this.selectedName.asReadonly();
 
-  /** Idempotent: loads tournament list and resolves selection (stored → active → first). */
+  /** Idempotent: loads tournament list and resolves selection (stored → active → first). Safe if called concurrently. */
   async ensureLoaded(): Promise<void> {
-    if (this.initialized) return;
-    this.initialized = true;
+    if (this.loadPromise != null) {
+      await this.loadPromise;
+      return;
+    }
+    this.loadPromise = this.performInitialLoad();
+    await this.loadPromise;
+  }
+
+  private async performInitialLoad(): Promise<void> {
     let list: Tournament[] = [];
     try {
       list = await this.wagerApi.getTournaments();
@@ -48,7 +57,7 @@ export class AdminTournamentContextService {
       /* private mode */
     }
 
-    let id =
+    const id =
       stored && list.some((t) => t.tournamentId === stored)
         ? stored
         : active?.tournamentId && list.some((t) => t.tournamentId === active.tournamentId)

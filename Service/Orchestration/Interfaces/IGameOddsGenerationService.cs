@@ -1,24 +1,19 @@
 using TecmoTourney.DataAccess.Models;
 using TecmoTourney.Models;
-using TecmoTourney.Models.Requests;
-using TecmoTourney.ResultPattern;
 
 namespace TecmoTourney.Orchestration.Interfaces
 {
     /// <summary>
-    /// Single place for LLM-based odds generation and persistence (linked to <see cref="GameResultDAOModel"/> when applicable).
+    /// LLM-based odds generation and persistence; odds rows always include <see cref="GameOddsDAOModel.GameResultId"/>.
     /// </summary>
     public interface IGameOddsGenerationService
     {
         /// <summary>
-        /// For each saved game with a GameResultId, inserts TC_GameOdds with GameResultId set if none exists yet.
-        /// Batches all games into one LLM call when possible.
+        /// For each saved game, inserts TC_GameOdds with GameResultId when missing. One LLM call for the batch.
+        /// Games are already persisted; failures here do not roll back games. Best-effort inserts on total failure.
         /// </summary>
-        Task EnsureOddsForNewGameResultsAsync(IReadOnlyList<GameResultDAOModel> savedGamesWithIds, CancellationToken cancellationToken = default);
-
-        /// <summary>
-        /// Legacy endpoint: create odds from requests (no GameResultId). Skips matchups that already exist for the tournament + bracket.
-        /// </summary>
-        Task<Operation<List<GameOddsModel>, ApiError>> CreateOddsFromRequestsAsync(int tournamentId, IEnumerable<GameOddsRequestModel> pointSpreads, CancellationToken cancellationToken = default);
+        Task<OddsGenerationStatusModel> EnsureOddsForNewGameResultsAsync(
+            IReadOnlyList<GameResultDAOModel> savedGamesWithIds,
+            CancellationToken cancellationToken = default);
     }
 }

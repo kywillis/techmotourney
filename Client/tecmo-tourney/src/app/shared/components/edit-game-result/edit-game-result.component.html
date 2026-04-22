@@ -126,5 +126,8 @@
       </div>
     </div>
 
-    <button class="btn btn-primary save" type="submit">Save</button>
+    <div class="action-with-spinner">
+        <button class="btn btn-primary save" type="submit" [disabled]="saving">{{ saving ? 'Saving…' : 'Save' }}</button>
+        <span *ngIf="saving" class="spinner-border spinner-border-sm ms-2" role="status" aria-label="Loading"></span>
+    </div>
 </form>

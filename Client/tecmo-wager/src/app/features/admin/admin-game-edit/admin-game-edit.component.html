@@ -25,6 +25,7 @@
         Status
         <select name="status" [(ngModel)]="status">
           <option value="Waiting">Waiting</option>
+          <option value="InProgress">In progress</option>
           <option value="Completed">Completed</option>
         </select>
       </label>
@@ -94,8 +95,8 @@
     <h2 id="admin-odds-section" class="section-title">Odds</h2>
     <form class="form-stack" (ngSubmit)="saveOdds()">
       <label>
-        Spread (integer)
-        <input type="number" name="spread" [(ngModel)]="spread" />
+        Spread (half-point, e.g. 3.5)
+        <input type="number" name="spread" step="0.1" [(ngModel)]="spread" />
       </label>
       <label>
         Favored (spread)
@@ -107,12 +108,12 @@
         </select>
       </label>
       <label>
-        Moneyline {{ row.player1.playerName || 'Player 1' }} (American, e.g. −110)
-        <input type="number" name="ml1" [(ngModel)]="moneyLinePlayer1" />
+        Moneyline {{ row.player1.playerName || 'Player 1' }} (American, one decimal, e.g. −110.0)
+        <input type="number" name="ml1" step="0.1" [(ngModel)]="moneyLinePlayer1" />
       </label>
       <label>
-        Moneyline {{ row.player2.playerName || 'Player 2' }} (American, e.g. −110)
-        <input type="number" name="ml2" [(ngModel)]="moneyLinePlayer2" />
+        Moneyline {{ row.player2.playerName || 'Player 2' }} (American, one decimal, e.g. −110.0)
+        <input type="number" name="ml2" step="0.1" [(ngModel)]="moneyLinePlayer2" />
       </label>
       <label>
         Over/under

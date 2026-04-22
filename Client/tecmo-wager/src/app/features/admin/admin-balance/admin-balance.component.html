@@ -3,7 +3,7 @@
   <header class="header">
     <app-star-flanked-title title="Player balance" />
   </header>
-  <p class="note">Adjust a player’s global wager balance. The list is limited to players on the tournament selected in the menu.</p>
+  <p class="note">Adjust a player’s global wager balance. Everyone in the players table is listed (including bettors who are not on a tournament roster).</p>
   @if (listLoading()) {
     <p class="loading">Loading players…</p>
   } @else if (listError()) {

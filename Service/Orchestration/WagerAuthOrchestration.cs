@@ -5,7 +5,6 @@ using TecmoTourney.DataAccess.Interfaces;
 using TecmoTourney.DataAccess.Models;
 using TecmoTourney.Models;
 using TecmoTourney.Models.Requests;
-using TecmoTourney.Notifications;
 using TecmoTourney.Orchestration.Interfaces;
 using TecmoTourney.ResultPattern;
 
@@ -16,18 +15,15 @@ namespace TecmoTourney.Orchestration
         private readonly IPlayerDAO _playerDAO;
         private readonly IPendingActivationDAO _pendingActivationDAO;
         private readonly GoogleAuthOptions _googleAuthOptions;
-        private readonly IPendingSignupSmsNotifier _pendingSignupSmsNotifier;
 
         public WagerAuthOrchestration(
             IPlayerDAO playerDAO,
             IPendingActivationDAO pendingActivationDAO,
-            IOptions<GoogleAuthOptions> googleAuthOptions,
-            IPendingSignupSmsNotifier pendingSignupSmsNotifier)
+            IOptions<GoogleAuthOptions> googleAuthOptions)
         {
             _playerDAO = playerDAO;
             _pendingActivationDAO = pendingActivationDAO;
             _googleAuthOptions = googleAuthOptions.Value;
-            _pendingSignupSmsNotifier = pendingSignupSmsNotifier;
         }
 
         public async Task<Operation<WagerAuthResponseModel, ApiError>> AuthenticateAsync(WagerAuthRequestModel request)
@@ -111,10 +107,6 @@ namespace TecmoTourney.Orchestration
                 RequestedAt = DateTime.UtcNow
             };
             await _pendingActivationDAO.CreateAsync(newPending);
-            await _pendingSignupSmsNotifier.NotifyNewPendingAsync(
-                newPending.PendingActivationId,
-                newPending.FullName,
-                newPending.Email);
             return new WagerAuthResponseModel
             {
                 IsAuthenticated = false,

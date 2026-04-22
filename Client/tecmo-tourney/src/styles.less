@@ -19,9 +19,34 @@ select{
   padding: 4px;
 }
 
-.error{
-  color:@highlite-color;
+/* Form validation text: keep red type, light panel so it reads on @background blue */
+small.error,
+p.error,
+.form-validation-message {
+  color: #c62828;
+  background-color: rgba(255, 250, 245, 0.97);
+  border: 1px solid rgba(198, 40, 40, 0.35);
+  border-radius: 4px;
+  padding: 0.4rem 0.65rem;
+  margin-top: 0.35rem;
+  display: inline-block;
+  max-width: 100%;
+  line-height: 1.4;
+  box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
+
+p.error {
+  display: block;
+}
+
+/* app-message error alerts on blue pages */
+.alert.message.alert-danger {
+  color: #c62828;
+  background-color: rgba(255, 250, 245, 0.97);
+  border-color: rgba(198, 40, 40, 0.45);
+}
+
 .gameCnt{
   margin:10px 0 5px 0;
   padding-bottom: 5px;
@@ -133,6 +158,14 @@ a:hover
 {
     color: lighten(@link-color, 20%);
 }
+/* Inline loading spinners to the right of primary buttons */
+.action-with-spinner {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
 .link {
     display: inline-block;
     position: relative;

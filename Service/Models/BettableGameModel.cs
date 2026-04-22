@@ -1,6 +1,6 @@
 namespace TecmoTourney.Models
 {
-    /// <summary>Game available to bet: active tournament, status Waiting, GameStartedAt null, has odds with GameResultId.</summary>
+    /// <summary>Game with lines for wager UI (open for betting or read-only completed / in progress).</summary>
     public class BettableGameModel
     {
         public int GameResultId { get; set; }
@@ -11,6 +11,10 @@ namespace TecmoTourney.Models
         public string Player2Name { get; set; } = string.Empty;
         public int Player1ProfilePic { get; set; }
         public int Player2ProfilePic { get; set; }
+        /// <summary>TC_GameResults.StatusId as enum name (Waiting, InProgress, Completed).</summary>
+        public string GameStatus { get; set; } = string.Empty;
+        /// <summary>True when the public may place new wagers on this game.</summary>
+        public bool IsOpenForBetting { get; set; }
         /// <summary>Final scores for completed games; otherwise null.</summary>
         public int? Player1Score { get; set; }
         public int? Player2Score { get; set; }

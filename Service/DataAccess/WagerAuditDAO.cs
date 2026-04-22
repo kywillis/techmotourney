@@ -24,6 +24,13 @@ namespace TecmoTourney.DataAccess
             return id;
         }
 
+        public async Task<IEnumerable<WagerAuditDAOModel>> GetByWagerIdAsync(int wagerId)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            const string sql = "SELECT * FROM TC_WagerAudit WHERE WagerId = @WagerId ORDER BY CreatedAt DESC, AuditId DESC";
+            return await connection.QueryAsync<WagerAuditDAOModel>(sql, new { WagerId = wagerId });
+        }
+
         public async Task<IEnumerable<WagerAuditDAOModel>> GetByTargetPlayerIdAsync(int targetPlayerId, int? tournamentId = null)
         {
             using var connection = new SqlConnection(_connectionString);

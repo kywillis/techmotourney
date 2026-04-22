@@ -10,6 +10,7 @@ export enum TournamentStatus {
 export enum GameStatus {
     Waiting = "Waiting",
     Completed = "Completed",
+    InProgress = "InProgress",
 }
 
 export enum GameType {
@@ -37,6 +38,7 @@ export enum PrelimTieBreaker {
   }
 
   export enum BracketLocation {
+    Preliminary = 'Preliminary',
     Winners = 'winners',
     Losers = 'losers',
     Champinship = 'champinship'

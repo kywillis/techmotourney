@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Collections.Generic;
@@ -103,6 +103,23 @@ namespace TecmoTourney.Controllers
         public async Task<IActionResult> Reset(int tournamentId, ResetTournamentRequestModel request)
         {
             var result = await _tournamentsOrchestration.Reset(tournamentId, request);
+            return result.ToActionResult();
+        }
+
+        /// <summary>Removes bracket games, wagers, and odds; clears bracket JSON; sets status to Preliminaries. Does not remove prelims.</summary>
+        [HttpPost("{tournamentId}/reset-tournament-phase")]
+        public async Task<IActionResult> ResetTournamentPhase(int tournamentId, ResetTournamentRequestModel request)
+        {
+            var result = await _tournamentsOrchestration.ResetTournamentPhaseAsync(tournamentId, request);
+            return result.ToActionResult();
+        }
+
+        /// <summary>Admin-only (via middleware): re-run double-elim reconciliation from prelim seeds and bracket results.</summary>
+        [HttpPost("{tournamentId}/recalculate-bracket")]
+        [ProducesResponseType(200, Type = typeof(RecalculateBracketResponseModel))]
+        public async Task<IActionResult> RecalculateBracket(int tournamentId)
+        {
+            var result = await _tournamentsOrchestration.RecalculateBracketAsync(tournamentId);
             return result.ToActionResult();
         }
     }

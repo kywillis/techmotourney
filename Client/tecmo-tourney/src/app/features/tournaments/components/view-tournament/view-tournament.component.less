@@ -13,6 +13,20 @@
     margin-top:25px;
 }
 
+.bracket-tab-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Spinners on blue tournament background */
+.tabContent .action-spinner,
+.tournamentPlayers .action-spinner {
+    color: #fff;
+    border-color: currentColor;
+    border-right-color: transparent;
+}
+
 .tournamentPlayers{
     margin-top:20px;
 }
@@ -24,4 +38,33 @@
 .topButton{
     text-align: right;
     margin-top: 15px;
+}
+
+.tournament-admin-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 200px;
+    row-gap: 0.75rem;
+}
+
+.bracket-game-modal-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.bracket-game-modal-tabs {
+    margin-top: 0;
+}
+
+.bracket-game-modal-tab {
+    padding-top: 0.75rem;
+    max-width: 100%;
+}
+
+.bracket-preview-empty {
+    color: #6c757d;
+    font-size: 0.95rem;
+    padding: 0.5rem 0;
 }

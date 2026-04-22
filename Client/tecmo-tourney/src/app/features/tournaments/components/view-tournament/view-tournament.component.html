@@ -11,11 +11,19 @@
                 </li>
             </ul>
         </div>
-        <button class="btn btn-primary" (click)="startPrelims()">
-            Generate Matchups & Start Prelims <i class="bi bi-dpad"></i>
-        </button>
+        <div class="action-with-spinner">
+            <button class="btn btn-primary" (click)="startPrelims()" [disabled]="startingPrelims">
+                Generate Matchups & Start Prelims <i class="bi bi-dpad"></i>
+            </button>
+            <span *ngIf="startingPrelims" class="spinner-border spinner-border-sm action-spinner" role="status" aria-label="Loading"></span>
+        </div>
     </div>
-    <mat-tab-group  #tabGroup *ngIf="tournament.status != TournamentStatus.Waiting" [(selectedIndex)]="selectedIndex"  (selectedIndexChange)="onTabChange($event)">
+    <mat-tab-group
+      #tabGroup
+      *ngIf="tournament.status != TournamentStatus.Waiting"
+      [selectedIndex]="selectedIndex"
+      (selectedIndexChange)="onTabChange($event)"
+    >
         <mat-tab label="Preliminaries">
             <div class="tabContent">
                 <div class="row">
@@ -23,9 +31,12 @@
                         <div class="row">
                             <div class="col-7"><app-section-header text="Standings"></app-section-header></div>
                             <div class="col-5 topButton">
-                                <button class="btn btn-primary" (click)="startTournament()" *ngIf="loggedIn() && tournament.status == TournamentStatus.Preliminaries">
-                                    <a class="dark" >Start Tournament <i class="bi bi-arrow-right-circle"></i></a>
-                                </button>    
+                                <div class="action-with-spinner" *ngIf="loggedIn() && tournament.status == TournamentStatus.Preliminaries">
+                                    <button class="btn btn-primary" type="button" (click)="startTournament()" [disabled]="startingTournament">
+                                        <span class="dark">Start Tournament <i class="bi bi-arrow-right-circle"></i></span>
+                                    </button>
+                                    <span *ngIf="startingTournament" class="spinner-border spinner-border-sm action-spinner" role="status" aria-label="Loading"></span>
+                                </div>
                             </div>
                         </div>
                         <table class="standings white-border">
@@ -67,19 +78,27 @@
                         <div class="games white-border">
                             <div *ngIf="filteredPrelimGames.length - prelimGames.length" style="text-align: right;"><span class="btn btn-primary" (click)="filterPrelimGames(-1)">Show All</span></div>
                             <div *ngFor="let game of filteredPrelimGames" class="prelimGame gameCnt">
-                                <app-view-game-result [gameResult]="game" (editGame)="onEditGame($event)" (deleteGame)="onDeleteGame($event)" [showControls]="!tournamentCompleted" [showDatePlayed]="tournamentCompleted" [showStatus]="!tournamentCompleted" ></app-view-game-result>
+                                <app-view-game-result [gameResult]="game" (editGame)="onEditGame($event)" (deleteGame)="onDeleteGame($event)" [showControls]="!tournamentCompleted" [showDatePlayed]="tournamentCompleted" [showStatus]="true" [showWageringBand]="true" [useParentWageringData]="true" [parentWageringSnapshot]="wageringSnapshotsByGameId[game.gameResultId]"></app-view-game-result>
                             </div>
                         </div>
                     </div>
                 </div> 
             </div>       
         </mat-tab>
-        <mat-tab label="Bracket" [disabled]="tournament.status == TournamentStatus.Preliminaries" class="tabContent">
-            <img *ngIf="tournament.bracketImage != ''"  class="bracket" src="/assets/{{tournament.bracketImage}}" style="display: block;margin-top:10px;" />
-            <iframe *ngIf="tournament.bracketImage == ''"  id="bracket-iframe"
+        <mat-tab label="Bracket" class="tabContent">
+            <img *ngIf="hasBracketImage(tournament)" class="bracket" src="/assets/{{tournament.bracketImage}}" style="display: block;margin-top:10px;" />
+            <iframe *ngIf="!hasBracketImage(tournament) && usesLegacyJqueryBracket(tournament)" id="bracket-iframe"
                      src="./assets/bracket.html"
                      style="width: 100%; height: 825px; border: none;"></iframe>
-                
+            <div *ngIf="!hasBracketImage(tournament) && !usesLegacyJqueryBracket(tournament)" class="bracket-tab-stack">
+                <app-tournament-bracket-viewer
+                    [games]="allGames"
+                    [standings]="standings"
+                    [players]="players"
+                    [oddsByGameResultId]="oddsByGameResultId"
+                    [tournamentStatus]="tournament.status"
+                    (bracketMatchActivate)="onBracketMatchActivate($event)"></app-tournament-bracket-viewer>
+            </div>
         </mat-tab>
         <mat-tab label="Stats" class="tabContent">
             <div class="tabContent">
@@ -107,10 +126,9 @@
             </div>
         </mat-tab>
     </mat-tab-group>
-   <div *ngIf="loggedIn() && tournament.status != TournamentStatus.Waiting" style="margin-top: 150px;"><button class="btn btn-primary" (click)="showReset()">Reset Tournament</button></div>
 </div>
-<div *ngIf="loading">    
-    loading
+<div *ngIf="loading" class="view-tournament-page-loading text-center py-4">
+    <span class="spinner-border text-light" role="status" aria-label="Loading"></span>
 </div>
 
 <!-- view-tournament.component.html -->
@@ -120,6 +138,57 @@
 <app-modal #deleteGameResultModal title="Delete Game">
     <app-delete-game-result #deleteGameResult (gameDeleted)="gameDeleted()"></app-delete-game-result>
 </app-modal>
+<app-modal #bracketNoMatchModal [title]="bracketNoMatchModalTitle">
+    <p class="mb-0">No Matchup Set</p>
+</app-modal>
+
+<app-modal
+    #bracketGameModal
+    [title]="''"
+    [titleSegments]="bracketGameModalTitleSegments"
+    (closed)="onBracketGameModalClosed()"
+>
+    <div *ngIf="bracketModalGame" class="bracket-game-modal-layout">
+        <app-view-game-result
+            [gameResult]="bracketModalGame"
+            (editGame)="onEditGame($event)"
+            (deleteGame)="onDeleteGame($event)"
+            [showControls]="false"
+            [showWageringBand]="false"
+            [showStatus]="false"
+            [showDatePlayed]="false"
+        ></app-view-game-result>
+        <mat-tab-group
+            animationDuration="0ms"
+            class="bracket-game-modal-tabs"
+            (selectedIndexChange)="onBracketModalTabChange($event)"
+        >
+            <mat-tab label="Preview">
+                <div class="bracket-game-modal-tab">
+                    <ng-container *ngIf="bracketModalPreviewSnapshot as snap">
+                        <app-game-wagering-modal
+                            [embedded]="true"
+                            [snapshot]="snap"
+                            [excludeGameResultId]="bracketModalGame.gameResultId"
+                        ></app-game-wagering-modal>
+                    </ng-container>
+                    <p *ngIf="!bracketModalPreviewSnapshot" class="bracket-preview-empty mb-0">
+                        No lines or wagering data for this game yet.
+                    </p>
+                </div>
+            </mat-tab>
+            <mat-tab label="Edit Game" *ngIf="bracketGameModalAdmin">
+                <div class="bracket-game-modal-tab">
+                    <app-edit-game-result
+                        #bracketGameEdit
+                        (gameResultSaved)="onBracketGameEditSaved()"
+                    ></app-edit-game-result>
+                </div>
+            </mat-tab>
+        </mat-tab-group>
+    </div>
+</app-modal>
+
 <app-modal #viewGameResultModal title="View Game">
     <app-view-game-result #viewGameResult (editGame)="onEditGame($event)" (deleteGame)="onDeleteGame($event)" [showControls]="!tournamentCompleted" [showDatePlayed]="tournamentCompleted" [showStatus]="!tournamentCompleted"></app-view-game-result>
 </app-modal>
@@ -129,14 +198,60 @@
     </div>
 </app-modal>
 
-<app-modal #resetModal title="Reset Tournament">
-    <strong>You are about to reset this tournament</strong>
+<app-modal #resetModal title="Reset Entire Tournament">
+    <strong>You are about to reset this entire tournament</strong>
     <ul>
-        <li>This will reset this tournament to a status of Preliminaries.</li>
-        <li>It will set all bracket games to deleted</li>
-        <li>It will delete the bracket data</li>
-        <li>It will delete all point spread data</li>
+        <li>Status will return to <strong>Waiting</strong> (not yet started).</li>
+        <li>All games (preliminaries and bracket) will be removed.</li>
+        <li>Bracket data and all odds for this tournament will be deleted.</li>
     </ul>
-    <button type="button" class="btn btn-primary" (click)="resetTournament()">Reset tournament</button>
+    <div class="action-with-spinner">
+        <button type="button" class="btn btn-primary" (click)="resetTournament()" [disabled]="resettingTournament">Reset Entire Tournament</button>
+        <span *ngIf="resettingTournament" class="spinner-border spinner-border-sm ms-2" role="status" aria-label="Loading"></span>
+    </div>
     <div *ngIf="resetError" style="color: red;">{{resetError}}</div>
+</app-modal>
+
+<app-modal #restartPhaseModal title="Reset to Preliminaries">
+    <strong>Clear bracket and return to end of preliminaries</strong>
+    <ul>
+        <li>All <strong>bracket</strong> games will be removed; preliminary games stay as they are.</li>
+        <li>Wagers and odds tied to those bracket games will be deleted.</li>
+        <li>Legacy bracket data will be cleared.</li>
+        <li>Tournament status will be set to <strong>Preliminaries</strong> so you can start the bracket again.</li>
+    </ul>
+    <div class="action-with-spinner">
+        <button type="button" class="btn btn-primary" (click)="confirmRestartTournamentPhase()" [disabled]="restartingPhase">Reset to Preliminaries</button>
+        <span *ngIf="restartingPhase" class="spinner-border spinner-border-sm ms-2" role="status" aria-label="Loading"></span>
+    </div>
+    <div *ngIf="restartPhaseError" style="color: red;">{{restartPhaseError}}</div>
+</app-modal>
+
+<app-modal #fakePrelimModal title="Fill fake prelim results (debug)">
+    <ng-container *ngIf="incompletePrelimGamesForFake.length === 0">
+        <p class="text-muted mb-0">There are no incomplete preliminary games. Nothing will be changed.</p>
+    </ng-container>
+    <ng-container *ngIf="incompletePrelimGamesForFake.length > 0">
+        <p class="mb-2">
+            <strong>Debug:</strong> Each incomplete preliminary game will be saved as <strong>Completed</strong> using the
+            existing save API, with random data:
+        </p>
+        <ul>
+            <li>Teams: two random distinct teams from the same global list as Edit Game (valid <code>GameTeamId</code>s)</li>
+            <li>Passing and rushing yards: random integer from 1 to 100 for each player</li>
+            <li>Scores: random integer from 0 to 30 for each player (never a tie)</li>
+        </ul>
+        <div class="action-with-spinner">
+            <button
+                type="button"
+                class="btn btn-primary"
+                (click)="confirmFillFakePrelimResults()"
+                [disabled]="fakePrelimSaving"
+            >
+                {{ fakePrelimSaving ? 'Saving…' : 'Apply fake results' }}
+            </button>
+            <span *ngIf="fakePrelimSaving" class="spinner-border spinner-border-sm ms-2" role="status" aria-label="Loading"></span>
+        </div>
+    </ng-container>
+    <div *ngIf="fakePrelimError" class="mt-2" style="color: red;">{{ fakePrelimError }}</div>
 </app-modal>

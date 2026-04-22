@@ -18,7 +18,8 @@ namespace TecmoTourney.Orchestration.Interfaces
         Task<Operation<List<WagerModel>, ApiError>> GetPendingWagersForTournamentAsync(int tournamentId);
         Task<Operation<bool, ApiError>> AdminCancelWagerAsync(int adminPlayerId, int wagerId);
         Task<Operation<bool, ApiError>> UpdateGameOddsByGameResultIdAsync(int gameResultId, AdminUpdateGameOddsRequestModel request);
-        Task<Operation<GameResultModel, ApiError>> SaveGameResultAdminAsync(SaveGameResultRequestModel gameResult);
-        Task<Operation<List<AdminPlayerBalanceListItemModel>, ApiError>> ListPlayersForBalanceAdminAsync(int tournamentId);
+        Task<Operation<SaveGameResultResponseModel, ApiError>> SaveGameResultAdminAsync(SaveGameResultRequestModel gameResult);
+        /// <summary>All non-deleted players with wager balance (not scoped to a tournament roster).</summary>
+        Task<Operation<List<AdminPlayerBalanceListItemModel>, ApiError>> ListPlayersForBalanceAdminAsync();
     }
 }

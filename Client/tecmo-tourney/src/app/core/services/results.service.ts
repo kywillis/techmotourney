@@ -1,12 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { interval, Observable, switchMap } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
 import { IGameResult } from '../models/gameResult.model';
 import { ISaveGameResultRequest } from '../models/request/saveGameResultRequest.model';
 import { ConfigService } from './config.service';
-import { ITournamentBracketUpdate } from '../models/tournamentBracketUpdate.model';
 import { IGameSearchParameters } from '../models/gameSearchParameters';
 import { IPointSpread } from '../models/pointSpread.model';
+import { ISaveGameResultResponse } from '../models/save-game-result-response.model';
+import { IPublicWageringSnapshot } from '../models/public-wagering-snapshot.model';
 
 @Injectable({
   providedIn: 'root'
@@ -18,18 +20,8 @@ export class ResultsService {
     this.apiUrl = this.configService.getApiUrl() + '/results';
   }
 
-  createResult(request: ISaveGameResultRequest): Observable<IGameResult> {
-    return this.http.post<IGameResult>(`${this.apiUrl}`, request);
-  }
-
-  getBracketUpdates(tournamentId: number): Observable<ITournamentBracketUpdate[]> {
-    return interval(10 * 1000).pipe(
-      switchMap(() => this.http.get<ITournamentBracketUpdate[]>(`${this.apiUrl}/gameUpdates/${tournamentId}`))
-    );
-  }
-
-  acknowledgeBracketUpdate(tournamentBracketUpdateId: number):  Observable<any> {
-    return this.http.put(`${this.apiUrl}/gameUpdates/${tournamentBracketUpdateId}`, null);
+  createResult(request: ISaveGameResultRequest): Observable<ISaveGameResultResponse> {
+    return this.http.post<ISaveGameResultResponse>(`${this.apiUrl}`, request);
   }
 
   getResult(resultId: number): Observable<IGameResult> {
@@ -44,8 +36,8 @@ export class ResultsService {
     return this.http.get<IGameResult[]>(`${this.apiUrl}/player/${playerId}`);
   }
 
-  updateResult(resultId: string, request: ISaveGameResultRequest): Observable<IGameResult> {
-    return this.http.put<IGameResult>(`${this.apiUrl}/${resultId}`, request);
+  updateResult(resultId: number, request: ISaveGameResultRequest): Observable<ISaveGameResultResponse> {
+    return this.http.put<ISaveGameResultResponse>(`${this.apiUrl}/${resultId}`, request);
   }
 
   deleteResult(gameResultId: number): Observable<void> {
@@ -87,5 +79,19 @@ export class ResultsService {
   
   getPointSpreads(tournamentId: number) : Observable<IPointSpread[]> {
     return this.http.get<IPointSpread[]>(`${this.apiUrl}/${tournamentId}/pointSpreads/`);
+  }
+
+  /** Public lines + market depth; emits null when the game has no odds (404). */
+  getWageringSnapshot(gameResultId: number): Observable<IPublicWageringSnapshot | null> {
+    return this.http.get<IPublicWageringSnapshot>(`${this.apiUrl}/games/${gameResultId}/wagering-snapshot`).pipe(
+      catchError(() => of(null))
+    );
+  }
+
+  /** All public snapshots for games in the tournament that have odds; empty array on failure. */
+  getWageringSnapshotsByTournament(tournamentId: number): Observable<IPublicWageringSnapshot[]> {
+    return this.http
+      .get<IPublicWageringSnapshot[]>(`${this.apiUrl}/tournament/${tournamentId}/wagering-snapshots`)
+      .pipe(catchError(() => of([])));
   }
 }

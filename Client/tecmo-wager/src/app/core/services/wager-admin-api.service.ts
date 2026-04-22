@@ -39,6 +39,17 @@ export interface SaveGameResultRequest {
   bracketGameId: number;
 }
 
+export interface OddsGenerationStatus {
+  attempted: boolean;
+  success: boolean;
+  message?: string | null;
+}
+
+export interface SaveGameResultResponse {
+  gameResult: AdminGameResultRow;
+  oddsGeneration: OddsGenerationStatus;
+}
+
 export interface AdminGameResultRow {
   gameResultId: number;
   tournamentId: number;
@@ -198,23 +209,30 @@ export class WagerAdminApiService {
     return firstValueFrom(this.http.put<boolean>(`${this.adminBase}/games/${gameResultId}/odds`, body));
   }
 
-  saveGameResult(body: SaveGameResultRequest): Promise<AdminGameResultRow> {
-    return firstValueFrom(this.http.post<AdminGameResultRow>(`${this.adminBase}/game-result`, body));
+  saveGameResult(body: SaveGameResultRequest): Promise<SaveGameResultResponse> {
+    return firstValueFrom(
+      this.http.post<Record<string, unknown>>(`${this.adminBase}/game-result`, body)
+    ).then((raw) => {
+      const grRaw = (raw['gameResult'] ?? raw['GameResult']) as Record<string, unknown> | undefined;
+      if (!grRaw || typeof grRaw !== 'object') {
+        throw new Error('Invalid save response: missing gameResult');
+      }
+      return {
+        gameResult: this.normalizeGameResultRow(grRaw),
+        oddsGeneration: normalizeOddsGeneration(raw['oddsGeneration'] ?? raw['OddsGeneration'])
+      };
+    });
   }
 
   updatePlayerBalance(body: WagerBalanceAdminRequest): Promise<boolean> {
     return firstValueFrom(this.http.patch<boolean>(`${this.adminBase}/balance`, body));
   }
 
-  getPlayersForBalanceAdmin(tournamentId: number): Promise<AdminPlayerBalanceListItem[]> {
+  getPlayersForBalanceAdmin(): Promise<AdminPlayerBalanceListItem[]> {
     const str = (v: unknown) => (v == null ? '' : String(v));
     const num = (v: unknown) => (typeof v === 'number' ? v : Number(v));
     const pick = (raw: Record<string, unknown>, c: string, p: string) => raw[c] ?? raw[p];
-    return firstValueFrom(
-      this.http.get<Record<string, unknown>[]>(`${this.adminBase}/players`, {
-        params: { tournamentId: tournamentId.toString() }
-      })
-    ).then((rows) =>
+    return firstValueFrom(this.http.get<Record<string, unknown>[]>(`${this.adminBase}/players`)).then((rows) =>
       rows.map((raw) => ({
         playerId: num(pick(raw, 'playerId', 'PlayerId')),
         fullName: str(pick(raw, 'fullName', 'FullName')).trim() || `Player ${num(pick(raw, 'playerId', 'PlayerId'))}`,
@@ -266,4 +284,15 @@ export class WagerAdminApiService {
   getGameLinesForAdmin(gameResultId: number): Promise<BettableGame> {
     return firstValueFrom(this.http.get<BettableGame>(`${this.adminBase}/games/${gameResultId}/lines`));
   }
+}
+
+function normalizeOddsGeneration(raw: unknown): OddsGenerationStatus {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const pick = (c: string, p: string) => r[c] ?? r[p];
+  const msg = pick('message', 'Message');
+  return {
+    attempted: Boolean(pick('attempted', 'Attempted')),
+    success: Boolean(pick('success', 'Success')),
+    message: msg == null || msg === '' ? null : String(msg)
+  };
 }

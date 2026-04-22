@@ -1,0 +1,157 @@
+@import '../../../../styles.less';
+
+.matchup-preview-modal-header {
+  position: relative;
+  display: block;
+  text-align: center;
+  padding: 1rem 3rem 1rem 1rem;
+
+  .matchup-preview-title-wrap {
+    display: inline-block;
+    max-width: calc(100% - 2.75rem);
+    text-align: center;
+  }
+
+  .btn-close {
+    position: absolute;
+    top: 50%;
+    right: 0.75rem;
+    transform: translateY(-50%);
+    margin: 0;
+  }
+}
+
+:host ::ng-deep .matchup-preview-modal-header app-section-header .sectionHeader {
+  margin: 0;
+}
+
+.game-wagering-modal--embedded {
+  padding-top: 0.25rem;
+}
+
+.matchup-names {
+  margin-bottom: 1rem;
+}
+
+.matchup-names-with-faces {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 0.85rem;
+  font-size: 1.5em; /* +50% vs modal body for names + vs */
+}
+
+.matchup-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.matchup-vs {
+  opacity: 0.9;
+  font-size: 0.85em;
+}
+
+/* Sprite faces are 64px; scale down for the modal row */
+.matchup-names-with-faces .matchup-face.player-face {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  margin: 0;
+  transform: scale(0.5);
+  transform-origin: center center;
+}
+
+.game-wagering-modal {
+  .section {
+    margin-bottom: 1.25rem;
+  }
+
+  /* First section title sits tight under matchup names; later ones breathe */
+  .section:first-of-type .statsHeader {
+    margin-top: 0;
+  }
+
+  .section:not(:first-of-type) .statsHeader {
+    margin-top: 1.25rem;
+  }
+
+  /* Match modal body: drop Bootstrap dark table fill */
+  .table {
+    --bs-table-bg: transparent;
+    --bs-table-striped-bg: transparent;
+    --bs-table-active-bg: transparent;
+    --bs-table-hover-bg: fade(@text-color, 6%);
+    color: inherit;
+    background-color: transparent;
+    margin-bottom: 0;
+  }
+
+  .table > :not(caption) > * > * {
+    background-color: transparent;
+    color: inherit;
+    border-bottom-color: fade(@dark-color, 25%);
+  }
+}
+
+.lines-table,
+.depth-table {
+  th {
+    vertical-align: top;
+    white-space: nowrap;
+    width: auto;
+    min-width: 5.5rem;
+    padding-right: 1rem;
+  }
+
+  td.odds-value-nowrap {
+    white-space: nowrap;
+  }
+}
+
+.summary-body {
+  white-space: pre-wrap;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  margin-top: 0.35rem;
+}
+
+.h2h-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.h2h-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid fade(@dark-color, 12%);
+}
+
+.h2h-date {
+  flex: 0 0 7.5rem;
+  font-size: 0.8rem;
+  color: @link-color;
+}
+
+.h2h-matchup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+}
+
+.h2h-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.h2h-vs {
+  color: fade(@dark-color, 55%);
+}

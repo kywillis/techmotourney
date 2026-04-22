@@ -51,7 +51,7 @@ export class AdminGameEditComponent implements OnInit {
   moneyLinePlayer2: number | null = null;
   overUnder: number | null = null;
 
-  /** Roster for current admin tournament (same source as balance page). */
+  /** All players (for line edits); includes non-roster accounts that may wager. */
   tournamentPlayers = signal<AdminPlayerBalanceListItem[]>([]);
   /** TC_GameTeams — option text is TeamName. */
   gameTeams = signal<GameTeamOption[]>([]);
@@ -81,7 +81,7 @@ export class AdminGameEditComponent implements OnInit {
       const [list, detail, roster, teams] = await Promise.all([
         this.adminApi.getTournamentResults(tid),
         this.adminApi.getGameLinesForAdmin(id),
-        this.adminApi.getPlayersForBalanceAdmin(tid),
+        this.adminApi.getPlayersForBalanceAdmin(),
         this.adminApi.getGameTeams()
       ]);
       this.tournamentPlayers.set(roster);
@@ -188,8 +188,15 @@ export class AdminGameEditComponent implements OnInit {
           rushingYards: this.p2Rush
         }
       };
-      await this.adminApi.saveGameResult(body);
-      this.message.set('Scores saved.');
+      const saveRes = await this.adminApi.saveGameResult(body);
+      let msg = 'Scores saved.';
+      const og = saveRes.oddsGeneration;
+      if (og.attempted && !og.success) {
+        msg += ' ' + (og.message || 'Odds generation failed.');
+        this.error.set(msg);
+      } else {
+        this.message.set(msg);
+      }
       await this.load();
     } catch (e) {
       this.error.set(e instanceof Error ? e.message : 'Save failed.');
@@ -204,10 +211,12 @@ export class AdminGameEditComponent implements OnInit {
     this.savingOdds.set(true);
     try {
       await this.adminApi.updateGameOdds(this.gameResultId, {
-        spread: Math.trunc(this.spread),
+        spread: Math.round(this.spread * 10) / 10,
         favoredPlayerId: this.favoredPlayerId,
-        moneyLinePlayer1: this.moneyLinePlayer1,
-        moneyLinePlayer2: this.moneyLinePlayer2,
+        moneyLinePlayer1:
+          this.moneyLinePlayer1 == null ? null : Math.round(this.moneyLinePlayer1 * 10) / 10,
+        moneyLinePlayer2:
+          this.moneyLinePlayer2 == null ? null : Math.round(this.moneyLinePlayer2 * 10) / 10,
         overUnder: this.overUnder
       });
       this.message.set('Odds updated.');

@@ -1,4 +1,4 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -7,7 +7,6 @@ import {
   WagerAdminApiService,
   WagerBalanceAdminRequest
 } from '../../../core/services/wager-admin-api.service';
-import { AdminTournamentContextService } from '../../../core/services/admin-tournament-context.service';
 
 @Component({
   selector: 'app-admin-balance',
@@ -16,9 +15,8 @@ import { AdminTournamentContextService } from '../../../core/services/admin-tour
   templateUrl: './admin-balance.component.html',
   styleUrl: './admin-balance.component.less'
 })
-export class AdminBalanceComponent {
+export class AdminBalanceComponent implements OnInit {
   private adminApi = inject(WagerAdminApiService);
-  private adminTournament = inject(AdminTournamentContextService);
 
   players = signal<{ playerId: number; fullName: string; balance: number }[]>([]);
   listLoading = signal(true);
@@ -33,11 +31,8 @@ export class AdminBalanceComponent {
 
   private loadGeneration = 0;
 
-  constructor() {
-    effect(() => {
-      const tid = this.adminTournament.tournamentId();
-      void this.loadPlayersForTournament(tid);
-    });
+  ngOnInit(): void {
+    void this.loadPlayers();
   }
 
   get currentBalance(): number | null {
@@ -46,21 +41,12 @@ export class AdminBalanceComponent {
     return this.players().find((p) => p.playerId === id)?.balance ?? null;
   }
 
-  private async loadPlayersForTournament(tournamentId: number | null): Promise<void> {
+  private async loadPlayers(): Promise<void> {
     const gen = ++this.loadGeneration;
-
-    if (tournamentId == null) {
-      this.players.set([]);
-      this.selectedPlayerId = null;
-      this.listLoading.set(false);
-      this.listError.set('Choose a tournament from the menu (Change tournament).');
-      return;
-    }
-
     this.listLoading.set(true);
     this.listError.set('');
     try {
-      const rows = await this.adminApi.getPlayersForBalanceAdmin(tournamentId);
+      const rows = await this.adminApi.getPlayersForBalanceAdmin();
       if (gen !== this.loadGeneration) return;
       this.players.set(rows);
       if (this.selectedPlayerId != null && !rows.some((p) => p.playerId === this.selectedPlayerId)) {
@@ -105,7 +91,7 @@ export class AdminBalanceComponent {
       };
       await this.adminApi.updatePlayerBalance(body);
       this.message.set('Balance updated.');
-      await this.loadPlayersForTournament(this.adminTournament.tournamentId());
+      await this.loadPlayers();
     } catch (e) {
       this.error.set(e instanceof Error ? e.message : 'Update failed.');
     } finally {

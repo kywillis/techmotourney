@@ -1,6 +1,6 @@
 <div class="game-detail-screen">
   <header class="header">
-    <app-star-flanked-title title="Place wager" />
+    <app-star-flanked-title [title]="pageTitle()" />
   </header>
 
   @if (loading()) {
@@ -22,13 +22,17 @@
 
     <hr class="game-detail-rule" />
 
+    @if (gameStatusDebugLine(); as dbg) {
+      <p class="game-debug-status">{{ dbg }}</p>
+    }
+
     <div class="markets">
       <h3>Spread</h3>
       <div class="market-row">
-        <button type="button" class="market-side" [class.selected]="selectedMarket() === 'Spread' && selectedSide() === 'Player1Spread'" (click)="setMarket('Spread'); setSide('Player1Spread')">
+        <button type="button" class="market-side" [disabled]="!isOpenForBettingNow()" [class.selected]="selectedMarket() === 'Spread' && selectedSide() === 'Player1Spread'" (click)="setMarket('Spread'); setSide('Player1Spread')">
           {{ game()!.player1Name }} {{ spreadDisplay().p1 > 0 ? '+' : '' }}{{ spreadDisplay().p1 }}
         </button>
-        <button type="button" class="market-side" [class.selected]="selectedMarket() === 'Spread' && selectedSide() === 'Player2Spread'" (click)="setMarket('Spread'); setSide('Player2Spread')">
+        <button type="button" class="market-side" [disabled]="!isOpenForBettingNow()" [class.selected]="selectedMarket() === 'Spread' && selectedSide() === 'Player2Spread'" (click)="setMarket('Spread'); setSide('Player2Spread')">
           {{ game()!.player2Name }} {{ spreadDisplay().p2 > 0 ? '+' : '' }}{{ spreadDisplay().p2 }}
         </button>
       </div>
@@ -36,21 +40,21 @@
       @if (game()!.odds.overUnder != null) {
         <h3>Over / Under {{ game()!.odds.overUnder }}</h3>
         <div class="market-row">
-          <button type="button" class="market-side" [class.selected]="selectedSide() === 'Over'" (click)="setMarket('OverUnder'); setSide('Over')">Over {{ game()!.odds.overUnder }}</button>
-          <button type="button" class="market-side" [class.selected]="selectedSide() === 'Under'" (click)="setMarket('OverUnder'); setSide('Under')">Under {{ game()!.odds.overUnder }}</button>
+          <button type="button" class="market-side" [disabled]="!isOpenForBettingNow()" [class.selected]="selectedSide() === 'Over'" (click)="setMarket('OverUnder'); setSide('Over')">Over {{ game()!.odds.overUnder }}</button>
+          <button type="button" class="market-side" [disabled]="!isOpenForBettingNow()" [class.selected]="selectedSide() === 'Under'" (click)="setMarket('OverUnder'); setSide('Under')">Under {{ game()!.odds.overUnder }}</button>
         </div>
       }
 
       @if (game()!.odds.moneyLinePlayer1 != null) {
         <h3>Money line</h3>
         <div class="market-row">
-          <button type="button" class="market-side" [class.selected]="selectedSide() === 'Player1ML'" (click)="setMarket('MoneyLine'); setSide('Player1ML')">{{ game()!.player1Name }} {{ formatAmericanOdds(game()!.odds.moneyLinePlayer1) }}</button>
-          <button type="button" class="market-side" [class.selected]="selectedSide() === 'Player2ML'" (click)="setMarket('MoneyLine'); setSide('Player2ML')">{{ game()!.player2Name }} {{ formatAmericanOdds(game()!.odds.moneyLinePlayer2) }}</button>
+          <button type="button" class="market-side" [disabled]="!isOpenForBettingNow()" [class.selected]="selectedSide() === 'Player1ML'" (click)="setMarket('MoneyLine'); setSide('Player1ML')">{{ game()!.player1Name }} {{ formatAmericanOdds(game()!.odds.moneyLinePlayer1) }}</button>
+          <button type="button" class="market-side" [disabled]="!isOpenForBettingNow()" [class.selected]="selectedSide() === 'Player2ML'" (click)="setMarket('MoneyLine'); setSide('Player2ML')">{{ game()!.player2Name }} {{ formatAmericanOdds(game()!.odds.moneyLinePlayer2) }}</button>
         </div>
       }
     </div>
 
-    @if (!isParticipantInGame() && marketBookDisplay(); as book) {
+    @if (isOpenForBettingNow() && !isParticipantInGame() && marketBookDisplay(); as book) {
       <div class="market-book" [class.market-book--paused]="effectiveMaxStake() < 1">
         @if (effectiveMaxStake() < 1) {
           <p class="book-status-msg book-status-msg--bad">{{ pausedUntilMessage() }}</p>
@@ -89,53 +93,64 @@
       </div>
     }
 
-    <div class="game-detail-risk-star-strip" role="presentation" aria-hidden="true"></div>
+    @if (isOpenForBettingNow()) {
+      <div class="game-detail-risk-star-strip" role="presentation" aria-hidden="true"></div>
+    }
 
     <div class="stake-row">
-      @if (isParticipantInGame()) {
-        <p class="place-error participant-block">You cannot wager on a game you are playing in</p>
+      @if (isOpenForBettingNow()) {
+        @if (isParticipantInGame()) {
+          <p class="place-error participant-block">You cannot wager on a game you are playing in</p>
+        } @else {
+          @if (stakeOverMaxHintShown() && effectiveMaxStake() >= 1) {
+            <p class="book-cap-note">{{ stakeLimitWhy() }}</p>
+          }
+          <input
+            type="number"
+            [attr.placeholder]="riskPlaceholder()"
+            [value]="stakeInputDisplay()"
+            min="1"
+            step="1"
+            [max]="effectiveMaxStake()"
+            [disabled]="effectiveMaxStake() < 1"
+            (input)="setStakeFromInput($any($event.target).value)"
+          />
+          @if (stakeAmount() >= 1) {
+            <div class="payout-row">
+              <p class="payout-col payout-col--to-win">
+                To win: ${{ toWinAmount() | number:'1.0-0' }}
+                @if (payoutCaption()) {
+                  <span class="payout-caption"> · {{ payoutCaption() }}</span>
+                }
+              </p>
+              <p class="payout-col payout-col--total-return">
+                Payout if win: ${{ totalReturnIfWin() | number:'1.0-0' }} (stake + win)
+              </p>
+            </div>
+          }
+          @if (floorBalance() < 1) {
+            <p class="place-error">Insufficient balance to wager.</p>
+          }
+          @if (floorBalance() >= 1 && effectiveMaxStake() < 1 && marketBookDisplay() === null) {
+            <p class="place-error">{{ pausedUntilMessage() }}</p>
+          }
+          @if (imbalanceBlocksWager() && stakeAmount() >= 1) {
+            <p class="place-error">{{ pausedUntilMessage() }}</p>
+          }
+          @if (placeError()) {
+            <p class="place-error">{{ placeError() }}</p>
+          }
+          <button type="button" class="btn btn-primary" [disabled]="placing() || !canPlaceWager()" (click)="placeWager()">
+            {{ placing() ? 'Placing…' : 'Place wager' }}
+          </button>
+        }
       } @else {
-      @if (stakeOverMaxHintShown() && effectiveMaxStake() >= 1) {
-        <p class="book-cap-note">{{ stakeLimitWhy() }}</p>
-      }
-      <input
-        type="number"
-        [attr.placeholder]="riskPlaceholder()"
-        [value]="stakeInputDisplay()"
-        min="1"
-        step="1"
-        [max]="effectiveMaxStake()"
-        [disabled]="effectiveMaxStake() < 1"
-        (input)="setStakeFromInput($any($event.target).value)"
-      />
-      @if (stakeAmount() >= 1) {
-        <div class="payout-row">
-          <p class="payout-col payout-col--to-win">
-            To win: ${{ toWinAmount() | number:'1.0-0' }}
-            @if (payoutCaption()) {
-              <span class="payout-caption"> · {{ payoutCaption() }}</span>
-            }
-          </p>
-          <p class="payout-col payout-col--total-return">
-            Payout if win: ${{ totalReturnIfWin() | number:'1.0-0' }} (stake + win)
-          </p>
-        </div>
-      }
-      @if (floorBalance() < 1) {
-        <p class="place-error">Insufficient balance to wager.</p>
-      }
-      @if (floorBalance() >= 1 && effectiveMaxStake() < 1 && marketBookDisplay() === null) {
-        <p class="place-error">{{ pausedUntilMessage() }}</p>
-      }
-      @if (imbalanceBlocksWager() && stakeAmount() >= 1) {
-        <p class="place-error">{{ pausedUntilMessage() }}</p>
-      }
-      @if (placeError()) {
-        <p class="place-error">{{ placeError() }}</p>
-      }
-        <button type="button" class="btn btn-primary" [disabled]="placing() || !canPlaceWager()" (click)="placeWager()">
-          {{ placing() ? 'Placing…' : 'Place wager' }}
-        </button>
+        @if (finalScoreSummary(); as line) {
+          <p class="final-score">{{ line }}</p>
+        }
+        @if (isParticipantInGame()) {
+          <p class="place-error participant-block">You cannot wager on a game you are playing in</p>
+        }
       }
     </div>
 

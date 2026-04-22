@@ -1,6 +1,11 @@
 <ng-template #content let-modal>
 	<div class="modal-header">
-		<h4 class="modal-title" id="modal-basic-title">{{title}}</h4>
+		<h4 class="modal-title" id="modal-basic-title">
+			<ng-container *ngIf="titleSegments?.length; else modalPlainTitle">
+				<span *ngFor="let seg of titleSegments" [class]="seg.cssClass || ''">{{ seg.text }}</span>
+			</ng-container>
+			<ng-template #modalPlainTitle>{{ title }}</ng-template>
+		</h4>
 		<button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click');close()"></button>
 	</div>
 	<div class="modal-body">

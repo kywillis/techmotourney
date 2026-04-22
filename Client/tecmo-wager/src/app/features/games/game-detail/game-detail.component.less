@@ -22,6 +22,22 @@
   margin-bottom: 1rem;
 }
 
+.game-debug-status {
+  font-size: 0.75rem;
+  color: var(--link);
+  margin: 0 0 0.5rem 0;
+  font-family: ui-monospace, 'Cascadia Code', monospace;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.final-score {
+  font-size: 0.5625rem;
+  color: var(--text);
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+}
+
 .loading {
   font-size: 0.625rem;
   text-align: center;
@@ -93,6 +109,12 @@
   &.selected {
     border-color: var(--highlight);
     background: rgba(251, 89, 154, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
   }
 }
 

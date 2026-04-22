@@ -21,7 +21,6 @@ namespace TecmoTourney.Orchestration
         private readonly IGameOddsDAO _gameOddsDAO;
         private readonly IGameResultOrchestration _gameResultOrchestration;
         private readonly ITournamentsDAO _tournamentsDAO;
-        private readonly IPlayerTournamentDAO _playerTournamentDAO;
         private readonly IMapper _mapper;
 
         public WagerAdminOrchestration(
@@ -33,7 +32,6 @@ namespace TecmoTourney.Orchestration
             IGameOddsDAO gameOddsDAO,
             IGameResultOrchestration gameResultOrchestration,
             ITournamentsDAO tournamentsDAO,
-            IPlayerTournamentDAO playerTournamentDAO,
             IMapper mapper)
         {
             _pendingActivationDAO = pendingActivationDAO;
@@ -44,7 +42,6 @@ namespace TecmoTourney.Orchestration
             _gameOddsDAO = gameOddsDAO;
             _gameResultOrchestration = gameResultOrchestration;
             _tournamentsDAO = tournamentsDAO;
-            _playerTournamentDAO = playerTournamentDAO;
             _mapper = mapper;
         }
 
@@ -289,22 +286,13 @@ namespace TecmoTourney.Orchestration
             return true;
         }
 
-        public Task<Operation<GameResultModel, ApiError>> SaveGameResultAdminAsync(SaveGameResultRequestModel gameResult) =>
+        public Task<Operation<SaveGameResultResponseModel, ApiError>> SaveGameResultAdminAsync(SaveGameResultRequestModel gameResult) =>
             _gameResultOrchestration.SaveGameResultAsync(gameResult);
 
-        public async Task<Operation<List<AdminPlayerBalanceListItemModel>, ApiError>> ListPlayersForBalanceAdminAsync(int tournamentId)
+        public async Task<Operation<List<AdminPlayerBalanceListItemModel>, ApiError>> ListPlayersForBalanceAdminAsync()
         {
-            if (tournamentId < 1)
-                return new ApiError("tournamentId is required", HttpStatusCode.BadRequest);
-            if (await _tournamentsDAO.GetById(tournamentId) == null)
-                return new ApiError("Tournament not found", HttpStatusCode.NotFound);
-
-            var tournamentPlayerIds = (await _playerTournamentDAO.GetByTournamentIdAsync(tournamentId))
-                .Select(l => l.PlayerId)
-                .ToHashSet();
             var allPlayers = (await _playerDAO.ListPlayersAsync(null, false)).ToList();
-            var raw = allPlayers.Where(p => tournamentPlayerIds.Contains(p.PlayerId)).ToList();
-            var rows = raw
+            var rows = allPlayers
                 .GroupBy(p => p.PlayerId)
                 .Select(g => g.First())
                 .Select(p => new AdminPlayerBalanceListItemModel

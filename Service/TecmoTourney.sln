@@ -5,7 +5,7 @@ VisualStudioVersion = 17.9.34622.214
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TecmoTourney", "TecmoTourney.csproj", "{DFE86BDA-6B62-42FF-9129-5468FC61A45C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScoreRecorder", "..\ScoreRecorder\ScoreRecorder.csproj", "{A4CF3313-BCA8-4C8A-947F-0B0FA3B76B40}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScoreGrabber", "..\..\..\techmotourney\ScoreGrabber\ScoreGrabber.csproj", "{A4CF3313-BCA8-4C8A-947F-0B0FA3B76B40}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

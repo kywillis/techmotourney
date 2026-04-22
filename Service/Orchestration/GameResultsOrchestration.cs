@@ -38,7 +38,7 @@ namespace TecmoTourney.Orchestration
             _gameOddsDAO = gameOddsDAO;
         }
 
-        public async Task<Operation<GameResultModel, ApiError>> SaveGameResultAsync(SaveGameResultRequestModel gameResult)
+        public async Task<Operation<SaveGameResultResponseModel, ApiError>> SaveGameResultAsync(SaveGameResultRequestModel gameResult)
         {
             try
             {
@@ -61,7 +61,11 @@ namespace TecmoTourney.Orchestration
                     await updateTournament(game);
 
                 await populatePlayerNames(game);
-                return game;
+                return new SaveGameResultResponseModel
+                {
+                    GameResult = game,
+                    OddsGeneration = new OddsGenerationStatusModel { Attempted = false, Success = true }
+                };
             }
             catch (Exception e)
             {
@@ -159,7 +163,7 @@ namespace TecmoTourney.Orchestration
             try
             {
                 var gameResultDAOModels = await _gameResultDAO.SearchAsync(tournamentId, player1Id, player2Id);
-                if (bracketLocation.HasValue)
+                if (bracketLocation.HasValue && bracketLocation != BracketLocation.Preliminary)
                 {
                     gameResultDAOModels = gameResultDAOModels.OrderBy(g => g.GameResultId);
                     gameResultDAOModels = (bracketLocation != BracketLocation.Losers || gameResultDAOModels.Count() <= 1)
@@ -232,35 +236,6 @@ namespace TecmoTourney.Orchestration
             }
         }
 
-        public async Task<Operation<List<GameOddsModel>, ApiError>> CreatePointSpreadsAsync(int tournamentId, IEnumerable<GameOddsRequestModel> pointSpreads)
-        {
-            try
-            {
-                var results = new List<GameOddsModel>();
-                if (pointSpreads == null || !pointSpreads.Any())
-                    return results;
-                var allGameOdds = await _gameOddsDAO.GetByTournamentIdAsync(tournamentId);
-                foreach (var request in pointSpreads)
-                {
-                    var exists = allGameOdds.Any(g => ((g.Player1Id == request.Player1ID && g.Player2Id == request.Player2ID) || (g.Player1Id == request.Player2ID && g.Player2Id == request.Player1ID)) && g.BracketTypeId == (int)request.BracketType);
-                    if (!exists)
-                    {
-                        var gameOddsDAOModel = _mapper.Map<GameOddsDAOModel>(request);
-                        gameOddsDAOModel.TournamentId = tournamentId;
-                        gameOddsDAOModel.BracketTypeId = (int)request.BracketType;
-                        gameOddsDAOModel.FavoredPlayerId = null;
-                        var created = await _gameOddsDAO.CreatePointSpreadsAsync(gameOddsDAOModel);
-                        results.Add(_mapper.Map<GameOddsModel>(created));
-                    }
-                }
-                return results;
-            }
-            catch (Exception e)
-            {
-                return new ApiError(e.Message, HttpStatusCode.InternalServerError);
-            }
-        }
-
         public async Task<Operation<List<GameOddsModel>, ApiError>> GetPointSpreadsAsync(int tournamentId)
         {
             try
@@ -290,8 +265,12 @@ namespace TecmoTourney.Orchestration
             var players = await _playerDAO.ListPlayersAsync();
             foreach (var game in games)
             {
-                game.Player1.PlayerName = players.First(p => p.PlayerId == game.Player1.PlayerId).FullName;
-                game.Player2.PlayerName = players.First(p => p.PlayerId == game.Player2.PlayerId).FullName;
+                PlayerDAOModel p1 = players.First(p => p.PlayerId == game.Player1.PlayerId);
+                game.Player1.PlayerName = p1.FullName;
+                game.Player1.ProfilePic = p1.ProfilePic >= 1 ? p1.ProfilePic : 1;
+                PlayerDAOModel p2 = players.First(p => p.PlayerId == game.Player2.PlayerId);
+                game.Player2.PlayerName = p2.FullName;
+                game.Player2.ProfilePic = p2.ProfilePic >= 1 ? p2.ProfilePic : 1;
             }
         }
 

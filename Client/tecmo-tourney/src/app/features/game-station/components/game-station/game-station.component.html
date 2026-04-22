@@ -1,0 +1,154 @@
+<div class="game-station">
+  <app-message #message></app-message>
+
+  <div *ngIf="showDetailLoading" class="gs-muted">Loading…</div>
+  <div *ngIf="routeGameId != null && loadError && !loading" class="alert alert-danger gs-banner">{{ loadError }}</div>
+
+  <ng-container *ngIf="showList">
+    <header class="gs-header">
+      <h1 class="gs-title">Game station</h1>
+      <p class="gs-sub" *ngIf="tournamentName">{{ tournamentName }}</p>
+    </header>
+
+    <div *ngIf="loading" class="gs-muted">Loading…</div>
+    <div *ngIf="loadError && !loading" class="alert alert-danger gs-banner">{{ loadError }}</div>
+
+    <ng-container *ngIf="!loading && !loadError">
+      <section class="gs-section gs-section-waiting">
+        <h2 class="gs-section-title">Waiting</h2>
+        <p *ngIf="waiting.length === 0" class="gs-empty">No games waiting</p>
+        <ul class="gs-list">
+          <li *ngFor="let g of waiting">
+            <button type="button" class="gs-row" (click)="openGame(g)">
+              <span class="gs-row-main">
+                <span class="gs-players gs-players--with-faces">
+                  <span [class]="faceClass(g.player1, 'list')" aria-hidden="true"></span>
+                  <span class="gs-player-label">{{ g.player1.playerName }}</span>
+                  <span class="gs-vs-inline">vs</span>
+                  <span class="gs-player-label">{{ g.player2.playerName }}</span>
+                  <span [class]="faceClass(g.player2, 'list')" aria-hidden="true"></span>
+                </span>
+                <span class="gs-meta">
+                  <ng-container *ngIf="startedAtLine(g) as line">
+                    <span class="gs-started-at" [attr.title]="startedAtTooltip(g) ?? null">{{ line }}</span>
+                    <span class="gs-meta-sep" aria-hidden="true">·</span>
+                  </ng-container>
+                  <span>#{{ g.gameResultId }}</span>
+                </span>
+              </span>
+              <span class="gs-chevron" aria-hidden="true">›</span>
+            </button>
+          </li>
+        </ul>
+      </section>
+
+      <section class="gs-section">
+        <h2 class="gs-section-title">In progress</h2>
+        <p *ngIf="inProgress.length === 0" class="gs-empty">No games in progress</p>
+        <ul class="gs-list">
+          <li *ngFor="let g of inProgress">
+            <button type="button" class="gs-row" (click)="openGame(g)">
+              <span class="gs-row-main">
+                <span class="gs-players gs-players--with-faces">
+                  <span [class]="faceClass(g.player1, 'list')" aria-hidden="true"></span>
+                  <span class="gs-player-label">{{ g.player1.playerName }}</span>
+                  <span class="gs-vs-inline">vs</span>
+                  <span class="gs-player-label">{{ g.player2.playerName }}</span>
+                  <span [class]="faceClass(g.player2, 'list')" aria-hidden="true"></span>
+                </span>
+                <span class="gs-teams-row">
+                  <span class="gs-team-side gs-team-side--p1">
+                    <span *ngIf="g.player1.teamName" class="gs-helmet-wrap" aria-hidden="true">
+                      <span [class]="helmetClasses(g.player1.teamName)"></span>
+                    </span>
+                    <span>{{ g.player1.teamName || '—' }}</span>
+                  </span>
+                  <span class="gs-team-sep" aria-hidden="true">·</span>
+                  <span class="gs-team-side gs-team-side--p2">
+                    <span>{{ g.player2.teamName || '—' }}</span>
+                    <span *ngIf="g.player2.teamName" class="gs-helmet-wrap" aria-hidden="true">
+                      <span [class]="helmetClasses(g.player2.teamName)"></span>
+                    </span>
+                  </span>
+                </span>
+                <span class="gs-meta">
+                  <ng-container *ngIf="startedAtLine(g) as line">
+                    <span class="gs-started-at" [attr.title]="startedAtTooltip(g) ?? null">{{ line }}</span>
+                    <span class="gs-meta-sep" aria-hidden="true">·</span>
+                  </ng-container>
+                  <span>#{{ g.gameResultId }}</span>
+                </span>
+              </span>
+              <span class="gs-chevron" aria-hidden="true">›</span>
+            </button>
+          </li>
+        </ul>
+      </section>
+    </ng-container>
+  </ng-container>
+
+  <ng-container *ngIf="showDetail && selectedGame">
+    <header class="gs-detail-header">
+      <button type="button" class="btn btn-link gs-back" (click)="back()">← Back</button>
+      <div class="gs-status-pill">
+        {{ selectedGame.status === GameStatus.Waiting ? 'Waiting' : 'In progress' }}
+      </div>
+    </header>
+
+    <div class="gs-matchup">
+      <div class="gs-player-block">
+        <div class="gs-player-name-row gs-player-name-row--p1">
+          <div [class]="faceClass(selectedGame.player1)" aria-hidden="true"></div>
+          <div class="gs-player-name">{{ selectedGame.player1.playerName }}</div>
+        </div>
+        <select
+          id="p1team"
+          class="form-select gs-select"
+          [(ngModel)]="p1TeamId"
+          [attr.aria-label]="'Team for ' + selectedGame.player1.playerName"
+        >
+          <option [ngValue]="null">Select team</option>
+          <option *ngFor="let team of teams" [ngValue]="team.gameTeamId">{{ team.teamName }}</option>
+        </select>
+      </div>
+      <div class="gs-vs">vs</div>
+      <div class="gs-player-block">
+        <div class="gs-player-name-row gs-player-name-row--p2">
+          <div class="gs-player-name">{{ selectedGame.player2.playerName }}</div>
+          <div [class]="faceClass(selectedGame.player2)" aria-hidden="true"></div>
+        </div>
+        <select
+          id="p2team"
+          class="form-select gs-select"
+          [(ngModel)]="p2TeamId"
+          [attr.aria-label]="'Team for ' + selectedGame.player2.playerName"
+        >
+          <option [ngValue]="null">Select team</option>
+          <option *ngFor="let team of teams" [ngValue]="team.gameTeamId">{{ team.teamName }}</option>
+        </select>
+      </div>
+    </div>
+
+    <p class="error" *ngIf="formError">{{ formError }}</p>
+
+    <div class="gs-actions gs-actions--stacked">
+      <button
+        type="button"
+        class="btn btn-primary btn-lg gs-primary"
+        (click)="submit()"
+        [disabled]="saving"
+      >
+        {{ selectedGame.status === GameStatus.Waiting ? 'Start game' : 'Save teams' }}
+      </button>
+      <button
+        *ngIf="selectedGame.status === GameStatus.InProgress"
+        type="button"
+        class="btn btn-outline-light btn-lg gs-secondary-btn"
+        (click)="revertToWaiting()"
+        [disabled]="saving"
+      >
+        Set back to Waiting
+      </button>
+    </div>
+  </ng-container>
+</div>

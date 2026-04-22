@@ -1,6 +1,4 @@
-using System.Net;
 using System.Text;
-using AutoMapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -10,9 +8,7 @@ using TecmoTourney;
 using TecmoTourney.DataAccess.Interfaces;
 using TecmoTourney.DataAccess.Models;
 using TecmoTourney.Models;
-using TecmoTourney.Models.Requests;
 using TecmoTourney.Orchestration.Interfaces;
-using TecmoTourney.ResultPattern;
 
 namespace TecmoTourney.Orchestration
 {
@@ -22,11 +18,11 @@ namespace TecmoTourney.Orchestration
         {
             public string Player1Name { get; set; } = string.Empty;
             public string Player2Name { get; set; } = string.Empty;
-            public int Spread { get; set; }
+            public decimal Spread { get; set; }
             public string Summary { get; set; } = string.Empty;
             public string FavoredPlayerName { get; set; } = string.Empty;
-            public int? MoneyLinePlayer1 { get; set; }
-            public int? MoneyLinePlayer2 { get; set; }
+            public decimal? MoneyLinePlayer1 { get; set; }
+            public decimal? MoneyLinePlayer2 { get; set; }
             public decimal? OverUnder { get; set; }
         }
 
@@ -34,7 +30,6 @@ namespace TecmoTourney.Orchestration
         private readonly IPlayerDAO _playerDAO;
         private readonly IGameTeamDAO _gameTeamDAO;
         private readonly IGameOddsDAO _gameOddsDAO;
-        private readonly IMapper _mapper;
         private readonly IHostEnvironment _environment;
         private readonly IConfiguration _configuration;
         private readonly ILogger<GameOddsGenerationService> _logger;
@@ -44,7 +39,6 @@ namespace TecmoTourney.Orchestration
             IPlayerDAO playerDAO,
             IGameTeamDAO gameTeamDAO,
             IGameOddsDAO gameOddsDAO,
-            IMapper mapper,
             IHostEnvironment environment,
             IConfiguration configuration,
             ILogger<GameOddsGenerationService> logger)
@@ -53,16 +47,17 @@ namespace TecmoTourney.Orchestration
             _playerDAO = playerDAO;
             _gameTeamDAO = gameTeamDAO;
             _gameOddsDAO = gameOddsDAO;
-            _mapper = mapper;
             _environment = environment;
             _configuration = configuration;
             _logger = logger;
         }
 
-        public async Task EnsureOddsForNewGameResultsAsync(IReadOnlyList<GameResultDAOModel> savedGamesWithIds, CancellationToken cancellationToken = default)
+        public async Task<OddsGenerationStatusModel> EnsureOddsForNewGameResultsAsync(
+            IReadOnlyList<GameResultDAOModel> savedGamesWithIds,
+            CancellationToken cancellationToken = default)
         {
             if (savedGamesWithIds == null || savedGamesWithIds.Count == 0)
-                return;
+                return new OddsGenerationStatusModel { Attempted = false, Success = true };
 
             var toGenerate = new List<GameOddsDAOModel>();
             foreach (var game in savedGamesWithIds)
@@ -73,6 +68,10 @@ namespace TecmoTourney.Orchestration
                 if (existing != null)
                     continue;
 
+                var bracketTypeId = game.GameTypeId == (int)GameType.Preliminary
+                    ? (int)BracketLocation.Preliminary
+                    : (int)BracketLocation.Winners;
+
                 var now = DateTime.UtcNow;
                 toGenerate.Add(new GameOddsDAOModel
                 {
@@ -80,8 +79,8 @@ namespace TecmoTourney.Orchestration
                     TournamentId = game.TournamentId,
                     Player1Id = game.Player1Id,
                     Player2Id = game.Player2Id,
-                    BracketTypeId = (int)BracketLocation.Winners,
-                    Spread = 0,
+                    BracketTypeId = bracketTypeId,
+                    Spread = 0m,
                     FavoredPlayerId = null,
                     Summary = string.Empty,
                     DateAdded = now,
@@ -90,77 +89,50 @@ namespace TecmoTourney.Orchestration
             }
 
             if (toGenerate.Count == 0)
-                return;
+                return new OddsGenerationStatusModel { Attempted = false, Success = true };
+
+            var llmOk = false;
+            try
+            {
+                llmOk = await TryApplyLlmOddsAsync(toGenerate, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "LLM odds step failed before insert");
+            }
 
             try
             {
-                await ApplyLlmOddsAsync(toGenerate, cancellationToken);
                 foreach (var gameOdds in toGenerate)
                 {
-                    if (gameOdds.Spread > 0)
-                        gameOdds.Spread *= -1;
+                    if (gameOdds.Spread > 0m)
+                        gameOdds.Spread = -gameOdds.Spread;
                     await _gameOddsDAO.CreatePointSpreadsAsync(gameOdds);
                 }
+
+                return new OddsGenerationStatusModel
+                {
+                    Attempted = true,
+                    Success = llmOk,
+                    Message = llmOk
+                        ? null
+                        : "Games are scheduled but automatic odds lines did not complete; use admin tools to set or verify lines."
+                };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to generate or persist odds for {Count} new game(s)", toGenerate.Count);
+                _logger.LogError(ex, "Failed to persist odds rows for {Count} game(s)", toGenerate.Count);
+                return new OddsGenerationStatusModel
+                {
+                    Attempted = true,
+                    Success = false,
+                    Message = $"Odds could not be saved: {ex.Message}"
+                };
             }
         }
 
-        public async Task<Operation<List<GameOddsModel>, ApiError>> CreateOddsFromRequestsAsync(
-            int tournamentId,
-            IEnumerable<GameOddsRequestModel> pointSpreads,
-            CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                var results = new List<GameOddsModel>();
-                var requests = pointSpreads?.ToList() ?? new List<GameOddsRequestModel>();
-                if (requests.Count == 0)
-                    return results;
-
-                var allGameOdds = (await _gameOddsDAO.GetByTournamentIdAsync(tournamentId)).ToList();
-                var newGameOdds = new List<GameOddsDAOModel>();
-                foreach (var request in requests)
-                {
-                    if (!allGameOdds.Any(g =>
-                            ((g.Player1Id == request.Player1ID && g.Player2Id == request.Player2ID) ||
-                             (g.Player1Id == request.Player2ID && g.Player2Id == request.Player1ID)) &&
-                            g.BracketTypeId == (int)request.BracketType))
-                    {
-                        var gameOddsDAOModel = _mapper.Map<GameOddsDAOModel>(request);
-                        gameOddsDAOModel.FavoredPlayerId = null;
-                        gameOddsDAOModel.GameResultId = null;
-                        var now = DateTime.UtcNow;
-                        gameOddsDAOModel.DateAdded = now;
-                        gameOddsDAOModel.DateModified = now;
-                        newGameOdds.Add(gameOddsDAOModel);
-                    }
-                }
-
-                if (newGameOdds.Count == 0)
-                    return results;
-
-                await ApplyLlmOddsAsync(newGameOdds, cancellationToken);
-                foreach (var gameOdds in newGameOdds)
-                {
-                    if (gameOdds.Spread > 0)
-                        gameOdds.Spread *= -1;
-                    var created = await _gameOddsDAO.CreatePointSpreadsAsync(gameOdds);
-                    results.Add(_mapper.Map<GameOddsModel>(created));
-                }
-
-                return results;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "CreateOddsFromRequestsAsync failed for tournament {TournamentId}", tournamentId);
-                return new ApiError(ex.Message, HttpStatusCode.InternalServerError);
-            }
-        }
-
-        private async Task ApplyLlmOddsAsync(List<GameOddsDAOModel> pointSpreads, CancellationToken cancellationToken)
+        /// <summary>Returns true only if GPT returned JSON for every matchup with a non-empty summary and lines were applied.</summary>
+        private async Task<bool> TryApplyLlmOddsAsync(List<GameOddsDAOModel> pointSpreads, CancellationToken cancellationToken)
         {
             try
             {
@@ -179,41 +151,121 @@ namespace TecmoTourney.Orchestration
                 if (string.IsNullOrWhiteSpace(key))
                 {
                     _logger.LogWarning("ApplicationConfig:gptKey is not set; skipping LLM odds generation");
-                    return;
+                    return false;
                 }
 
-                var client = new ChatClient("gpt-4o", key);
+                var client = new ChatClient("gpt-5.4", key);
                 var messages = new List<ChatMessage>
                 {
                     new UserChatMessage(ChatMessageContentPart.CreateTextPart(aiInstructions))
                 };
                 var completion = await client.CompleteChatAsync(messages, cancellationToken: cancellationToken);
-                var text = completion.Value.Content[0].Text;
-                var responses = JsonConvert.DeserializeObject<IEnumerable<OddsGenerationResponse>>(text);
-                if (responses == null)
-                    return;
+                var rawText = completion.Value.Content[0].Text;
+                var jsonText = ExtractJsonPayload(rawText);
+                var responses = JsonConvert.DeserializeObject<List<OddsGenerationResponse>>(jsonText);
+                if (responses == null || responses.Count == 0)
+                {
+                    _logger.LogWarning("LLM odds: could not deserialize response as a non-empty JSON array");
+                    return false;
+                }
 
+                var matched = new List<(GameOddsDAOModel Game, OddsGenerationResponse Response, decimal SpreadNorm)>();
                 foreach (var gameOdds in pointSpreads)
                 {
                     var player1Name = allPlayers.First(p => p.PlayerId == gameOdds.Player1Id).FullName;
                     var player2Name = allPlayers.First(p => p.PlayerId == gameOdds.Player2Id).FullName;
                     var response = responses.FirstOrDefault(r =>
-                        r.Player2Name == player2Name && r.Player1Name == player1Name);
+                        NamesMatch(r.Player1Name, player1Name) && NamesMatch(r.Player2Name, player2Name));
                     if (response == null)
-                        continue;
-                    var favoredPlayer = allPlayers.FirstOrDefault(p => p.FullName == response.FavoredPlayerName);
+                    {
+                        _logger.LogWarning(
+                            "LLM odds: no JSON object matched players {P1} vs {P2}",
+                            player1Name,
+                            player2Name);
+                        return false;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(response.Summary))
+                    {
+                        _logger.LogWarning(
+                            "LLM odds: matched row for {P1} vs {P2} is missing required non-empty summary",
+                            player1Name,
+                            player2Name);
+                        return false;
+                    }
+
+                    if (!TryNormalizeHalfPointSpread(response.Spread, out var spreadNorm))
+                    {
+                        _logger.LogWarning(
+                            "LLM odds: spread {Spread} for {P1} vs {P2} must be a non-zero half-point line (one decimal, ending in .5)",
+                            response.Spread,
+                            player1Name,
+                            player2Name);
+                        return false;
+                    }
+
+                    matched.Add((gameOdds, response, spreadNorm));
+                }
+
+                foreach (var (gameOdds, response, spreadNorm) in matched)
+                {
+                    var favoredPlayer = allPlayers.FirstOrDefault(p => p.FullName == response.FavoredPlayerName?.Trim());
                     gameOdds.FavoredPlayerId = favoredPlayer?.PlayerId;
-                    gameOdds.Spread = response.Spread;
-                    gameOdds.Summary = response.Summary;
-                    gameOdds.MoneyLinePlayer1 = response.MoneyLinePlayer1;
-                    gameOdds.MoneyLinePlayer2 = response.MoneyLinePlayer2;
+                    gameOdds.Spread = spreadNorm;
+                    gameOdds.Summary = response.Summary.Trim();
+                    gameOdds.MoneyLinePlayer1 = NormalizeMoneyLineOneDecimal(response.MoneyLinePlayer1);
+                    gameOdds.MoneyLinePlayer2 = NormalizeMoneyLineOneDecimal(response.MoneyLinePlayer2);
                     gameOdds.OverUnder = response.OverUnder;
                 }
+
+                return true;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "LLM odds generation failed");
+                return false;
             }
+        }
+
+        private static bool NamesMatch(string? fromModel, string fromDb)
+        {
+            if (string.IsNullOrWhiteSpace(fromModel))
+                return false;
+            return string.Equals(fromModel.Trim(), fromDb.Trim(), StringComparison.Ordinal);
+        }
+
+        /// <summary>Spread must be non-zero with exactly one decimal place and fractional part .5 (no integer / whole-number pushes).</summary>
+        private static bool TryNormalizeHalfPointSpread(decimal raw, out decimal normalized)
+        {
+            normalized = Math.Round(raw, 1, MidpointRounding.AwayFromZero);
+            if (normalized == 0m)
+                return false;
+            var abs = Math.Abs(normalized);
+            var frac = abs - Math.Truncate(abs);
+            return frac == 0.5m;
+        }
+
+        private static decimal? NormalizeMoneyLineOneDecimal(decimal? raw)
+        {
+            if (!raw.HasValue)
+                return null;
+            return Math.Round(raw.Value, 1, MidpointRounding.AwayFromZero);
+        }
+
+        /// <summary>Strips optional markdown fences so Newtonsoft can parse the array.</summary>
+        private static string ExtractJsonPayload(string text)
+        {
+            var t = text.Trim();
+            if (!t.StartsWith("```", StringComparison.Ordinal))
+                return t;
+            var afterFirstLine = t.IndexOf('\n');
+            if (afterFirstLine < 0)
+                return t;
+            t = t[(afterFirstLine + 1)..].TrimStart();
+            var fenceEnd = t.LastIndexOf("```", StringComparison.Ordinal);
+            if (fenceEnd >= 0)
+                t = t[..fenceEnd];
+            return t.Trim();
         }
 
         private async Task<string> BuildBaseAiTextAsync(CancellationToken cancellationToken)

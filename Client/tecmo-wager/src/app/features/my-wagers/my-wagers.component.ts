@@ -1,6 +1,7 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
+import { interval } from 'rxjs';
 import { StarFlankedTitleComponent } from '../../shared/components/star-flanked-title/star-flanked-title.component';
 import { WagerApiService } from '../../core/services/wager-api.service';
 import { ActiveTournamentService } from '../../core/services/active-tournament.service';
@@ -15,8 +16,11 @@ import { formatWagerPick, formatWagerStatus } from '../../core/utils/wager-displ
   styleUrl: './my-wagers.component.less'
 })
 export class MyWagersComponent implements OnInit {
+  private static readonly refreshMs = 30_000;
+
   private wagerApi = inject(WagerApiService);
   readonly activeTournament = inject(ActiveTournamentService);
+  private destroyRef = inject(DestroyRef);
 
   loading = signal(true);
   error = signal('');
@@ -36,25 +40,40 @@ export class MyWagersComponent implements OnInit {
 
   ngOnInit(): void {
     void this.load();
+    interval(MyWagersComponent.refreshMs)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => void this.load({ silent: true }));
   }
 
-  async load(): Promise<void> {
-    this.loading.set(true);
-    this.error.set('');
+  async load(options?: { silent?: boolean }): Promise<void> {
+    const silent = options?.silent === true;
+    if (!silent) {
+      this.loading.set(true);
+      this.error.set('');
+    }
     try {
       await this.activeTournament.refresh();
       const tid = this.activeTournament.tournamentId();
       if (tid == null) {
         this.wagers.set([]);
-        this.loading.set(false);
+        if (!silent) {
+          this.loading.set(false);
+        }
         return;
       }
       const list = await this.wagerApi.getMyWagers(tid);
       this.wagers.set(list);
+      if (silent) {
+        this.error.set('');
+      }
     } catch (e) {
-      this.error.set(e instanceof Error ? e.message : 'Failed to load wagers.');
+      if (!silent) {
+        this.error.set(e instanceof Error ? e.message : 'Failed to load wagers.');
+      }
     } finally {
-      this.loading.set(false);
+      if (!silent) {
+        this.loading.set(false);
+      }
     }
   }
 

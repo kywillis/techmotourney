@@ -75,6 +75,24 @@ export class GameDetailComponent implements OnInit, OnDestroy {
     return pid === g.player1Id || pid === g.player2Id;
   });
 
+  /** Strict: only true when API explicitly allows betting (missing flag = closed for safety). */
+  isOpenForBettingNow = computed(() => this.game()?.isOpenForBetting === true);
+
+  pageTitle = computed(() => (this.isOpenForBettingNow() ? 'Place wager' : 'Game lines'));
+
+  gameStatusDebugLine = computed(() => {
+    const g = this.game();
+    if (!g) return '';
+    const st = g.gameStatus?.trim() || '—';
+    return `Status: ${st}`;
+  });
+
+  finalScoreSummary = computed(() => {
+    const g = this.game();
+    if (!g || g.player1Score == null || g.player2Score == null) return null;
+    return `Final: ${g.player1Name} ${g.player1Score} – ${g.player2Score} ${g.player2Name}`;
+  });
+
   spreadDisplay = computed(() => {
     const g = this.game();
     if (!g) return { p1: 0, p2: 0 };
@@ -294,6 +312,7 @@ export class GameDetailComponent implements OnInit, OnDestroy {
   });
 
   canPlaceWager = computed(() => {
+    if (!this.isOpenForBettingNow()) return false;
     if (this.isParticipantInGame()) return false;
     const stake = this.stakeAmount();
     const max = this.effectiveMaxStake();

@@ -11,4 +11,6 @@ export interface IGameResult {
     gameType: GameType;
     /** If set, this game does not count toward this player's preliminary seeding. */
     seedingExemptPlayerId?: number | null;
+    /** UTC when the match was marked in progress at the game station. */
+    gameStartedAt?: string | null;
   }

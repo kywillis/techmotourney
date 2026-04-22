@@ -30,6 +30,7 @@ namespace TecmoTourney
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => ((GameStatus)src.StatusId).ToString()))
                 .ForMember(dest => dest.GameType, opt => opt.MapFrom(src => ((GameType)src.GameTypeId).ToString()))
                 .ForMember(dest => dest.Date, opt => opt.MapFrom(src => src.DateAdded))
+                .ForMember(dest => dest.GameStartedAt, opt => opt.MapFrom(src => src.GameStartedAt))
                 .MapDAOToGameResultStatsModel();
 
             CreateMap<GameResultModel, GameResultDAOModel>()

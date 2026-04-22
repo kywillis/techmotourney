@@ -1,7 +1,7 @@
 import { Component, OnInit, EventEmitter, Output, ViewChild, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ResultsService } from 'src/app/core/services/results.service';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 import { PlayersService } from 'src/app/core/services/players.service';
 import { GameTeamsService } from 'src/app/core/services/gameTeams.service';
 import { IPlayer } from 'src/app/core/models/player.model';
@@ -9,7 +9,9 @@ import { IGameResult } from 'src/app/core/models/gameResult.model';
 import { ISaveGameResultRequest } from 'src/app/core/models/request/saveGameResultRequest.model';
 import { GameStatus, GameType } from 'src/app/enums';
 import { MessageComponent } from '../message/message.component';
+import { ISaveGameResultResponse } from 'src/app/core/models/save-game-result-response.model';
 import { IGameResultPlayer } from 'src/app/core/models/gameResultPlayer.model';
+import { getHttpErrorMessage } from 'src/app/core/utils/http-error.util';
 
 @Component({
     selector: 'app-edit-game-result',
@@ -27,6 +29,7 @@ export class EditGameResultComponent implements OnInit {
   gameResultForm: FormGroup;
   players: IPlayer[] = [];
   teams: any[] = []; // Placeholder for teams
+  saving = false;
   statuses = Object.entries(GameStatus).map(([key, value]) => ({ value, display: key }));
   gameTypes = Object.entries(GameType).map(([key, value]) => ({ value, display: key }));
 
@@ -110,15 +113,36 @@ export class EditGameResultComponent implements OnInit {
       gameType: formValues.gameType
     };
 
-    this.resultsService.createResult(request).subscribe(
-      result => {
+    const id = this.gameResult!.gameResultId;
+    const call: Observable<ISaveGameResultResponse> =
+      id && id > 0
+        ? this.resultsService.updateResult(id, request)
+        : this.resultsService.createResult(request);
+
+    this.saving = true;
+    call.subscribe({
+      next: (res) => {
+        this.saving = false;
         this.gameResultSaved.emit();
-        this.messageComponent.setMessage('game saved')
+        let msg = 'Game saved.';
+        const og =
+          res.bracketReconciliation?.oddsGeneration?.attempted
+            ? res.bracketReconciliation.oddsGeneration
+            : res.oddsGeneration;
+        if (og.attempted && !og.success) {
+          msg += ' ' + (og.message || 'Odds generation failed.');
+          this.messageComponent.setMessage(msg, true);
+        } else {
+          this.messageComponent.setMessage(msg);
+        }
       },
-      error => {
-        this.messageComponent.setMessage('error saving game')
+      error: (errorResponse) => {
+        this.saving = false;
+        const detail = getHttpErrorMessage(errorResponse);
+        this.messageComponent.setMessage(`There was an error saving the game: ${detail}`, true);
+        console.error('Error saving game:', errorResponse);
       }
-    );
+    });
   }
 
   createPlayerStats(playerFormGroup: any): IGameResultPlayer {
@@ -143,12 +167,11 @@ export class EditGameResultComponent implements OnInit {
     return team ? team.name : '';
   }
 
-  loadPlayers(){
-    players: this.playersService.getPlayers(this.tournamentId).subscribe((players)=>{
+  loadPlayers() {
+    this.playersService.getPlayers(this.tournamentId).subscribe((players) => {
       players.sort((a, b) => a.fullName.localeCompare(b.fullName));
-        this.players = players;
+      this.players = players;
     });
-
   }
 
   setGame(gameResult: IGameResult, players: IPlayer[]): void {

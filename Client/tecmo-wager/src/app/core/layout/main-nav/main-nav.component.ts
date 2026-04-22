@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, DestroyRef, effect } from '@angular/core';
+import { Component, inject, signal, DestroyRef, effect } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
@@ -27,13 +27,6 @@ export class MainNavComponent {
   adminRoute = signal(false);
   /** Count of Google signups awaiting activation (admin-only poll). */
   pendingPlayersCount = signal(0);
-
-  tournamentName = this.activeTournament.tournamentName;
-
-  /** Admins always see the selected admin tournament; players see the active event. */
-  displayTournamentName = computed(() =>
-    this.isAdmin() ? this.adminTournament.tournamentName() : this.activeTournament.tournamentName()
-  );
 
   hasSession = this.auth.hasSession;
   isActiveUser = this.auth.isAuthenticated;
