@@ -5,6 +5,7 @@ using TecmoTourney.DataAccess;
 using TecmoTourney.Orchestration;
 using TecmoTourney;
 using TecmoTourney.Middleware;
+using TecmoTourney.Notifications;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -41,6 +42,9 @@ builder.Services.AddSingleton(resolver => resolver.GetRequiredService<IOptions<A
 
 // Bind Google auth (for wager app)
 builder.Services.Configure<GoogleAuthOptions>(builder.Configuration.GetSection(GoogleAuthOptions.SectionName));
+
+builder.Services.Configure<NtfyOptions>(builder.Configuration.GetSection(NtfyOptions.SectionName));
+builder.Services.AddHttpClient<INtfyClient, NtfyClient>();
 
 // Add Authentication: Google ID tokens (JWT) for wager endpoints
 var googleAuth = builder.Configuration.GetSection(GoogleAuthOptions.SectionName).Get<GoogleAuthOptions>();

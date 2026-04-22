@@ -20,5 +20,14 @@ namespace TecmoTourney.DataAccess.Interfaces
         Task<bool> CancelPendingKeepingGameResultAsync(int wagerId, DateTime cancelledAt);
         /// <summary>Non-pending only: set GameResultId NULL (historical row kept).</summary>
         Task<bool> ClearGameResultIdForNonPendingAsync(int wagerId);
+
+        /// <summary>House net for settled wagers on this game: stakes kept from losses minus win payouts (positive = house up).</summary>
+        Task<decimal> GetSettledWagerNetForGameResultAsync(int gameResultId);
+
+        /// <summary>Same net across all non-cancelled settled wagers in the tournament.</summary>
+        Task<decimal> GetSettledWagerNetForTournamentAsync(int tournamentId);
+
+        /// <summary>Latest SettleWager win payout per winning wager for this game (for ntfy lines).</summary>
+        Task<IReadOnlyDictionary<int, decimal>> GetWinPayoutsByWagerIdForGameResultAsync(int gameResultId);
     }
 }

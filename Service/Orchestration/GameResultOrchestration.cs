@@ -53,6 +53,8 @@ public class GameResultOrchestration : IGameResultOrchestration
 
     private readonly IWagerSettlementService _wagerSettlementService;
 
+    private readonly IGameCompletedNtfyNotifier _gameCompletedNtfyNotifier;
+
     private static IEnumerable<GameTeamDAOModel> _gameTeams = new List<GameTeamDAOModel>();
 
     public GameResultOrchestration(
@@ -68,7 +70,8 @@ public class GameResultOrchestration : IGameResultOrchestration
         ITournamentsOrchestration tournamentsOrchestration,
         ITournamentBracketReconciliationService tournamentBracketReconciliationService,
         IGameResultSaveAuditDAO gameResultSaveAuditDAO,
-        IWagerSettlementService wagerSettlementService)
+        IWagerSettlementService wagerSettlementService,
+        IGameCompletedNtfyNotifier gameCompletedNtfyNotifier)
     {
         _tournamentsDAO = tournamentsDAO;
         _gameTeamDAO = gameTeamDAO;
@@ -83,6 +86,7 @@ public class GameResultOrchestration : IGameResultOrchestration
         _tournamentBracketReconciliationService = tournamentBracketReconciliationService;
         _gameResultSaveAuditDAO = gameResultSaveAuditDAO;
         _wagerSettlementService = wagerSettlementService;
+        _gameCompletedNtfyNotifier = gameCompletedNtfyNotifier;
     }
 
     public async Task<Operation<bool, ApiError>> AcknowledgeBracketUpdate(int tournamentBracketUpdateId)
@@ -256,6 +260,12 @@ public class GameResultOrchestration : IGameResultOrchestration
             {
                 return new ApiError(string.Join("; ", errors), HttpStatusCode.BadRequest);
             }
+            int? previousStatusId = null;
+            if (gameResult.GameResultId is int priorId && priorId > 0)
+            {
+                var before = await _gameResultDAO.GetGameResultAsync(priorId);
+                previousStatusId = before?.StatusId;
+            }
             GameResultDAOModel gameResultDAOModel = _mapper.Map<GameResultDAOModel>(gameResult);
             GameResultDAOModel savedGameResultDAOModel;
             var isNewGame = !gameResult.GameResultId.HasValue || gameResult.GameResultId < 1;
@@ -314,6 +324,23 @@ public class GameResultOrchestration : IGameResultOrchestration
                 oddsStatus = bracketRec.OddsGeneration;
 
             await _wagerSettlementService.SettleWagersAfterGameSaveAsync(savedGameResultDAOModel);
+
+            var completedId = (int)GameStatus.Completed;
+            if (savedGameResultDAOModel.StatusId == completedId
+                && (isNewGame || previousStatusId != completedId))
+            {
+                try
+                {
+                    await _gameCompletedNtfyNotifier.TryNotifyFirstCompletedAsync(
+                        game,
+                        savedGameResultDAOModel.GameResultId,
+                        savedGameResultDAOModel.TournamentId);
+                }
+                catch
+                {
+                    // ntfy must not fail the save
+                }
+            }
 
             await TryInsertSaveAuditAsync(gameResult, savedGameResultDAOModel.GameResultId);
 

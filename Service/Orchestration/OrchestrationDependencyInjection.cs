@@ -19,6 +19,7 @@ namespace TecmoTourney.Orchestration
             services.AddScoped<IWagerSettlementService, WagerSettlementService>();
             services.AddScoped<ITournamentBracketReconciliationService, TournamentBracketReconciliationService>();
             services.AddScoped<IGameStationOrchestration, GameStationOrchestration>();
+            services.AddScoped<IGameCompletedNtfyNotifier, GameCompletedNtfyNotifier>();
         }
     }
 }

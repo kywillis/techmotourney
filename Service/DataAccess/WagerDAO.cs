@@ -178,5 +178,85 @@ WHERE WagerId = @WagerId AND Status = @Pending";
             var rows = await connection.ExecuteAsync(sql, new { WagerId = wagerId, Pending = WagerStatus.Pending });
             return rows > 0;
         }
+
+        public async Task<decimal> GetSettledWagerNetForGameResultAsync(int gameResultId)
+        {
+            const string sql = @"
+SELECT
+  ISNULL((
+    SELECT SUM(w.StakeAmount)
+    FROM TC_Wagers w
+    WHERE w.GameResultId = @GameResultId AND w.Status = 'Lost'
+  ), 0)
+- ISNULL((
+  SELECT SUM(x.Amt)
+  FROM TC_Wagers w
+  CROSS APPLY (
+    SELECT TOP 1 a.Amount AS Amt
+    FROM TC_WagerAudit a
+    WHERE a.WagerId = w.WagerId
+      AND a.Action = 'SettleWagerWin'
+      AND a.GameResultId = @GameResultId
+    ORDER BY a.CreatedAt DESC, a.AuditId DESC
+  ) x
+  WHERE w.GameResultId = @GameResultId AND w.Status = 'Won'
+), 0);";
+
+            using var connection = new SqlConnection(_connectionString);
+            return await connection.ExecuteScalarAsync<decimal>(sql, new { GameResultId = gameResultId });
+        }
+
+        public async Task<decimal> GetSettledWagerNetForTournamentAsync(int tournamentId)
+        {
+            const string sql = @"
+SELECT
+  ISNULL((
+    SELECT SUM(w.StakeAmount)
+    FROM TC_Wagers w
+    WHERE w.TournamentId = @TournamentId AND w.Status = 'Lost'
+  ), 0)
+- ISNULL((
+  SELECT SUM(x.Amt)
+  FROM TC_Wagers w
+  CROSS APPLY (
+    SELECT TOP 1 a.Amount AS Amt
+    FROM TC_WagerAudit a
+    WHERE a.WagerId = w.WagerId
+      AND a.Action = 'SettleWagerWin'
+      AND a.GameResultId = w.GameResultId
+    ORDER BY a.CreatedAt DESC, a.AuditId DESC
+  ) x
+  WHERE w.TournamentId = @TournamentId AND w.Status = 'Won'
+), 0);";
+
+            using var connection = new SqlConnection(_connectionString);
+            return await connection.ExecuteScalarAsync<decimal>(sql, new { TournamentId = tournamentId });
+        }
+
+        public async Task<IReadOnlyDictionary<int, decimal>> GetWinPayoutsByWagerIdForGameResultAsync(int gameResultId)
+        {
+            const string sql = @"
+SELECT w.WagerId, x.Amt AS Payout
+FROM TC_Wagers w
+CROSS APPLY (
+  SELECT TOP 1 a.Amount AS Amt
+  FROM TC_WagerAudit a
+  WHERE a.WagerId = w.WagerId
+    AND a.Action = 'SettleWagerWin'
+    AND a.GameResultId = @GameResultId
+  ORDER BY a.CreatedAt DESC, a.AuditId DESC
+) x
+WHERE w.GameResultId = @GameResultId AND w.Status = 'Won'";
+
+            using var connection = new SqlConnection(_connectionString);
+            var rows = await connection.QueryAsync<WinPayoutRow>(sql, new { GameResultId = gameResultId });
+            return rows.ToDictionary(r => r.WagerId, r => r.Payout);
+        }
+
+        private sealed class WinPayoutRow
+        {
+            public int WagerId { get; set; }
+            public decimal Payout { get; set; }
+        }
     }
 }
