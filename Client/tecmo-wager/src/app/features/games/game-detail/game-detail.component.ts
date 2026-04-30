@@ -17,13 +17,18 @@ import { BettableGame } from '../../../core/models/bettable-game.model';
 import { PlaceWagerRequest, WagerMarketType, WagerSide } from '../../../core/models/place-wager-request.model';
 import {
   profitFromAmericanOdds,
-  maxStakeForAmericanOddsWinCap
+  maxStakeForAmericanOddsWinCap,
+  STANDARD_SPREAD_AMERICAN_LINE
 } from '../../../core/utils/american-odds.util';
 import {
   bookStakeUpperBound,
   maxStakeForImbalance,
   wouldViolateMarketImbalance
 } from '../../../core/utils/market-imbalance.util';
+import {
+  formatBookUsd,
+  netReturnAfterVig
+} from '../../../core/utils/book-money.util';
 
 /** Max dollars at risk on spread / O/U. */
 const HOUSE_MAX_RISK_SPREAD_OU = 40;
@@ -280,15 +285,15 @@ export class GameDetailComponent implements OnInit, OnDestroy {
     return `The most you can put on this pick right now is $${eff}.`;
   });
 
-  /** Profit if the bet wins (stake returned separately). */
-  toWinAmount = computed(() => {
+  /** Gross profit if the bet wins (before vig; stake returned separately in total return). */
+  grossProfitIfWin = computed(() => {
     const stake = this.stakeAmount();
     const g = this.game();
     const market = this.selectedMarket();
     const side = this.selectedSide();
     if (!g || stake <= 0) return 0;
     if (market === 'Spread' || market === 'OverUnder') {
-      return stake;
+      return profitFromAmericanOdds(stake, STANDARD_SPREAD_AMERICAN_LINE);
     }
     const line =
       side === 'Player1ML' ? g.odds.moneyLinePlayer1 : g.odds.moneyLinePlayer2;
@@ -296,12 +301,28 @@ export class GameDetailComponent implements OnInit, OnDestroy {
     return profitFromAmericanOdds(stake, line);
   });
 
-  totalReturnIfWin = computed(() => this.stakeAmount() + this.toWinAmount());
+  /** Full return including stake, after house vig (matches settlement). */
+  totalReturnIfWin = computed(() => {
+    const stake = this.stakeAmount();
+    const g = this.game();
+    if (!g || stake <= 0) return 0;
+    const gross = stake + this.grossProfitIfWin();
+    return netReturnAfterVig(gross, stake, g.wageringVigPercent ?? 0);
+  });
+
+  /** Net profit (to win) after vig. */
+  netProfitIfWin = computed(() => {
+    const stake = this.stakeAmount();
+    if (stake <= 0) return 0;
+    return this.totalReturnIfWin() - stake;
+  });
+
+  bookUsd = formatBookUsd;
 
   payoutCaption = computed(() => {
     const market = this.selectedMarket();
     if (market === 'Spread' || market === 'OverUnder') {
-      return 'even money';
+      return '-110';
     }
     const g = this.game();
     const side = this.selectedSide();
@@ -507,6 +528,7 @@ export class GameDetailComponent implements OnInit, OnDestroy {
         stakeAmount: this.stakeAmount()
       };
       await this.wagerApi.placeWager(request);
+      await this.auth.refreshBalance();
       await this.auth.authenticateWithGoogle(this.auth.getToken()!);
       this.router.navigate(['/wagers']);
     } catch (e: unknown) {

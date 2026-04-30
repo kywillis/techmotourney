@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ConfigService } from './config.service';
 import { WagerAuthResponse } from '../models/wager-auth.model';
@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { isJwtExpired } from '../utils/jwt.util';
 
 const STORAGE_KEY_ID_TOKEN = 'tecmo-wager.google-id-token';
+const BALANCE_POLL_MS = 60_000;
 
 /** Coerce API shape (camelCase + optional PascalCase) into WagerAuthResponse.profilePic. */
 function normalizeWagerAuthResponse(raw: WagerAuthResponse): WagerAuthResponse {
@@ -32,8 +33,13 @@ function normalizeWagerAuthResponse(raw: WagerAuthResponse): WagerAuthResponse {
   providedIn: 'root'
 })
 export class WagerAuthService {
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
+
   private authState = signal<WagerAuthResponse | null>(null);
   private idToken = signal<string | null>(null);
+  private balanceRefreshInFlight: Promise<void> | null = null;
+  private balancePollId: ReturnType<typeof setInterval> | null = null;
 
   readonly currentAuth = this.authState.asReadonly();
   readonly isAuthenticated = computed(() => {
@@ -58,11 +64,6 @@ export class WagerAuthService {
     return p > 0 ? p : 1;
   });
 
-  constructor(
-    private http: HttpClient,
-    private config: ConfigService
-  ) {}
-
   getToken(): string | null {
     return this.idToken();
   }
@@ -82,6 +83,7 @@ export class WagerAuthService {
     try {
       await this.authenticateWithGoogle(stored, { persist: false });
     } catch {
+      this.stopBalancePolling();
       this.clearPersistedToken();
       this.idToken.set(null);
       this.authState.set(null);
@@ -103,10 +105,14 @@ export class WagerAuthService {
     if (persist) {
       this.persistToken(idToken);
     }
+    if (this.balancePollId == null) {
+      this.startBalancePollingIfEligible();
+    }
     return response;
   }
 
   logout(): void {
+    this.stopBalancePolling();
     this.idToken.set(null);
     this.authState.set(null);
     this.clearPersistedToken();
@@ -118,6 +124,54 @@ export class WagerAuthService {
     if (current) {
       this.authState.set({ ...current, balance });
     }
+  }
+
+  /**
+   * GET /wager/balance and update auth. No-ops if no session, pending, or not logged in.
+   * Concurrent callers wait on a single in-flight request.
+   */
+  async refreshBalance(): Promise<void> {
+    if (!this.idToken() || this.isPending() || !this.authState()) {
+      return;
+    }
+    if (this.balanceRefreshInFlight) {
+      return this.balanceRefreshInFlight;
+    }
+    const url = `${this.config.getApiUrl()}/wager/balance`;
+    this.balanceRefreshInFlight = (async () => {
+      try {
+        const value = await firstValueFrom(this.http.get<number>(url));
+        const n = Number(value);
+        if (Number.isFinite(n)) {
+          this.updateBalance(n);
+        }
+      } catch {
+        /* network / 401 */
+      } finally {
+        this.balanceRefreshInFlight = null;
+      }
+    })();
+    return this.balanceRefreshInFlight;
+  }
+
+  private stopBalancePolling(): void {
+    if (this.balancePollId != null) {
+      clearInterval(this.balancePollId);
+      this.balancePollId = null;
+    }
+  }
+
+  /**
+   * 60s balance sync — started after login, not via signal effect (avoids re-runs on every updateBalance / authState write).
+   */
+  private startBalancePollingIfEligible(): void {
+    this.stopBalancePolling();
+    const a = this.authState();
+    if (!this.idToken() || !a || a.isPending) {
+      return;
+    }
+    void this.refreshBalance();
+    this.balancePollId = window.setInterval(() => void this.refreshBalance(), BALANCE_POLL_MS);
   }
 
   private persistToken(token: string): void {

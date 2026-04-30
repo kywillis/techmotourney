@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using TecmoTourney;
 using TecmoTourney.DataAccess.Interfaces;
 using TecmoTourney.DataAccess.Models;
 using TecmoTourney.Models;
@@ -165,7 +166,7 @@ public class GameStationOrchestration : IGameStationOrchestration
             Status = (GameStatus)dao.StatusId,
             GameType = (GameType)dao.GameTypeId,
             Date = dao.DateAdded,
-            GameStartedAt = dao.GameStartedAt,
+            GameStartedAt = GameClockTime.AsUtcForJson(dao.GameStartedAt),
             BracketGameId = dao.BracketGameId ?? 0,
             SeedingExemptPlayerId = dao.SeedingExemptPlayerId,
             Player1 = new GameResultStatsModel

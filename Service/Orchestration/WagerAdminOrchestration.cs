@@ -22,6 +22,7 @@ namespace TecmoTourney.Orchestration
         private readonly IGameResultOrchestration _gameResultOrchestration;
         private readonly ITournamentsDAO _tournamentsDAO;
         private readonly IMapper _mapper;
+        private readonly ApplicationConfig _appConfig;
 
         public WagerAdminOrchestration(
             IPendingActivationDAO pendingActivationDAO,
@@ -32,7 +33,8 @@ namespace TecmoTourney.Orchestration
             IGameOddsDAO gameOddsDAO,
             IGameResultOrchestration gameResultOrchestration,
             ITournamentsDAO tournamentsDAO,
-            IMapper mapper)
+            IMapper mapper,
+            ApplicationConfig appConfig)
         {
             _pendingActivationDAO = pendingActivationDAO;
             _playerDAO = playerDAO;
@@ -43,6 +45,7 @@ namespace TecmoTourney.Orchestration
             _gameResultOrchestration = gameResultOrchestration;
             _tournamentsDAO = tournamentsDAO;
             _mapper = mapper;
+            _appConfig = appConfig;
         }
 
         public async Task<Operation<List<PendingActivationModel>, ApiError>> GetPendingActivationsAsync(bool includeActivated = false)
@@ -232,7 +235,7 @@ namespace TecmoTourney.Orchestration
                 BettorFullName = string.IsNullOrWhiteSpace(r.BettorFullName) ? null : r.BettorFullName.Trim()
             }).ToList();
             foreach (var w in list)
-                WagerOrchestration.ApplyMyWagerListDisplayFields(w);
+                WagerOrchestration.ApplyMyWagerListDisplayFields(w, _appConfig.WageringVigPercent);
             return list;
         }
 

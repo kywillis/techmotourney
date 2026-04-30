@@ -118,13 +118,13 @@
           @if (stakeAmount() >= 1) {
             <div class="payout-row">
               <p class="payout-col payout-col--to-win">
-                To win: ${{ toWinAmount() | number:'1.0-0' }}
+                To win: {{ bookUsd(netProfitIfWin()) }}
                 @if (payoutCaption()) {
                   <span class="payout-caption"> · {{ payoutCaption() }}</span>
                 }
               </p>
               <p class="payout-col payout-col--total-return">
-                Payout if win: ${{ totalReturnIfWin() | number:'1.0-0' }} (stake + win)
+                Payout if win: {{ bookUsd(totalReturnIfWin()) }}
               </p>
             </div>
           }
@@ -166,7 +166,7 @@
           @for (row of game()!.action!; track $index) {
             <span class="game-action-cell">{{ row.playerName }}</span>
             <span class="game-action-cell">{{ formatActionPick(row.side) }}</span>
-            <span class="game-action-cell">${{ row.stakeAmount | number:'1.0-0' }}</span>
+            <span class="game-action-cell">{{ bookUsd(row.stakeAmount) }}</span>
           }
         </div>
       </section>

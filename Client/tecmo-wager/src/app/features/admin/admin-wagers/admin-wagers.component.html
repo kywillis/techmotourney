@@ -16,7 +16,7 @@
           <p><strong>{{ w.bettorFullName || 'Player ' + w.playerId }}</strong></p>
           <p>{{ matchup(w) }}</p>
           <p>{{ w.pickDescription }}</p>
-          <p>Stake ${{ w.stakeAmount | number: '1.0-2' }}</p>
+          <p>Stake {{ bookUsd(w.stakeAmount) }}</p>
           <div class="row">
             <a [routerLink]="['/admin/games', w.gameResultId]" fragment="odds" class="mini-link">Edit Lines</a>
             <button

@@ -2,6 +2,7 @@ using System.Net;
 using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
+using TecmoTourney;
 using TecmoTourney.DataAccess.Interfaces;
 using TecmoTourney.DataAccess.Models;
 using TecmoTourney.Models;
@@ -14,7 +15,7 @@ namespace TecmoTourney.Orchestration
     public class WagerOrchestration : IWagerOrchestration
     {
         private const decimal MinStake = 1m;
-        /// <summary>Max dollars at risk on spread / over-under (even money).</summary>
+        /// <summary>Max dollars at risk on spread / over-under (−110 standard price).</summary>
         private const decimal MaxRiskSpreadOrOverUnder = 40m;
         /// <summary>Max win (profit) on money line; max stake is derived from the line.</summary>
         private const decimal MaxWinMoneyLine = 40m;
@@ -27,6 +28,7 @@ namespace TecmoTourney.Orchestration
         private readonly IGameResultDAO _gameResultDAO;
         private readonly IGameOddsDAO _gameOddsDAO;
         private readonly IMapper _mapper;
+        private readonly ApplicationConfig _appConfig;
 
         public WagerOrchestration(
             IPlayerDAO playerDAO,
@@ -36,7 +38,8 @@ namespace TecmoTourney.Orchestration
             ITournamentsOrchestration tournamentsOrchestration,
             IGameResultDAO gameResultDAO,
             IGameOddsDAO gameOddsDAO,
-            IMapper mapper)
+            IMapper mapper,
+            ApplicationConfig appConfig)
         {
             _playerDAO = playerDAO;
             _wagerDAO = wagerDAO;
@@ -46,6 +49,7 @@ namespace TecmoTourney.Orchestration
             _gameResultDAO = gameResultDAO;
             _gameOddsDAO = gameOddsDAO;
             _mapper = mapper;
+            _appConfig = appConfig;
         }
 
         public async Task<Operation<decimal, ApiError>> GetBalanceAsync(int playerId)
@@ -88,14 +92,15 @@ namespace TecmoTourney.Orchestration
             }).ToList();
             await EnrichMyWagerNamesWhenMissingAsync(list);
             foreach (var w in list)
-                ApplyMyWagerListDisplayFields(w);
+                ApplyMyWagerListDisplayFields(w, _appConfig.WageringVigPercent);
             return list;
         }
 
-        internal static void ApplyMyWagerListDisplayFields(WagerModel w)
+        internal static void ApplyMyWagerListDisplayFields(WagerModel w, int vigPercent)
         {
             w.PickDescription = BuildMyWagerPickDescription(w);
-            w.PotentialPayout = Math.Round(ComputePotentialTotalReturnOnWin(w), 2, MidpointRounding.AwayFromZero);
+            var gross = ComputePotentialTotalReturnOnWin(w);
+            w.PotentialPayout = BookMoney.NetReturnAfterVigOnProfit(gross, w.StakeAmount, vigPercent);
         }
 
         private static string BuildMyWagerPickDescription(WagerModel w)
@@ -158,7 +163,7 @@ namespace TecmoTourney.Orchestration
                 : $"{playerName} (moneyline {oddsStr})";
         }
 
-        /// <summary>Stake plus profit if the bet wins (matches even-money spread/O-U and American ML).</summary>
+        /// <summary>Stake plus profit if the bet wins (standard −110 spread/O-U and American ML).</summary>
         private static decimal ComputePotentialTotalReturnOnWin(WagerModel w)
         {
             var s = w.StakeAmount;
@@ -169,7 +174,7 @@ namespace TecmoTourney.Orchestration
             {
                 case WagerMarketType.Spread:
                 case WagerMarketType.OverUnder:
-                    return s * 2m;
+                    return BookMoney.GrossReturnOnWinSpreadOrOverUnder(s);
 
                 case WagerMarketType.MoneyLine:
                     var odds = w.Side == WagerSide.Player1ML
@@ -548,7 +553,7 @@ namespace TecmoTourney.Orchestration
                 Player2Name = p2?.FullName ?? $"Player {game.Player2Id}",
                 Player1ProfilePic = p1?.ProfilePic ?? 0,
                 Player2ProfilePic = p2?.ProfilePic ?? 0,
-                GameStartedAt = game.GameStartedAt,
+                GameStartedAt = GameClockTime.AsUtcForJson(game.GameStartedAt),
                 Odds = new BettableGameOddsModel
                 {
                     Spread = odds.Spread,
@@ -559,7 +564,8 @@ namespace TecmoTourney.Orchestration
                     Summary = odds.Summary?.Trim() ?? string.Empty
                 },
                 GameStatus = ((GameStatus)game.StatusId).ToString(),
-                IsOpenForBetting = game.StatusId == (int)GameStatus.Waiting && !game.GameStartedAt.HasValue
+                IsOpenForBetting = game.StatusId == (int)GameStatus.Waiting && !game.GameStartedAt.HasValue,
+                WageringVigPercent = _appConfig.WageringVigPercent
             };
             if (game.StatusId == (int)GameStatus.Completed)
             {

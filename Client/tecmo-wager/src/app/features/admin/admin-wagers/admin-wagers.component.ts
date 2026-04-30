@@ -1,21 +1,23 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { StarFlankedTitleComponent } from '../../../shared/components/star-flanked-title/star-flanked-title.component';
 import { WagerAdminApiService } from '../../../core/services/wager-admin-api.service';
 import { AdminTournamentContextService } from '../../../core/services/admin-tournament-context.service';
 import { MyWager } from '../../../core/models/my-wager.model';
+import { formatBookUsd } from '../../../core/utils/book-money.util';
 
 @Component({
   selector: 'app-admin-wagers',
   standalone: true,
-  imports: [DecimalPipe, RouterLink, StarFlankedTitleComponent],
+  imports: [RouterLink, StarFlankedTitleComponent],
   templateUrl: './admin-wagers.component.html',
   styleUrl: './admin-wagers.component.less'
 })
 export class AdminWagersComponent implements OnInit {
   private adminApi = inject(WagerAdminApiService);
   private adminTournament = inject(AdminTournamentContextService);
+
+  bookUsd = formatBookUsd;
 
   wagers = signal<MyWager[]>([]);
   loading = signal(true);

@@ -90,6 +90,17 @@ builder.Services.AddOrchestrationServices();
 
 var app = builder.Build();
 
+// One-time: verify Ntfy resolved from configuration (overrides: env Ntfy__Topic, user secrets, etc.)
+{
+    var raw = app.Configuration["Ntfy:Topic"];
+    var o = app.Services.GetRequiredService<IOptions<NtfyOptions>>().Value;
+    app.Logger.LogInformation(
+        "Ntfy: Configuration[Ntfy:Topic] = {Raw} | IOptions.Topic = {BoundTopic} | BaseUrl = {BaseUrl}",
+        raw == null ? "<null key>" : raw == "" ? "<empty string>" : raw,
+        string.IsNullOrEmpty(o.Topic) ? "<empty>" : o.Topic!,
+        o.BaseUrl);
+}
+
 // Serve Angular files from wwwroot (or another folder if needed)
 app.UseDefaultFiles(); // Looks for index.html
 app.UseStaticFiles();  // Serves static assets like JS, CSS

@@ -61,30 +61,36 @@ export class ActivityComponent implements OnInit {
       case 'CancelWager':
       case 'AdminCancelWager':
         return 'Wager Cancelled';
-      case 'BalanceSet':
       case 'BalanceAdd':
+        return 'Funds added';
+      case 'BalanceSet':
+        return 'Balance set';
       case 'BalanceSetToZero':
-        return 'Balance Updated';
+        return 'Balance cleared';
       default:
         return action.replace(/([A-Z])/g, ' $1').trim();
     }
   }
 
   amountDetail(e: WagerAuditEntry): string | null {
-    if (e.amount == null || Number.isNaN(e.amount)) return null;
-    const x = Math.abs(e.amount);
-    const fmt = this.formatMoney(x);
     switch (e.action) {
       case 'PlaceWager':
-        return `Stake ${fmt}`;
+        if (e.amount == null || Number.isNaN(e.amount)) return null;
+        return `Stake ${this.formatMoney(Math.abs(e.amount))}`;
       case 'CancelWager':
-        return `Refund ${fmt}`;
-      case 'BalanceSet':
+        if (e.amount == null || Number.isNaN(e.amount)) return null;
+        return `Refund ${this.formatMoney(Math.abs(e.amount))}`;
       case 'BalanceAdd':
+        if (e.amount == null || Number.isNaN(e.amount)) return null;
+        return `Added ${this.formatMoney(Math.abs(e.amount))}`;
+      case 'BalanceSet':
+        if (e.amount == null || Number.isNaN(e.amount)) return null;
+        return `Set to ${this.formatMoney(Math.abs(e.amount))}`;
       case 'BalanceSetToZero':
-        return fmt;
+        return 'Set to $0';
       default:
-        return fmt;
+        if (e.amount == null || Number.isNaN(e.amount)) return null;
+        return this.formatMoney(Math.abs(e.amount));
     }
   }
 

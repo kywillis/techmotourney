@@ -72,6 +72,7 @@ export class MainNavComponent {
         this.closeMenu();
         void this.activeTournament.refresh();
         this.syncAdminContext();
+        void this.auth.refreshBalance();
       });
   }
 

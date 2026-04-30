@@ -25,5 +25,8 @@ namespace TecmoTourney.Models
         public List<WagerActionItemModel>? Action { get; set; }
         /// <summary>Aggregated pending dollars per side; always populated for liquidity / imbalance UI.</summary>
         public BettableGameMarketDepthModel MarketDepth { get; set; } = new();
+
+        /// <summary>Global vig; percent of profit on wins (5 = 5%). UI matches settlement.</summary>
+        public int WageringVigPercent { get; set; }
     }
 }

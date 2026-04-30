@@ -112,7 +112,8 @@ namespace TecmoTourney.Orchestration
             };
             await _pendingActivationDAO.CreateAsync(newPending);
             await _ntfy.SendAsync(
-                $"Wager signup pending: {newPending.FullName} ({newPending.Email})  id {newPending.PendingActivationId}");
+                $"Wager signup pending: {newPending.FullName} ({newPending.Email})  id {newPending.PendingActivationId}",
+                "Pending Sign Up");
             return new WagerAuthResponseModel
             {
                 IsAuthenticated = false,

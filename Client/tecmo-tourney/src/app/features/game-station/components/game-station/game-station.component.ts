@@ -180,33 +180,57 @@ export class GameStationComponent implements OnInit {
     return `helmet-small helmet-small-${t.toLowerCase()}`;
   }
 
-  /** Local `HH:mm` when `gameStartedAt` is set (in-progress start at station). */
+  private static readonly easternTimeZone = 'America/New_York';
+
+  /**
+   * API stores `gameStartedAt` as UTC. JSON may omit "Z" (Unspecified from SQL); if so, treat as UTC
+   * so `America/New_York` formatting is correct.
+   */
+  private static dateFromApiUtc(iso: string): Date {
+    const s = String(iso).trim();
+    if (/Z$/i.test(s) || /[+-]\d{2}:\d{2}$/.test(s)) {
+      return new Date(s);
+    }
+    const normalized = s.includes('T') ? s : s.replace(' ', 'T');
+    return new Date(`${normalized}Z`);
+  }
+
+  /** Wall-clock time in US Eastern when `gameStartedAt` is set (in-progress start at station). */
   startedAtLine(game: IGameResult): string | null {
     const raw = game.gameStartedAt;
     if (raw == null || String(raw).trim() === '') {
       return null;
     }
-    const d = new Date(raw as string);
+    const d = GameStationComponent.dateFromApiUtc(String(raw));
     if (Number.isNaN(d.getTime())) {
       return null;
     }
     const clock = d
-      .toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true })
+      .toLocaleTimeString('en-US', {
+        timeZone: GameStationComponent.easternTimeZone,
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      })
       .replace(/\s/g, '');
-    return `started at: ${clock}`;
+    return `started at: ${clock} ET`;
   }
 
-  /** Full date/time for native tooltip (`title`). */
+  /** Full date/time in Eastern for native tooltip (`title`). */
   startedAtTooltip(game: IGameResult): string | null {
     const raw = game.gameStartedAt;
     if (raw == null || String(raw).trim() === '') {
       return null;
     }
-    const d = new Date(raw as string);
+    const d = GameStationComponent.dateFromApiUtc(String(raw));
     if (Number.isNaN(d.getTime())) {
       return null;
     }
-    return d.toLocaleString(undefined, { dateStyle: 'full', timeStyle: 'long' });
+    return d.toLocaleString('en-US', {
+      timeZone: GameStationComponent.easternTimeZone,
+      dateStyle: 'full',
+      timeStyle: 'long'
+    });
   }
 
   ngOnInit(): void {

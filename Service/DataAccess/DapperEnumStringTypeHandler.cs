@@ -30,7 +30,8 @@ namespace TecmoTourney.DataAccess
     }
 
     /// <summary>
-    /// Registers Dapper type handlers for wager-related enums stored as string in the database.
+    /// Registers Dapper type handlers for wager-related enums stored as NVARCHAR in the database.
+    /// <see cref="WagerStatus"/> (TC_Wagers) and <see cref="WagerAuditAction"/> (TC_WagerAudit) use INT; no handler.
     /// Call once at application startup (e.g. from Program.cs).
     /// </summary>
     public static class WagerDapperRegistration
@@ -38,10 +39,8 @@ namespace TecmoTourney.DataAccess
         public static void RegisterWagerEnumHandlers()
         {
             SqlMapper.AddTypeHandler(new DapperEnumStringTypeHandler<PendingActivationStatus>());
-            SqlMapper.AddTypeHandler(new DapperEnumStringTypeHandler<WagerStatus>());
             SqlMapper.AddTypeHandler(new DapperEnumStringTypeHandler<WagerMarketType>());
             SqlMapper.AddTypeHandler(new DapperEnumStringTypeHandler<WagerSide>());
-            SqlMapper.AddTypeHandler(new DapperEnumStringTypeHandler<WagerAuditAction>());
         }
     }
 }

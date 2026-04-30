@@ -1,3 +1,6 @@
+/** Standard US book price for spread and totals wagers. */
+export const STANDARD_SPREAD_AMERICAN_LINE = -110;
+
 /**
  * Profit on a winning wager (excluding the returned stake) at American odds.
  * +200 → $100 risk wins $200 profit; -200 → $200 risk wins $100 profit.

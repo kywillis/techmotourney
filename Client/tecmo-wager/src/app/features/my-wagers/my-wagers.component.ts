@@ -7,6 +7,7 @@ import { WagerApiService } from '../../core/services/wager-api.service';
 import { ActiveTournamentService } from '../../core/services/active-tournament.service';
 import { MyWager } from '../../core/models/my-wager.model';
 import { formatWagerPick, formatWagerStatus } from '../../core/utils/wager-display.util';
+import { formatBookUsd } from '../../core/utils/book-money.util';
 
 @Component({
   selector: 'app-my-wagers',
@@ -90,17 +91,12 @@ export class MyWagersComponent implements OnInit {
   }
 
   stakeAndPayout(w: MyWager): string {
-    const stake = w.stakeAmount;
-    const stakeTxt = `$${Math.round(stake)}`;
+    const stakeTxt = formatBookUsd(w.stakeAmount);
     const payout = w.potentialPayout;
     if (payout == null || Number.isNaN(payout) || payout <= 0) {
       return `Stake ${stakeTxt}`;
     }
-    const rounded = Math.round(payout * 100) / 100;
-    const payoutTxt = Number.isInteger(rounded)
-      ? `$${rounded}`
-      : `$${rounded.toFixed(2)}`;
-    return `Stake ${stakeTxt}, Payout ${payoutTxt}`;
+    return `Stake ${stakeTxt}, Payout ${formatBookUsd(payout)}`;
   }
 
   statusLabel(status: string): string {

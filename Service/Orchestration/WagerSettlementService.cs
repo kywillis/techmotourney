@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using TecmoTourney;
 using TecmoTourney.DataAccess.Interfaces;
 using TecmoTourney.DataAccess.Models;
 using TecmoTourney.Orchestration.Interfaces;
@@ -20,17 +21,20 @@ namespace TecmoTourney.Orchestration
         private readonly IWagerAuditDAO _wagerAuditDAO;
         private readonly IPlayerDAO _playerDAO;
         private readonly IGameOddsDAO _gameOddsDAO;
+        private readonly ApplicationConfig _appConfig;
 
         public WagerSettlementService(
             IWagerDAO wagerDAO,
             IWagerAuditDAO wagerAuditDAO,
             IPlayerDAO playerDAO,
-            IGameOddsDAO gameOddsDAO)
+            IGameOddsDAO gameOddsDAO,
+            ApplicationConfig appConfig)
         {
             _wagerDAO = wagerDAO;
             _wagerAuditDAO = wagerAuditDAO;
             _playerDAO = playerDAO;
             _gameOddsDAO = gameOddsDAO;
+            _appConfig = appConfig;
         }
 
         /// <inheritdoc />
@@ -174,7 +178,7 @@ namespace TecmoTourney.Orchestration
             if (last != null && last.BalanceAfter.HasValue && last.BalanceBefore.HasValue)
                 delta = last.BalanceAfter.Value - last.BalanceBefore.Value;
             else
-                delta = FallbackSettlementBalanceDelta(wager, odds);
+                delta = FallbackSettlementBalanceDelta(wager, odds, _appConfig.WageringVigPercent);
 
             if (delta == 0)
                 return;
@@ -204,11 +208,14 @@ namespace TecmoTourney.Orchestration
         /// <summary>
         /// When no settlement audit exists (legacy), infer the balance delta that was applied from status + stake + odds.
         /// </summary>
-        private static decimal FallbackSettlementBalanceDelta(WagerDAOModel wager, GameOddsDAOModel odds)
+        private static decimal FallbackSettlementBalanceDelta(WagerDAOModel wager, GameOddsDAOModel odds, int vigPercent)
         {
             return wager.Status switch
             {
-                WagerStatus.Won => ComputePotentialTotalReturnOnWin(wager, odds),
+                WagerStatus.Won => BookMoney.NetReturnAfterVigOnProfit(
+                    ComputePotentialTotalReturnOnWin(wager, odds),
+                    wager.StakeAmount,
+                    vigPercent),
                 WagerStatus.Void => wager.StakeAmount,
                 _ => 0m
             };
@@ -234,7 +241,8 @@ namespace TecmoTourney.Orchestration
             {
                 case SettleGrade.Win:
                     newStatus = WagerStatus.Won;
-                    var payout = ComputePotentialTotalReturnOnWin(wager, odds);
+                    var gross = ComputePotentialTotalReturnOnWin(wager, odds);
+                    var payout = BookMoney.NetReturnAfterVigOnProfit(gross, wager.StakeAmount, _appConfig.WageringVigPercent);
                     balanceAfter = player.Balance + payout;
                     auditAction = WagerAuditAction.SettleWagerWin;
                     auditAmount = payout;
@@ -285,7 +293,7 @@ namespace TecmoTourney.Orchestration
             {
                 case WagerMarketType.Spread:
                 case WagerMarketType.OverUnder:
-                    return Math.Round(s * 2m, 2, MidpointRounding.AwayFromZero);
+                    return BookMoney.GrossReturnOnWinSpreadOrOverUnder(s);
 
                 case WagerMarketType.MoneyLine:
                     var american = w.Side == WagerSide.Player1ML

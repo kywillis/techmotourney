@@ -1,5 +1,5 @@
-using System.Globalization;
 using System.Text;
+using TecmoTourney;
 using TecmoTourney.DataAccess.Interfaces;
 using TecmoTourney.DataAccess.Models;
 using TecmoTourney.Models;
@@ -60,10 +60,20 @@ namespace TecmoTourney.Orchestration
             sb.AppendLine("wagers");
             sb.AppendLine(FormatWagerSection(wagers, winPayouts, nameById));
             sb.AppendLine();
-            sb.AppendLine(FormattableString.Invariant($"total payout for this game: {FmtDollar(netThisGame)}"));
-            sb.AppendLine(FormattableString.Invariant($"total payout for all games: {FmtDollar(netTournament)}"));
+            sb.AppendLine(FormatNetSummaryLine("this game", netThisGame));
+            sb.AppendLine(FormatNetSummaryLine("all games", netTournament));
 
-            await _ntfy.SendAsync(sb.ToString().TrimEnd(), cancellationToken);
+            await _ntfy.SendAsync(sb.ToString().TrimEnd(), "Game Completed", cancellationToken);
+        }
+
+        /// <summary>House net: positive = to house, negative = to players; zero shows "even".</summary>
+        private static string FormatNetSummaryLine(string scope, decimal net)
+        {
+            if (net == 0m)
+                return FormattableString.Invariant($"{scope}: even");
+            if (net > 0m)
+                return FormattableString.Invariant($"{scope}: paid to house {BookMoney.FormatUsd(net)}");
+            return FormattableString.Invariant($"{scope}: paid to players {BookMoney.FormatUsd(net)}");
         }
 
         private static string FormatWagerSection(
@@ -93,20 +103,20 @@ namespace TecmoTourney.Orchestration
             foreach (var x in orderedWins)
             {
                 var who = bettorFirstNameLower[x.Wager.PlayerId];
-                lines.Add(FormattableString.Invariant($"{who} won - {FmtDollar(x.Payout)}"));
+                lines.Add($"{who} won - {BookMoney.FormatUsd(x.Payout)}");
             }
 
             var orderedLoss = lost.OrderByDescending(w => w.StakeAmount);
             foreach (var w in orderedLoss)
             {
                 var who = bettorFirstNameLower[w.PlayerId];
-                lines.Add(FormattableString.Invariant($"{who} lost - {FmtDollar(w.StakeAmount)}"));
+                lines.Add($"{who} lost {BookMoney.FormatUsd(-w.StakeAmount)}");
             }
 
             foreach (var w in voi)
             {
                 var who = bettorFirstNameLower[w.PlayerId];
-                lines.Add(FormattableString.Invariant($"{who} void - {FmtDollar(w.StakeAmount)}"));
+                lines.Add($"{who} void - {BookMoney.FormatUsd(w.StakeAmount)}");
             }
 
             return string.Join(Environment.NewLine, lines);
@@ -132,13 +142,5 @@ namespace TecmoTourney.Orchestration
             return parts.Length > 0 ? parts[^1].ToLowerInvariant() : t.ToLowerInvariant();
         }
 
-        private static string FmtDollar(decimal d)
-        {
-            if (d == 0m)
-                return "$0.00";
-            var a = Math.Abs(d);
-            var s = a.ToString("0.00", CultureInfo.InvariantCulture);
-            return d < 0m ? "-$" + s : "$" + s;
-        }
     }
 }

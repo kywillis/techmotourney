@@ -45,4 +45,6 @@ export interface BettableGame {
   player2Score?: number | null;
   marketDepth?: BettableGameMarketDepth;
   action?: WagerActionItem[];
+  /** Percent of profit taken as vig (5 = 5%). Matches settlement. */
+  wageringVigPercent?: number;
 }

@@ -18,7 +18,7 @@ namespace TecmoTourney.Notifications
             _logger = logger;
         }
 
-        public async Task SendAsync(string message, CancellationToken cancellationToken = default)
+        public async Task SendAsync(string message, string? title = null, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(_options.Topic) || string.IsNullOrEmpty(message))
                 return;
@@ -33,8 +33,11 @@ namespace TecmoTourney.Notifications
 
             try
             {
-                using var content = new StringContent(message, Encoding.UTF8, "text/plain");
-                var response = await _http.PostAsync(requestUri, content, cancellationToken);
+                using var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
+                if (!string.IsNullOrWhiteSpace(title))
+                    request.Headers.TryAddWithoutValidation("Title", title);
+                request.Content = new StringContent(message, Encoding.UTF8, "text/plain");
+                var response = await _http.SendAsync(request, cancellationToken);
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("ntfy returned {Code}: {Reason}", (int)response.StatusCode, response.ReasonPhrase);
