@@ -45,11 +45,11 @@ namespace TecmoTourney.Orchestration
                 var raw = p?.FullName;
                 if (string.IsNullOrWhiteSpace(raw))
                     raw = $"Player {id}";
-                nameById[id] = FirstTokenLower(raw!);
+                nameById[id] = FormatNotificationPersonName(raw!, emptyFallback: "unknown");
             }
 
-            var p1 = NameForScoreLine(game.Player1?.PlayerName);
-            var p2 = NameForScoreLine(game.Player2?.PlayerName);
+            var p1 = FormatNotificationPersonName(game.Player1?.PlayerName, emptyFallback: "player");
+            var p2 = FormatNotificationPersonName(game.Player2?.PlayerName, emptyFallback: "player");
             var s1 = game.Player1?.Score ?? 0;
             var s2 = game.Player2?.Score ?? 0;
 
@@ -79,7 +79,7 @@ namespace TecmoTourney.Orchestration
         private static string FormatWagerSection(
             IList<WagerDAOModel> wagers,
             IReadOnlyDictionary<int, decimal> winPayouts,
-            IReadOnlyDictionary<int, string> bettorFirstNameLower)
+            IReadOnlyDictionary<int, string> bettorDisplayName)
         {
             if (wagers.Count == 0)
                 return "no wagers";
@@ -102,44 +102,55 @@ namespace TecmoTourney.Orchestration
                 .OrderByDescending(x => x.Payout);
             foreach (var x in orderedWins)
             {
-                var who = bettorFirstNameLower[x.Wager.PlayerId];
+                var who = bettorDisplayName[x.Wager.PlayerId];
                 lines.Add($"{who} won - {BookMoney.FormatUsd(x.Payout)}");
             }
 
             var orderedLoss = lost.OrderByDescending(w => w.StakeAmount);
             foreach (var w in orderedLoss)
             {
-                var who = bettorFirstNameLower[w.PlayerId];
+                var who = bettorDisplayName[w.PlayerId];
                 lines.Add($"{who} lost {BookMoney.FormatUsd(-w.StakeAmount)}");
             }
 
             foreach (var w in voi)
             {
-                var who = bettorFirstNameLower[w.PlayerId];
+                var who = bettorDisplayName[w.PlayerId];
                 lines.Add($"{who} void - {BookMoney.FormatUsd(w.StakeAmount)}");
             }
 
             return string.Join(Environment.NewLine, lines);
         }
 
-        private static string FirstTokenLower(string fullName)
+        /// <summary>
+        /// Multi-word names use first word plus initial of last word: "John Smith" → "John S".
+        /// Single token is capitalized normally (e.g. "Madonna").
+        /// </summary>
+        private static string FormatNotificationPersonName(string? raw, string emptyFallback)
         {
-            var t = fullName.Trim();
+            var t = (raw ?? string.Empty).Trim();
             if (t.Length == 0)
-                return "unknown";
-            var space = t.IndexOf(' ');
-            if (space < 0)
-                return t.ToLowerInvariant();
-            return t.Substring(0, space).ToLowerInvariant();
+                return emptyFallback;
+
+            var parts = t.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0)
+                return emptyFallback;
+
+            if (parts.Length == 1)
+                return CapitalizeWord(parts[0]);
+
+            var last = parts[^1];
+            var initial = last.Length > 0 ? char.ToUpperInvariant(last[0]).ToString() : string.Empty;
+            return $"{CapitalizeWord(parts[0])} {initial}";
         }
 
-        private static string NameForScoreLine(string? playerName)
+        private static string CapitalizeWord(string word)
         {
-            var t = (playerName ?? string.Empty).Trim();
-            if (t.Length == 0)
-                return "player";
-            var parts = t.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
-            return parts.Length > 0 ? parts[^1].ToLowerInvariant() : t.ToLowerInvariant();
+            if (word.Length == 0)
+                return word;
+            if (word.Length == 1)
+                return word.ToUpperInvariant();
+            return char.ToUpperInvariant(word[0]) + word.Substring(1).ToLowerInvariant();
         }
 
     }

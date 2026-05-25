@@ -130,6 +130,30 @@ namespace TecmoTourney.Controllers
             return result.ToActionResult();
         }
 
+        [HttpGet("players/{playerId:int}/audit")]
+        [ProducesResponseType(200, Type = typeof(List<WagerAuditEntryModel>))]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetPlayerAudit(int playerId, [FromQuery] int? tournamentId = null)
+        {
+            if (RequireAdmin() is { } err) return err;
+            var result = await _wagerAdminOrchestration.GetPlayerAuditAsync(playerId, tournamentId);
+            return result.ToActionResult();
+        }
+
+        [HttpGet("players/{playerId:int}/tournament/{tournamentId:int}/summary")]
+        [ProducesResponseType(200, Type = typeof(TournamentSummaryModel))]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetPlayerTournamentSummary(int playerId, int tournamentId)
+        {
+            if (RequireAdmin() is { } err) return err;
+            var result = await _wagerAdminOrchestration.GetPlayerTournamentSummaryAsync(playerId, tournamentId);
+            return result.ToActionResult();
+        }
+
         [HttpGet("settings")]
         [ProducesResponseType(200, Type = typeof(WagerSettingsModel))]
         [ProducesResponseType(403)]
@@ -216,6 +240,42 @@ namespace TecmoTourney.Controllers
         {
             if (RequireAdmin() is { } err) return err;
             var result = await _wagerAdminOrchestration.SaveGameResultAdminAsync(body);
+            return result.ToActionResult();
+        }
+
+        [HttpGet("tournaments/{tournamentId:int}/wager-snapshot")]
+        [ProducesResponseType(200, Type = typeof(WagerTournamentSnapshotModel))]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetWagerSnapshot(int tournamentId)
+        {
+            if (RequireAdmin() is { } err) return err;
+            var result = await _wagerAdminOrchestration.GetWagerTournamentSnapshotAsync(tournamentId);
+            return result.ToActionResult();
+        }
+
+        [HttpGet("tournaments/{tournamentId:int}/players/{playerId:int}/wagers")]
+        [ProducesResponseType(200, Type = typeof(List<WagerModel>))]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetWagersForPlayerInTournament(int tournamentId, int playerId)
+        {
+            if (RequireAdmin() is { } err) return err;
+            var result = await _wagerAdminOrchestration.GetWagersForPlayerTournamentAdminAsync(tournamentId, playerId);
+            return result.ToActionResult();
+        }
+
+        [HttpGet("games/{gameResultId:int}/wagers")]
+        [ProducesResponseType(200, Type = typeof(List<WagerModel>))]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetWagersForGame(int gameResultId, [FromQuery] int? tournamentId = null)
+        {
+            if (RequireAdmin() is { } err) return err;
+            var result = await _wagerAdminOrchestration.GetWagersForGameAdminAsync(gameResultId, tournamentId);
             return result.ToActionResult();
         }
     }

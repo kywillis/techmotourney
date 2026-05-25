@@ -1,0 +1,41 @@
+<div class="admin-screen">
+  <a routerLink="/admin" class="back-link">← Admin home</a>
+  <header class="header">
+    <app-star-flanked-title title="Players" />
+  </header>
+  <p class="note">Tap a player to view wager activity and audit history.</p>
+  @if (loading()) {
+    <p class="loading">Loading players…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (players().length === 0) {
+    <p class="empty">No players found.</p>
+  } @else {
+    <label class="player-search">
+      <span class="player-search-label">Search by name</span>
+      <input
+        type="search"
+        name="playerSearch"
+        [ngModel]="searchText()"
+        (ngModelChange)="onSearchChange($event)"
+        autocomplete="off"
+        placeholder="Filter players…"
+        aria-label="Search players by name"
+      />
+    </label>
+    @if (filteredPlayers().length === 0) {
+      <p class="empty">No players match “{{ searchText() }}”.</p>
+    } @else {
+    <ul class="player-list">
+      @for (p of filteredPlayers(); track p.playerId) {
+        <li>
+          <a [routerLink]="['/admin/players', p.playerId]" class="player-row">
+            <span class="player-name">{{ p.fullName }}</span>
+            <span class="player-balance">${{ p.balance | number: '1.2-2' }}</span>
+          </a>
+        </li>
+      }
+    </ul>
+    }
+  }
+</div>

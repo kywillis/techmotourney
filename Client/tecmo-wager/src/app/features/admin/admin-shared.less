@@ -36,6 +36,26 @@
   }
 }
 
+/** Compact nav action (white tile, blue text) — same look as admin-home .admin-link override. */
+.admin-action-link {
+  display: inline-block;
+  padding: 0.55rem 0.85rem;
+  text-align: center;
+  text-decoration: none;
+  color: #1565c0;
+  background: #fff;
+  border: 2px solid #64b5f6;
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: var(--highlight);
+    color: #0d47a1;
+  }
+}
+
 .loading,
 .empty,
 .error,

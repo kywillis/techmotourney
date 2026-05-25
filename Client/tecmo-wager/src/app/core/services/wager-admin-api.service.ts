@@ -6,6 +6,8 @@ import { MyWager } from '../models/my-wager.model';
 import { firstValueFrom } from 'rxjs';
 import { BettableGame } from '../models/bettable-game.model';
 import { AdminPlayerLinkListItem, PendingActivation } from '../models/pending-activation.model';
+import { WagerAuditEntry } from '../models/wager-audit-entry.model';
+import { TournamentSummary } from '../models/tournament-summary.model';
 
 export interface AdminUpdateGameOddsRequest {
   spread: number;
@@ -48,6 +50,32 @@ export interface OddsGenerationStatus {
 export interface SaveGameResultResponse {
   gameResult: AdminGameResultRow;
   oddsGeneration: OddsGenerationStatus;
+}
+
+export interface WagerTournamentSnapshot {
+  tournamentId: number;
+  tournamentName: string;
+  settledHouseNet: number;
+  pendingStakeTotal: number;
+  pendingWagerCount: number;
+  players: WagerSnapshotPlayerRow[];
+  games: WagerSnapshotGameRow[];
+}
+
+export interface WagerSnapshotPlayerRow {
+  playerId: number;
+  displayName: string;
+  settledPlayerPnl: number;
+  pendingStake: number;
+  pendingWagerCount: number;
+}
+
+export interface WagerSnapshotGameRow {
+  gameResultId: number;
+  label: string;
+  settledHouseNet: number;
+  pendingStake: number;
+  pendingWagerCount: number;
 }
 
 export interface AdminGameResultRow {
@@ -241,6 +269,33 @@ export class WagerAdminApiService {
     );
   }
 
+  getPlayerAudit(playerId: number, tournamentId?: number | null): Promise<WagerAuditEntry[]> {
+    const params: Record<string, string> = {};
+    if (tournamentId != null && tournamentId > 0) {
+      params['tournamentId'] = String(tournamentId);
+    }
+    return firstValueFrom(
+      this.http.get<Record<string, unknown>[]>(`${this.adminBase}/players/${playerId}/audit`, { params })
+    ).then((rows) => rows.map((r) => this.wagerApi.normalizeAuditEntry(r)));
+  }
+
+  getPlayerTournamentSummary(playerId: number, tournamentId: number): Promise<TournamentSummary> {
+    const pick = (raw: Record<string, unknown>, c: string, p: string) => raw[c] ?? raw[p];
+    const num = (v: unknown) => (typeof v === 'number' ? v : Number(v));
+    const str = (v: unknown) => (v == null ? '' : String(v));
+    return firstValueFrom(
+      this.http.get<Record<string, unknown>>(
+        `${this.adminBase}/players/${playerId}/tournament/${tournamentId}/summary`
+      )
+    ).then((raw) => ({
+      tournamentId: num(pick(raw, 'tournamentId', 'TournamentId')),
+      tournamentName: str(pick(raw, 'tournamentName', 'TournamentName')),
+      wins: num(pick(raw, 'wins', 'Wins')),
+      losses: num(pick(raw, 'losses', 'Losses')),
+      netAmount: num(pick(raw, 'netAmount', 'NetAmount'))
+    }));
+  }
+
   getTournamentResults(tournamentId: number): Promise<AdminGameResultRow[]> {
     return firstValueFrom(
       this.http.get<Record<string, unknown>[]>(`${this.resultsBase}/tournament/${tournamentId}`)
@@ -283,6 +338,57 @@ export class WagerAdminApiService {
   /** Odds + names for admin editor (any game state; not the public bettor-only endpoint). */
   getGameLinesForAdmin(gameResultId: number): Promise<BettableGame> {
     return firstValueFrom(this.http.get<BettableGame>(`${this.adminBase}/games/${gameResultId}/lines`));
+  }
+
+  getWagerSnapshot(tournamentId: number): Promise<WagerTournamentSnapshot> {
+    return firstValueFrom(
+      this.http.get<Record<string, unknown>>(`${this.adminBase}/tournaments/${tournamentId}/wager-snapshot`)
+    ).then((raw) => this.normalizeWagerSnapshot(raw));
+  }
+
+  getWagersForPlayerTournament(tournamentId: number, playerId: number): Promise<MyWager[]> {
+    return firstValueFrom(
+      this.http.get<Record<string, unknown>[]>(
+        `${this.adminBase}/tournaments/${tournamentId}/players/${playerId}/wagers`
+      )
+    ).then((rows) => rows.map((r) => this.wagerApi.normalizeMyWager(r)));
+  }
+
+  getWagersForGameAdmin(gameResultId: number, tournamentId: number): Promise<MyWager[]> {
+    return firstValueFrom(
+      this.http.get<Record<string, unknown>[]>(`${this.adminBase}/games/${gameResultId}/wagers`, {
+        params: { tournamentId: String(tournamentId) }
+      })
+    ).then((rows) => rows.map((r) => this.wagerApi.normalizeMyWager(r)));
+  }
+
+  private normalizeWagerSnapshot(raw: Record<string, unknown>): WagerTournamentSnapshot {
+    const pick = (c: string, p: string) => raw[c] ?? raw[p];
+    const num = (v: unknown) => (typeof v === 'number' ? v : Number(v));
+    const str = (v: unknown) => (v == null ? '' : String(v));
+    const playersRaw = (pick('players', 'Players') ?? []) as Record<string, unknown>[];
+    const gamesRaw = (pick('games', 'Games') ?? []) as Record<string, unknown>[];
+    return {
+      tournamentId: num(pick('tournamentId', 'TournamentId')),
+      tournamentName: str(pick('tournamentName', 'TournamentName')),
+      settledHouseNet: num(pick('settledHouseNet', 'SettledHouseNet')),
+      pendingStakeTotal: num(pick('pendingStakeTotal', 'PendingStakeTotal')),
+      pendingWagerCount: num(pick('pendingWagerCount', 'PendingWagerCount')),
+      players: playersRaw.map((r) => ({
+        playerId: num(r['playerId'] ?? r['PlayerId']),
+        displayName: str(r['displayName'] ?? r['DisplayName']),
+        settledPlayerPnl: num(r['settledPlayerPnl'] ?? r['SettledPlayerPnl']),
+        pendingStake: num(r['pendingStake'] ?? r['PendingStake']),
+        pendingWagerCount: num(r['pendingWagerCount'] ?? r['PendingWagerCount'])
+      })),
+      games: gamesRaw.map((r) => ({
+        gameResultId: num(r['gameResultId'] ?? r['GameResultId']),
+        label: str(r['label'] ?? r['Label']),
+        settledHouseNet: num(r['settledHouseNet'] ?? r['SettledHouseNet']),
+        pendingStake: num(r['pendingStake'] ?? r['PendingStake']),
+        pendingWagerCount: num(r['pendingWagerCount'] ?? r['PendingWagerCount'])
+      }))
+    };
   }
 }
 

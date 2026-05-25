@@ -1,0 +1,68 @@
+<div class="admin-screen audit-screen">
+  <a routerLink="/admin/players" class="back-link">← Players</a>
+  <header class="header">
+    <app-star-flanked-title [title]="playerName() || 'Player'" />
+  </header>
+
+  <div class="toolbar">
+    <label class="tournament-pick">
+      <span class="toolbar-label">Tournament</span>
+      <select
+        name="tournamentId"
+        [(ngModel)]="selectedTournamentId"
+        (ngModelChange)="onTournamentChange()"
+      >
+        <option [ngValue]="allTournamentsId">All tournaments</option>
+        @for (t of tournaments(); track t.tournamentId) {
+          <option [ngValue]="t.tournamentId">{{ t.name }}</option>
+        }
+      </select>
+    </label>
+    <div class="toolbar-actions">
+      <a
+        class="admin-action-link"
+        [routerLink]="['/admin/balance']"
+        [queryParams]="balanceLinkQueryParams()"
+      >
+        Balance
+      </a>
+      @if (wagersLinkQueryParams(); as wagersQp) {
+        <a
+          class="admin-action-link"
+          [routerLink]="['/admin/snapshot/wagers', 'player', playerId()]"
+          [queryParams]="wagersQp"
+        >
+          Wagers
+        </a>
+      }
+    </div>
+  </div>
+
+  @if (globalBalance() != null) {
+    <p class="global-balance">Account balance: <strong>${{ globalBalance() | number: '1.2-2' }}</strong></p>
+  }
+
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else {
+    <div class="audit-banner">
+      <p class="banner-scope">{{ summaryScopeLabel() }}</p>
+      <p class="banner-balance">
+        Final balance in scope: {{ formatMoney(summaryNetAmount()) }}
+      </p>
+      <p class="banner-record">{{ summaryWins() }}–{{ summaryLosses() }} record (settled wagers)</p>
+    </div>
+
+    @if (entries().length === 0) {
+      <p class="empty">No activity in this scope.</p>
+    } @else {
+      <ul class="audit-list">
+        @for (e of entries(); track e.auditId) {
+          <app-wager-history-card [view]="cardView(e)" />
+        }
+      </ul>
+    }
+  }
+</div>

@@ -1,18 +1,27 @@
 import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
 import { interval } from 'rxjs';
 import { StarFlankedTitleComponent } from '../../shared/components/star-flanked-title/star-flanked-title.component';
+import { WagerHistoryCardComponent } from '../../shared/components/wager-history-card/wager-history-card.component';
 import { WagerApiService } from '../../core/services/wager-api.service';
 import { ActiveTournamentService } from '../../core/services/active-tournament.service';
 import { MyWager } from '../../core/models/my-wager.model';
-import { formatWagerPick, formatWagerStatus } from '../../core/utils/wager-display.util';
-import { formatBookUsd } from '../../core/utils/book-money.util';
+import { WagerAuditEntry } from '../../core/models/wager-audit-entry.model';
+import {
+  AuditGameInfo,
+  buildViewFromMyWager,
+  indexAuditByWagerId,
+  indexGamesFromBoard,
+  indexGamesFromWagers,
+  indexWagersById,
+  mergeGameInfoMaps,
+  WagerHistoryCardView
+} from '../../core/utils/wager-audit-display.util';
 
 @Component({
   selector: 'app-my-wagers',
   standalone: true,
-  imports: [RouterLink, StarFlankedTitleComponent],
+  imports: [StarFlankedTitleComponent, WagerHistoryCardComponent],
   templateUrl: './my-wagers.component.html',
   styleUrl: './my-wagers.component.less'
 })
@@ -26,14 +35,12 @@ export class MyWagersComponent implements OnInit {
   loading = signal(true);
   error = signal('');
   wagers = signal<MyWager[]>([]);
+  auditByWagerId = signal<Map<number, WagerAuditEntry[]>>(new Map());
+  gamesById = signal<Map<number, AuditGameInfo>>(new Map());
 
-  activeWagers = computed(() =>
-    this.wagers().filter(w => w.status === 'Pending')
-  );
+  activeWagers = computed(() => this.wagers().filter((w) => w.status === 'Pending'));
 
-  settledWagers = computed(() =>
-    this.wagers().filter(w => w.status !== 'Pending')
-  );
+  settledWagers = computed(() => this.wagers().filter((w) => w.status !== 'Pending'));
 
   showEmpty = computed(
     () => !this.loading() && !this.error() && this.wagers().length === 0
@@ -57,13 +64,25 @@ export class MyWagersComponent implements OnInit {
       const tid = this.activeTournament.tournamentId();
       if (tid == null) {
         this.wagers.set([]);
+        this.auditByWagerId.set(new Map());
+        this.gamesById.set(new Map());
         if (!silent) {
           this.loading.set(false);
         }
         return;
       }
-      const list = await this.wagerApi.getMyWagers(tid);
+      const [list, auditRows, board] = await Promise.all([
+        this.wagerApi.getMyWagers(tid),
+        this.wagerApi.getMyAudit(tid),
+        this.wagerApi.getGamesBoard().catch(() => null)
+      ]);
       this.wagers.set(list);
+      this.auditByWagerId.set(indexAuditByWagerId(auditRows));
+      const gameMaps = [indexGamesFromWagers(list)];
+      if (board) {
+        gameMaps.push(indexGamesFromBoard(board));
+      }
+      this.gamesById.set(mergeGameInfoMaps(...gameMaps));
       if (silent) {
         this.error.set('');
       }
@@ -78,32 +97,13 @@ export class MyWagersComponent implements OnInit {
     }
   }
 
-  matchup(w: MyWager): string {
-    const a = (w.player1Name || '').trim() || '—';
-    const b = (w.player2Name || '').trim() || '—';
-    return `${a} vs ${b}`;
-  }
-
-  pickLine(w: MyWager): string {
-    const d = (w.pickDescription || '').trim();
-    if (d) return d;
-    return formatWagerPick(w.marketType, w.side, w.player1Name, w.player2Name);
-  }
-
-  stakeAndPayout(w: MyWager): string {
-    const stakeTxt = formatBookUsd(w.stakeAmount);
-    const payout = w.potentialPayout;
-    if (payout == null || Number.isNaN(payout) || payout <= 0) {
-      return `Stake ${stakeTxt}`;
-    }
-    return `Stake ${stakeTxt}, Payout ${formatBookUsd(payout)}`;
-  }
-
-  statusLabel(status: string): string {
-    return formatWagerStatus(status);
-  }
-
-  canViewGame(w: MyWager): boolean {
-    return w.status === 'Pending';
+  cardView(w: MyWager): WagerHistoryCardView {
+    return buildViewFromMyWager(
+      w,
+      this.auditByWagerId(),
+      indexWagersById(this.wagers()),
+      this.gamesById(),
+      'activity'
+    );
   }
 }

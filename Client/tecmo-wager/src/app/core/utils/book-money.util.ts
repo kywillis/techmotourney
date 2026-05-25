@@ -33,3 +33,14 @@ export function formatBookUsd(n: number): string {
   }
   return `$${s}`;
 }
+
+/** House net: positive = to house, negative = to players; zero = "even" (matches server ntfy copy). */
+export function formatNetSummaryLine(scope: string, net: number): string {
+  if (net === 0 || Object.is(net, -0)) {
+    return `${scope}: even`;
+  }
+  if (net > 0) {
+    return `${scope}: paid to house ${formatBookUsd(net)}`;
+  }
+  return `${scope}: paid to players ${formatBookUsd(net)}`;
+}

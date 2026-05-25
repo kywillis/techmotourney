@@ -51,6 +51,7 @@
           },
           "configurations": {
             "production": {
+              "baseHref": "/tourney/",
               "budgets": [
                 {
                   "type": "initial",

@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output, SimpleChanges } from '@
 import { IGameResult } from 'src/app/core/models/gameResult.model';
 import { IPlayerStat } from 'src/app/core/models/playerStat';
 import { IPlayer } from 'src/app/core/models/player.model';
-import { StatType } from 'src/app/enums';
+import { GameStatus, StatType } from 'src/app/enums';
 import { IGameResultPlayer } from 'src/app/core/models/gameResultPlayer.model';
 
 @Component({
@@ -55,8 +55,10 @@ export class DisplayStatsComponent implements OnInit{
   calculateStat(fn: (games: IGameResult[], player: IPlayer)=> IPlayerStat){    
     this.playerStats = [];
 
+    const completedGames = this.games.filter((g) => g.status === GameStatus.Completed);
+
     for (let i = 0; i < this.players.length; i++) {
-      const playerGames = this.games
+      const playerGames = completedGames
                           .filter((g) => { return g.player1.playerId == this.players[i].playerId || g.player2.playerId == this.players[i].playerId});
       const result = fn(playerGames, this.players[i]);
       this.playerStats.push(result);

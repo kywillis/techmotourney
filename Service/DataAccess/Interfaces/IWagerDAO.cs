@@ -29,5 +29,14 @@ namespace TecmoTourney.DataAccess.Interfaces
 
         /// <summary>Latest SettleWager win payout per winning wager for this game (for ntfy lines).</summary>
         Task<IReadOnlyDictionary<int, decimal>> GetWinPayoutsByWagerIdForGameResultAsync(int gameResultId);
+
+        /// <summary>Per-bettor settled P&amp;L for the tournament: win credits minus lost stakes; void counts as 0.</summary>
+        Task<IReadOnlyList<PlayerTournamentPnlRowDAOModel>> GetPlayerSettledPnlByTournamentAsync(int tournamentId);
+
+        Task<IReadOnlyList<PendingStakeByPlayerRowDAOModel>> GetPendingStakeByPlayerForTournamentAsync(int tournamentId);
+        Task<IReadOnlyList<PendingStakeByGameRowDAOModel>> GetPendingStakeByGameForTournamentAsync(int tournamentId);
+        Task<(decimal StakeTotal, int WagerCount)> GetTournamentPendingStakeSummaryAsync(int tournamentId);
+        Task<IReadOnlyList<int>> GetDistinctGameResultIdsWithWagersForTournamentAsync(int tournamentId);
+        Task<IEnumerable<WagerWithMatchupDAOModel>> GetWagersWithMatchupByGameResultIdAsync(int gameResultId);
     }
 }

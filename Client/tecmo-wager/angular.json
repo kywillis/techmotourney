@@ -65,6 +65,7 @@
           },
           "configurations": {
             "production": {
+              "baseHref": "/wager/",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",

@@ -29,6 +29,11 @@ import {
   formatBookUsd,
   netReturnAfterVig
 } from '../../../core/utils/book-money.util';
+import {
+  formatGameStatusLabel,
+  parseGameStatusTone,
+  type GameStatusTone
+} from '../../../core/utils/wager-display.util';
 
 /** Max dollars at risk on spread / O/U. */
 const HOUSE_MAX_RISK_SPREAD_OU = 40;
@@ -85,18 +90,21 @@ export class GameDetailComponent implements OnInit, OnDestroy {
 
   pageTitle = computed(() => (this.isOpenForBettingNow() ? 'Place wager' : 'Game lines'));
 
-  gameStatusDebugLine = computed(() => {
-    const g = this.game();
-    if (!g) return '';
-    const st = g.gameStatus?.trim() || '—';
-    return `Status: ${st}`;
-  });
-
-  finalScoreSummary = computed(() => {
-    const g = this.game();
-    if (!g || g.player1Score == null || g.player2Score == null) return null;
-    return `Final: ${g.player1Name} ${g.player1Score} – ${g.player2Score} ${g.player2Name}`;
-  });
+  /** Status row; when completed, final score on the right (template). */
+  gameStatusRow = computed(
+    (): { statusValue: string; statusTone: GameStatusTone; score: string | null } | null => {
+      const g = this.game();
+      if (!g) return null;
+      const raw = g.gameStatus?.trim() || '';
+      const statusTone = parseGameStatusTone(raw);
+      const statusValue = formatGameStatusLabel(raw);
+      const score =
+        statusTone === 'completed' && g.player1Score != null && g.player2Score != null
+          ? `${g.player1Name} ${g.player1Score} – ${g.player2Score} ${g.player2Name}`
+          : null;
+      return { statusValue, statusTone, score };
+    }
+  );
 
   spreadDisplay = computed(() => {
     const g = this.game();

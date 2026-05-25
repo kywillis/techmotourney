@@ -22,8 +22,17 @@
 
     <hr class="game-detail-rule" />
 
-    @if (gameStatusDebugLine(); as dbg) {
-      <p class="game-debug-status">{{ dbg }}</p>
+    @if (gameStatusRow(); as row) {
+      <p class="game-status-row" [class.game-status-row--with-score]="!!row.score">
+        <span class="game-status-left">
+          <span class="game-status-label">Status:</span>
+          <span class="game-status-value game-status-value--{{ row.statusTone }}">{{ row.statusValue }}</span>
+        </span>
+        @if (row.score) {
+          <span class="game-status-score">{{ row.score }}</span>
+          <span class="game-status-spacer" aria-hidden="true"></span>
+        }
+      </p>
     }
 
     <div class="markets">
@@ -145,9 +154,6 @@
           </button>
         }
       } @else {
-        @if (finalScoreSummary(); as line) {
-          <p class="final-score">{{ line }}</p>
-        }
         @if (isParticipantInGame()) {
           <p class="place-error participant-block">You cannot wager on a game you are playing in</p>
         }

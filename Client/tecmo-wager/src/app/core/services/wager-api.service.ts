@@ -122,7 +122,7 @@ export class WagerApiService {
     };
   }
 
-  private normalizeAuditEntry(raw: Record<string, unknown>): WagerAuditEntry {
+  normalizeAuditEntry(raw: Record<string, unknown>): WagerAuditEntry {
     const str = (v: unknown) => (v == null ? '' : String(v));
     const num = (v: unknown) => (typeof v === 'number' ? v : Number(v));
     const pick = (camel: string, pascal: string) => raw[camel] ?? raw[pascal];

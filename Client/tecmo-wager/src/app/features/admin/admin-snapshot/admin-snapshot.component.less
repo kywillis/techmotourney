@@ -1,0 +1,126 @@
+@import '../admin-shared.less';
+
+/* CTA / accent on white card (readable; matches user #FFDFA9). */
+:host {
+  --snapshot-cta: #ffdfa9;
+}
+
+.tournament-title {
+  font-size: 0.75rem;
+  text-align: center;
+  margin: 0 0 1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--light);
+}
+
+.headline {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+
+  .settled-line,
+  .pending-line {
+    font-size: 0.625rem;
+    margin: 0.4rem 0;
+  }
+
+  .settled-line__amount {
+    display: inline-block;
+    margin-left: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    font-weight: 700;
+    vertical-align: middle;
+    background: #fff;
+    border: 2px solid #c62828;
+    border-radius: 6px;
+  }
+
+  /* House net > 0: players net lost to book → green. < 0: paid to players → red. */
+  .settled-line__amount--house {
+    color: var(--success);
+  }
+
+  .settled-line__amount--players {
+    color: #c62828;
+  }
+
+  .pending-line {
+    color: var(--snapshot-cta);
+  }
+}
+
+.list-section {
+  margin-bottom: 1.5rem;
+  max-width: 28rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.section-h {
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--light);
+  border-bottom: 1px solid var(--dark);
+  padding-bottom: 0.35rem;
+  margin: 0 0 0.5rem;
+}
+
+.row-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.row-list li {
+  padding: 0.5rem 0.65rem;
+  background: var(--text);
+  border: 2px solid var(--highlight);
+  color: var(--bg);
+}
+
+.row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.name {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--bg);
+}
+
+.row-link {
+  font-size: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--highlight);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  white-space: nowrap;
+
+  &:hover,
+  &:focus-visible {
+    font-weight: 400;
+    text-decoration: none;
+  }
+}
+
+.row-detail,
+.row-pending {
+  font-size: 0.55rem;
+  margin: 0.2rem 0 0;
+  line-height: 1.3;
+  color: var(--bg);
+}
+
+.row-pending.muted {
+  opacity: 0.6;
+}

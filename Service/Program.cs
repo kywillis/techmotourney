@@ -7,6 +7,7 @@ using TecmoTourney;
 using TecmoTourney.Middleware;
 using TecmoTourney.Notifications;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.FileProviders;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -66,12 +67,17 @@ if (!string.IsNullOrEmpty(googleAuth?.ClientId))
     });
 }
 
-// Add CORS policy (existing tecmo-tourney + wager app origins)
+// Add CORS policy (local dev + optional Static Web Apps + same-site host)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin",
         policyBuilder => policyBuilder
-            .WithOrigins("http://localhost:4200", "http://localhost:4201")
+            .WithOrigins(
+                "http://localhost:4200",
+                "http://localhost:4201",
+                "https://tecmo.azurewebsites.net",
+                "https://happy-bush-03052ce1e.7.azurestaticapps.net",
+                "https://purple-cliff-0df052a1e.7.azurestaticapps.net")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials());
@@ -101,9 +107,31 @@ var app = builder.Build();
         o.BaseUrl);
 }
 
-// Serve Angular files from wwwroot (or another folder if needed)
-app.UseDefaultFiles(); // Looks for index.html
-app.UseStaticFiles();  // Serves static assets like JS, CSS
+var webRoot = app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+
+// Shared wwwroot (legacy assets: jquery, bracket, etc.)
+app.UseStaticFiles();
+
+// SPAs built to wwwroot/wager and wwwroot/tourney (base-href /wager/ and /tourney/)
+var wagerPath = Path.Combine(webRoot, "wager");
+if (Directory.Exists(wagerPath))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(wagerPath),
+        RequestPath = "/wager"
+    });
+}
+
+var tourneyPath = Path.Combine(webRoot, "tourney");
+if (Directory.Exists(tourneyPath))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(tourneyPath),
+        RequestPath = "/tourney"
+    });
+}
 
 if (app.Environment.IsDevelopment())
 {
@@ -118,7 +146,20 @@ app.UseAuthorization();
 app.UseTournamentsWriteAdmin();
 app.UseWagerPlayerResolution();
 
-// API routes first; SPA fallback last so /api/* is never served index.html
 app.MapControllers();
-app.MapFallbackToFile("index.html");
+
+// Default site root: send users to tournament SPA (change if you prefer a landing page)
+app.MapGet("/", () => Results.Redirect("/tourney/"));
+
+// Deep links and refresh on client routes
+if (Directory.Exists(wagerPath))
+{
+    app.MapFallbackToFile("/wager/{*path:nonfile}", "wager/index.html");
+}
+
+if (Directory.Exists(tourneyPath))
+{
+    app.MapFallbackToFile("/tourney/{*path:nonfile}", "tourney/index.html");
+}
+
 app.Run();

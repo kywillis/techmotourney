@@ -20,6 +20,7 @@ namespace TecmoTourney.Orchestration
         private readonly IWagerDAO _wagerDAO;
         private readonly IGameOddsDAO _gameOddsDAO;
         private readonly IGameResultOrchestration _gameResultOrchestration;
+        private readonly IWagerOrchestration _wagerOrchestration;
         private readonly ITournamentsDAO _tournamentsDAO;
         private readonly IMapper _mapper;
         private readonly ApplicationConfig _appConfig;
@@ -32,6 +33,7 @@ namespace TecmoTourney.Orchestration
             IWagerDAO wagerDAO,
             IGameOddsDAO gameOddsDAO,
             IGameResultOrchestration gameResultOrchestration,
+            IWagerOrchestration wagerOrchestration,
             ITournamentsDAO tournamentsDAO,
             IMapper mapper,
             ApplicationConfig appConfig)
@@ -43,6 +45,7 @@ namespace TecmoTourney.Orchestration
             _wagerDAO = wagerDAO;
             _gameOddsDAO = gameOddsDAO;
             _gameResultOrchestration = gameResultOrchestration;
+            _wagerOrchestration = wagerOrchestration;
             _tournamentsDAO = tournamentsDAO;
             _mapper = mapper;
             _appConfig = appConfig;
@@ -308,5 +311,191 @@ namespace TecmoTourney.Orchestration
                 .ToList();
             return rows;
         }
+
+        public async Task<Operation<List<WagerAuditEntryModel>, ApiError>> GetPlayerAuditAsync(int playerId, int? tournamentId = null)
+        {
+            if (playerId < 1)
+                return new ApiError("playerId is required", HttpStatusCode.BadRequest);
+            var player = await _playerDAO.GetPlayerAsync(playerId);
+            if (player == null)
+                return new ApiError("Player not found", HttpStatusCode.NotFound);
+            var entries = await _wagerAuditDAO.GetByTargetPlayerIdAsync(playerId, tournamentId);
+            var list = _mapper.Map<List<WagerAuditEntryModel>>(entries).ToList();
+            return list;
+        }
+
+        public Task<Operation<TournamentSummaryModel, ApiError>> GetPlayerTournamentSummaryAsync(int playerId, int tournamentId) =>
+            _wagerOrchestration.GetTournamentSummaryForUserAsync(playerId, tournamentId);
+
+        public async Task<Operation<WagerTournamentSnapshotModel, ApiError>> GetWagerTournamentSnapshotAsync(int tournamentId)
+        {
+            if (tournamentId < 1)
+                return new ApiError("tournamentId is required", HttpStatusCode.BadRequest);
+
+            var tDao = await _tournamentsDAO.GetById(tournamentId);
+            if (tDao == null)
+                return new ApiError("Tournament not found", HttpStatusCode.NotFound);
+
+            var settledHouseNet = await _wagerDAO.GetSettledWagerNetForTournamentAsync(tournamentId);
+            var (pendingTotal, pendingCount) = await _wagerDAO.GetTournamentPendingStakeSummaryAsync(tournamentId);
+
+            var pnlRows = await _wagerDAO.GetPlayerSettledPnlByTournamentAsync(tournamentId);
+            var pendingByPlayer = (await _wagerDAO.GetPendingStakeByPlayerForTournamentAsync(tournamentId)).ToDictionary(x => x.PlayerId);
+            var pendingByGame = (await _wagerDAO.GetPendingStakeByGameForTournamentAsync(tournamentId)).ToDictionary(x => x.GameResultId);
+
+            var playerIds = pnlRows.Select(p => p.PlayerId)
+                .Union(pendingByPlayer.Keys)
+                .Distinct()
+                .ToList();
+
+            var playerRows = new List<WagerSnapshotPlayerRowModel>();
+            foreach (var pid in playerIds.OrderBy(id => id))
+            {
+                var p = await _playerDAO.GetPlayerAsync(pid);
+                var name = p == null || string.IsNullOrWhiteSpace(p.FullName) ? $"Player {pid}" : p.FullName.Trim();
+                pendingByPlayer.TryGetValue(pid, out var pend);
+                var pnl = pnlRows.FirstOrDefault(r => r.PlayerId == pid)?.SettledPnl ?? 0m;
+                playerRows.Add(new WagerSnapshotPlayerRowModel
+                {
+                    PlayerId = pid,
+                    DisplayName = name,
+                    SettledPlayerPnl = pnl,
+                    PendingStake = pend?.StakeTotal ?? 0m,
+                    PendingWagerCount = pend?.WagerCount ?? 0
+                });
+            }
+
+            playerRows = playerRows.OrderBy(r => r.DisplayName, StringComparer.OrdinalIgnoreCase).ToList();
+
+            var gamesOp = await _gameResultOrchestration.ListResultsByTournamentAsync(tournamentId, false);
+            if (!gamesOp.IsSuccess)
+                return gamesOp.Failure!;
+
+            var tourneyGames = gamesOp.Data ?? new List<GameResultModel>();
+            var idOrder = tourneyGames.Select(g => g.GameResultId).ToList();
+            var distinctGameIds = (await _wagerDAO.GetDistinctGameResultIdsWithWagersForTournamentAsync(tournamentId)).ToList();
+            distinctGameIds.Sort((a, b) =>
+            {
+                var ia = idOrder.IndexOf(a);
+                var ib = idOrder.IndexOf(b);
+                if (ia < 0 && ib < 0)
+                    return a.CompareTo(b);
+                if (ia < 0)
+                    return 1;
+                if (ib < 0)
+                    return -1;
+                return ia.CompareTo(ib);
+            });
+
+            var gameRows = new List<WagerSnapshotGameRowModel>();
+            foreach (var gid in distinctGameIds)
+            {
+                var net = await _wagerDAO.GetSettledWagerNetForGameResultAsync(gid);
+                pendingByGame.TryGetValue(gid, out var pg);
+                var gr = tourneyGames.FirstOrDefault(x => x.GameResultId == gid);
+                var label = gr == null
+                    ? $"Game {gid}"
+                    : BuildSnapshotGameLabel(gr);
+                gameRows.Add(new WagerSnapshotGameRowModel
+                {
+                    GameResultId = gid,
+                    Label = label,
+                    SettledHouseNet = net,
+                    PendingStake = pg?.StakeTotal ?? 0m,
+                    PendingWagerCount = pg?.WagerCount ?? 0
+                });
+            }
+
+            return new WagerTournamentSnapshotModel
+            {
+                TournamentId = tournamentId,
+                TournamentName = tDao.Name?.Trim() ?? string.Empty,
+                SettledHouseNet = settledHouseNet,
+                PendingStakeTotal = pendingTotal,
+                PendingWagerCount = pendingCount,
+                Players = playerRows,
+                Games = gameRows
+            };
+        }
+
+        private static string BuildSnapshotGameLabel(GameResultModel g)
+        {
+            var p1 = g.Player1;
+            var p2 = g.Player2;
+            var n1 = string.IsNullOrWhiteSpace(p1?.PlayerName) ? $"P{p1?.PlayerId}" : p1!.PlayerName.Trim();
+            var n2 = string.IsNullOrWhiteSpace(p2?.PlayerName) ? $"P{p2?.PlayerId}" : p2!.PlayerName.Trim();
+            if (!string.IsNullOrWhiteSpace(p1?.TeamName) && !string.IsNullOrWhiteSpace(p2?.TeamName))
+                return FormattableString.Invariant($"({p1!.TeamName!.Trim()}) {n1} vs {n2} ({p2!.TeamName!.Trim()})");
+            if (!string.IsNullOrWhiteSpace(p1?.TeamName))
+                return FormattableString.Invariant($"({p1!.TeamName!.Trim()}) {n1} vs {n2}");
+            if (!string.IsNullOrWhiteSpace(p2?.TeamName))
+                return FormattableString.Invariant($"{n1} vs {n2} ({p2!.TeamName!.Trim()})");
+            return FormattableString.Invariant($"{n1} vs {n2}");
+        }
+
+        public async Task<Operation<List<WagerModel>, ApiError>> GetWagersForPlayerTournamentAdminAsync(int tournamentId, int playerId)
+        {
+            if (tournamentId < 1 || playerId < 1)
+                return new ApiError("tournamentId and playerId are required", HttpStatusCode.BadRequest);
+
+            var tDao = await _tournamentsDAO.GetById(tournamentId);
+            if (tDao == null)
+                return new ApiError("Tournament not found", HttpStatusCode.NotFound);
+
+            var found = (await _wagerDAO.GetByTournamentIdAsync(tournamentId)).Any(w => w.PlayerId == playerId);
+            if (!found)
+                return new List<WagerModel>();
+
+            var rows = (await _wagerDAO.GetByPlayerIdWithMatchupAsync(playerId, tournamentId, null)).ToList();
+            var list = rows.Select(MapWagerWithMatchupToModel).ToList();
+            foreach (var w in list)
+                WagerOrchestration.ApplyMyWagerListDisplayFields(w, _appConfig.WageringVigPercent);
+            return list;
+        }
+
+        public async Task<Operation<List<WagerModel>, ApiError>> GetWagersForGameAdminAsync(int gameResultId, int? expectedTournamentId = null)
+        {
+            if (gameResultId < 1)
+                return new ApiError("gameResultId is required", HttpStatusCode.BadRequest);
+
+            var rows = (await _wagerDAO.GetWagersWithMatchupByGameResultIdAsync(gameResultId)).ToList();
+            if (rows.Count < 1)
+                return new List<WagerModel>();
+
+            if (expectedTournamentId.HasValue && expectedTournamentId >= 1 &&
+                rows[0].TournamentId != expectedTournamentId.Value)
+                return new ApiError("Game is not in that tournament", HttpStatusCode.BadRequest);
+
+            var list = rows.Select(MapWagerWithMatchupToModel).ToList();
+            foreach (var w in list)
+                WagerOrchestration.ApplyMyWagerListDisplayFields(w, _appConfig.WageringVigPercent);
+            return list;
+        }
+
+        private WagerModel MapWagerWithMatchupToModel(WagerWithMatchupDAOModel r) =>
+            new()
+            {
+                WagerId = r.WagerId,
+                PlayerId = r.PlayerId,
+                GameResultId = r.GameResultId,
+                TournamentId = r.TournamentId,
+                MarketType = r.MarketType,
+                Side = r.Side,
+                StakeAmount = r.StakeAmount,
+                Status = r.Status,
+                CreatedAt = r.CreatedAt,
+                CancelledAt = r.CancelledAt,
+                SettledAt = r.SettledAt,
+                Player1Name = string.IsNullOrWhiteSpace(r.Player1Name) ? string.Empty : r.Player1Name.Trim(),
+                Player2Name = string.IsNullOrWhiteSpace(r.Player2Name) ? string.Empty : r.Player2Name.Trim(),
+                MatchPlayer1Id = r.MatchPlayer1Id,
+                MatchPlayer2Id = r.MatchPlayer2Id,
+                OddsSpread = r.OddsSpread,
+                OddsFavoredPlayerId = r.OddsFavoredPlayerId,
+                OddsMoneyLinePlayer1 = r.OddsMoneyLinePlayer1,
+                OddsMoneyLinePlayer2 = r.OddsMoneyLinePlayer2,
+                OddsOverUnder = r.OddsOverUnder,
+                BettorFullName = null
+            };
     }
 }

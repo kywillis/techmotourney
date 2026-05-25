@@ -244,3 +244,36 @@ option {
 .player-face-166 { background-position: -704px -1616px; }
 .player-face-167 { background-position: -878px -1616px; }
 .player-face-168 { background-position: -1052px -1616px; }
+
+/* Won / lost pill — shared by Activity, My wagers, admin player audit (matches my-wagers settled .status) */
+.wager-outcome-badge {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.5rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  background: #fff;
+  border: 2px solid #c62828;
+  border-radius: 999px;
+  line-height: 1.2;
+}
+
+.wager-outcome-badge--won {
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.wager-outcome-badge--lost {
+  color: #c62828;
+  border-color: #c62828;
+}
+
+.wager-outcome-badge--void {
+  color: var(--highlight);
+  border-color: var(--highlight);
+}
+
+.wager-outcome-badge--cancelled {
+  color: #c62828;
+  border-color: #c62828;
+}

@@ -1,0 +1,35 @@
+<li class="wager-history-card">
+  <p class="audit-primary">
+    @if (view.kind === 'place' && view.placeHeadline) {
+      <span class="action">{{ view.placeHeadline }}</span>
+    } @else if (isSettleOutcome(view.action)) {
+      <span class="wager-outcome-badge" [ngClass]="outcomeBadgeClass()">
+        {{ actionLabel(view.action) }}
+      </span>
+      @if (view.amountDetail) {
+        <span class="detail"> · {{ view.amountDetail }}</span>
+      }
+    } @else {
+      <span class="action">{{ actionLabel(view.action) }}</span>
+      @if (view.amountDetail) {
+        <span class="detail"> · {{ view.amountDetail }}</span>
+      }
+    }
+  </p>
+  @if (view.pickLine) {
+    <p class="pick-line">{{ view.pickLine }}</p>
+  }
+  @if (hasBalanceAfter()) {
+    <p class="balance-after">Balance after {{ formattedBalanceAfter() }}</p>
+  }
+  <p class="when">{{ view.when | date: 'MMM d, y · h:mm a' }}</p>
+  @if (view.matchup; as m) {
+    <div class="wager-history-card__footer">
+      @if (m.routerLink) {
+        <a [routerLink]="m.routerLink" [queryParams]="m.queryParams" class="matchup-link">{{ m.text }}</a>
+      } @else {
+        <p class="game-deleted">{{ m.text }}</p>
+      }
+    </div>
+  }
+</li>

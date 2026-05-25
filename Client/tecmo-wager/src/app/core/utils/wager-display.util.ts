@@ -1,3 +1,28 @@
+/** Game result status tone (matches tecmo-tourney game-status-badge colors). */
+export type GameStatusTone = 'waiting' | 'in-progress' | 'completed' | 'unknown';
+
+export function parseGameStatusTone(status: string | undefined): GameStatusTone {
+  const s = (status || '').trim().toLowerCase().replace(/\s+/g, '');
+  if (s === 'waiting') return 'waiting';
+  if (s === 'inprogress') return 'in-progress';
+  if (s === 'completed') return 'completed';
+  return 'unknown';
+}
+
+/** Display label for API GameStatus (Waiting, InProgress, Completed). */
+export function formatGameStatusLabel(status: string | undefined): string {
+  switch (parseGameStatusTone(status)) {
+    case 'waiting':
+      return 'Waiting';
+    case 'in-progress':
+      return 'In progress';
+    case 'completed':
+      return 'Completed';
+    default:
+      return (status || '').trim() || '—';
+  }
+}
+
 /** Human-readable pick from API enum strings. */
 export function formatWagerPick(
   marketType: string,
@@ -43,9 +68,9 @@ export function formatWagerStatus(status: string): string {
     case 'Pending':
       return 'Open';
     case 'Won':
-      return 'Won';
+      return 'Wager Won';
     case 'Lost':
-      return 'Lost';
+      return 'Wager Lost';
     case 'Void':
       return 'Void';
     case 'Cancelled':

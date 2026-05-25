@@ -1,0 +1,106 @@
+<div class="admin-screen">
+  <a routerLink="/admin" class="back-link">← Admin home</a>
+  <header class="header">
+    <app-star-flanked-title title="Tournament Snapshot" />
+  </header>
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (!hasSelection()) {
+    <p class="empty">No tournament selected.</p>
+  } @else {
+    @let s = data();
+    @if (s) {
+      <h2 class="tournament-title">
+        {{ s.tournamentName || 'Tournament ' + s.tournamentId }}
+      </h2>
+      <section class="headline" aria-label="Tournament net">
+        <p class="settled-line">
+          @if (isHouseNetZero(s.settledHouseNet)) {
+            Tournament (all games, settled): even
+          } @else if (s.settledHouseNet > 0) {
+            Tournament (all games, settled): paid to house
+            <span class="settled-line__amount settled-line__amount--house">{{ bookUsd(s.settledHouseNet) }}</span>
+          } @else {
+            Tournament (all games, settled): paid to players
+            <span class="settled-line__amount settled-line__amount--players">{{ bookUsd(s.settledHouseNet) }}</span>
+          }
+        </p>
+        <p class="pending-line">
+          Open wagers (stakes at risk):
+          <strong>{{ bookUsd(s.pendingStakeTotal) }}</strong>
+          ({{ s.pendingWagerCount }} wagers)
+        </p>
+      </section>
+      <section class="list-section" aria-label="By player">
+        <h3 class="section-h">By player</h3>
+        @if (s.players.length === 0) {
+          <p class="note">No row-level player data for this snapshot.</p>
+        } @else {
+          <ul class="row-list">
+            @for (p of s.players; track p.playerId) {
+              <li>
+                <div class="row-top">
+                  <span class="name">{{ p.displayName || 'Player ' + p.playerId }}</span>
+                  <a
+                    class="row-link"
+                    [routerLink]="['/admin/snapshot/wagers', 'player', p.playerId]"
+                    [queryParams]="{ tournamentId: s.tournamentId }"
+                  >
+                    All wagers
+                  </a>
+                </div>
+                <p class="row-detail">
+                  Settled (player P&amp;L) {{ bookUsd(p.settledPlayerPnl) }}
+                </p>
+                <p class="row-pending" [class.muted]="p.pendingWagerCount === 0">
+                  @if (p.pendingWagerCount > 0) {
+                    Open / pending: {{ bookUsd(p.pendingStake) }} ({{ p.pendingWagerCount }} wagers)
+                  } @else {
+                    No open wagers
+                  }
+                </p>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+      <section class="list-section" aria-label="By game">
+        <h3 class="section-h">By game</h3>
+        @if (s.games.length === 0) {
+          <p class="note">No games with wagers in this tournament yet.</p>
+        } @else {
+          <ul class="row-list">
+            @for (g of s.games; track g.gameResultId) {
+              <li>
+                <div class="row-top">
+                  <span class="name">{{ g.label || 'Game ' + g.gameResultId }}</span>
+                  <a
+                    class="row-link"
+                    [routerLink]="['/admin/snapshot/wagers', 'game', g.gameResultId]"
+                    [queryParams]="{ tournamentId: s.tournamentId }"
+                  >
+                    All wagers
+                  </a>
+                </div>
+                <p class="row-detail">
+                  {{ netLine('This game (settled)', g.settledHouseNet) }}
+                </p>
+                <p class="row-pending" [class.muted]="g.pendingWagerCount === 0">
+                  @if (g.pendingWagerCount > 0) {
+                    Open / pending: {{ bookUsd(g.pendingStake) }} ({{ g.pendingWagerCount }} wagers)
+                  } @else {
+                    No open wagers
+                  }
+                </p>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    } @else {
+      <p class="empty">No data.</p>
+    }
+  }
+</div>

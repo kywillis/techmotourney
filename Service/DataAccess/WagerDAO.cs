@@ -270,6 +270,132 @@ WHERE w.GameResultId = @GameResultId AND w.Status = @Won";
             return rows.ToDictionary(r => r.WagerId, r => r.Payout);
         }
 
+        public async Task<IReadOnlyList<PlayerTournamentPnlRowDAOModel>> GetPlayerSettledPnlByTournamentAsync(int tournamentId)
+        {
+            const string sql = @"
+SELECT w.PlayerId,
+  COALESCE(SUM(
+    CASE w.Status
+      WHEN @Lost THEN -w.StakeAmount
+      WHEN @Won THEN ISNULL(x.Payout, 0)
+      WHEN @Void THEN 0
+      ELSE 0
+    END
+  ), 0) AS SettledPnl
+FROM TC_Wagers w
+OUTER APPLY (
+  SELECT TOP 1 a.Amount AS Payout
+  FROM TC_WagerAudit a
+  WHERE a.WagerId = w.WagerId AND a.Action = @SettleWagerWin
+  ORDER BY a.CreatedAt DESC, a.AuditId DESC
+) x
+WHERE w.TournamentId = @TournamentId
+  AND w.Status IN (@Won, @Lost, @Void)
+GROUP BY w.PlayerId";
+            using var connection = new SqlConnection(_connectionString);
+            var rows = await connection.QueryAsync<PlayerTournamentPnlRowDAOModel>(sql, new
+            {
+                TournamentId = tournamentId,
+                Lost = (int)WagerStatus.Lost,
+                Won = (int)WagerStatus.Won,
+                Void = (int)WagerStatus.Void,
+                SettleWagerWin = (int)WagerAuditAction.SettleWagerWin
+            });
+            return rows.ToList();
+        }
+
+        public async Task<IReadOnlyList<PendingStakeByPlayerRowDAOModel>> GetPendingStakeByPlayerForTournamentAsync(int tournamentId)
+        {
+            const string sql = @"
+SELECT PlayerId, SUM(StakeAmount) AS StakeTotal, COUNT(*) AS WagerCount
+FROM TC_Wagers
+WHERE TournamentId = @TournamentId AND Status = @Pending
+GROUP BY PlayerId";
+            using var connection = new SqlConnection(_connectionString);
+            var rows = await connection.QueryAsync<PendingStakeByPlayerRowDAOModel>(sql, new
+            {
+                TournamentId = tournamentId,
+                Pending = (int)WagerStatus.Pending
+            });
+            return rows.ToList();
+        }
+
+        public async Task<IReadOnlyList<PendingStakeByGameRowDAOModel>> GetPendingStakeByGameForTournamentAsync(int tournamentId)
+        {
+            const string sql = @"
+SELECT GameResultId, SUM(StakeAmount) AS StakeTotal, COUNT(*) AS WagerCount
+FROM TC_Wagers
+WHERE TournamentId = @TournamentId AND Status = @Pending AND GameResultId IS NOT NULL
+GROUP BY GameResultId";
+            using var connection = new SqlConnection(_connectionString);
+            var rows = await connection.QueryAsync<PendingStakeByGameRowDAOModel>(sql, new
+            {
+                TournamentId = tournamentId,
+                Pending = (int)WagerStatus.Pending
+            });
+            return rows.ToList();
+        }
+
+        public async Task<(decimal StakeTotal, int WagerCount)> GetTournamentPendingStakeSummaryAsync(int tournamentId)
+        {
+            const string sql = @"
+SELECT COALESCE(SUM(StakeAmount), 0) AS StakeTotal, COUNT(*) AS WagerCount
+FROM TC_Wagers
+WHERE TournamentId = @TournamentId AND Status = @Pending";
+            using var connection = new SqlConnection(_connectionString);
+            var row = await connection.QuerySingleAsync<PendingTournamentSumRow>(sql, new
+            {
+                TournamentId = tournamentId,
+                Pending = (int)WagerStatus.Pending
+            });
+            return (row.StakeTotal, row.WagerCount);
+        }
+
+        private sealed class PendingTournamentSumRow
+        {
+            public decimal StakeTotal { get; set; }
+            public int WagerCount { get; set; }
+        }
+
+        public async Task<IReadOnlyList<int>> GetDistinctGameResultIdsWithWagersForTournamentAsync(int tournamentId)
+        {
+            const string sql = @"
+SELECT DISTINCT GameResultId
+FROM TC_Wagers
+WHERE TournamentId = @TournamentId AND GameResultId IS NOT NULL";
+            using var connection = new SqlConnection(_connectionString);
+            var rows = await connection.QueryAsync<int>(sql, new { TournamentId = tournamentId });
+            return rows.ToList();
+        }
+
+        public async Task<IEnumerable<WagerWithMatchupDAOModel>> GetWagersWithMatchupByGameResultIdAsync(int gameResultId)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            const string sql = @"
+SELECT w.WagerId, w.PlayerId, w.GameResultId, w.TournamentId, w.MarketType, w.Side, w.StakeAmount, w.Status, w.CreatedAt, w.CancelledAt, w.SettledAt,
+       COALESCE(NULLIF(LTRIM(RTRIM(p1.FullName)), ''), CASE WHEN gr.GameResultId IS NOT NULL THEN CONCAT('Player ', gr.Player1Id) ELSE '' END) AS Player1Name,
+       COALESCE(NULLIF(LTRIM(RTRIM(p2.FullName)), ''), CASE WHEN gr.GameResultId IS NOT NULL THEN CONCAT('Player ', gr.Player2Id) ELSE '' END) AS Player2Name,
+       ISNULL(gr.Player1Id, 0) AS MatchPlayer1Id,
+       ISNULL(gr.Player2Id, 0) AS MatchPlayer2Id,
+       ISNULL(odds.Spread, 0) AS OddsSpread,
+       odds.FavoredPlayerId AS OddsFavoredPlayerId,
+       odds.MoneyLinePlayer1 AS OddsMoneyLinePlayer1,
+       odds.MoneyLinePlayer2 AS OddsMoneyLinePlayer2,
+       odds.OverUnder AS OddsOverUnder
+FROM TC_Wagers w
+LEFT JOIN TC_GameResults gr ON w.GameResultId = gr.GameResultId AND gr.IsDeleted = 0
+LEFT JOIN TC_Players p1 ON gr.Player1Id = p1.PlayerId AND ISNULL(p1.IsDeleted, 0) = 0
+LEFT JOIN TC_Players p2 ON gr.Player2Id = p2.PlayerId AND ISNULL(p2.IsDeleted, 0) = 0
+OUTER APPLY (
+    SELECT TOP 1 o.Spread, o.FavoredPlayerId, o.MoneyLinePlayer1, o.MoneyLinePlayer2, o.OverUnder
+    FROM TC_GameOdds o
+    WHERE w.GameResultId IS NOT NULL AND o.GameResultId = w.GameResultId AND ISNULL(o.IsDeleted, 0) = 0
+) odds
+WHERE w.GameResultId = @GameResultId
+ORDER BY w.CreatedAt DESC";
+            return await connection.QueryAsync<WagerWithMatchupDAOModel>(sql, new { GameResultId = gameResultId });
+        }
+
         private sealed class WinPayoutRow
         {
             public int WagerId { get; set; }

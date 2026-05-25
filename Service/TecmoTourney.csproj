@@ -35,4 +35,42 @@
 	  <Folder Include="wwwroot\" />
 	</ItemGroup>
 
+	<!-- Set BuildSpasOnPublish=false to skip npm/ng when publishing API-only (requires Node.js + npm on PATH). -->
+	<PropertyGroup>
+		<BuildSpasOnPublish Condition="'$(BuildSpasOnPublish)' == ''">true</BuildSpasOnPublish>
+		<RepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..'))</RepoRoot>
+		<WagerClientDir>$(RepoRoot)\Client\tecmo-wager</WagerClientDir>
+		<TourneyClientDir>$(RepoRoot)\Client\tecmo-tourney</TourneyClientDir>
+		<WagerBrowserOut>$(WagerClientDir)\dist\tecmo-wager\browser</WagerBrowserOut>
+		<TourneyBrowserOut>$(TourneyClientDir)\dist\tecmo-tourney\browser</TourneyBrowserOut>
+	</PropertyGroup>
+
+	<Target Name="BuildAndCopySpasToWwwroot"
+	        BeforeTargets="ComputeFilesToPublish"
+	        Condition="'$(BuildSpasOnPublish)' == 'true' AND '$(DesignTimeBuild)' != 'true'">
+		<Message Importance="high" Text="Building Tecmo Wager SPA..." />
+		<Exec WorkingDirectory="$(WagerClientDir)" Command="npm ci --no-audit --no-fund" />
+		<Exec WorkingDirectory="$(WagerClientDir)" Command="npx ng build --configuration production" />
+
+		<Message Importance="high" Text="Building Tecmo Tourney SPA..." />
+		<Exec WorkingDirectory="$(TourneyClientDir)" Command="npm ci --no-audit --no-fund" />
+		<Exec WorkingDirectory="$(TourneyClientDir)" Command="npx ng build --configuration production" />
+
+		<RemoveDir Directories="$(MSBuildProjectDirectory)\wwwroot\wager" Condition="Exists('$(MSBuildProjectDirectory)\wwwroot\wager')" />
+		<RemoveDir Directories="$(MSBuildProjectDirectory)\wwwroot\tourney" Condition="Exists('$(MSBuildProjectDirectory)\wwwroot\tourney')" />
+		<MakeDir Directories="$(MSBuildProjectDirectory)\wwwroot\wager" />
+		<MakeDir Directories="$(MSBuildProjectDirectory)\wwwroot\tourney" />
+		<ItemGroup>
+			<WagerSpaFiles Include="$(WagerBrowserOut)\**\*.*" />
+			<TourneySpaFiles Include="$(TourneyBrowserOut)\**\*.*" />
+		</ItemGroup>
+		<Copy SourceFiles="@(WagerSpaFiles)"
+		      DestinationFiles="@(WagerSpaFiles->'$(MSBuildProjectDirectory)\wwwroot\wager\%(RecursiveDir)%(Filename)%(Extension)')"
+		      SkipUnchangedFiles="false" />
+		<Copy SourceFiles="@(TourneySpaFiles)"
+		      DestinationFiles="@(TourneySpaFiles->'$(MSBuildProjectDirectory)\wwwroot\tourney\%(RecursiveDir)%(Filename)%(Extension)')"
+		      SkipUnchangedFiles="false" />
+		<Message Importance="high" Text="SPAs copied to wwwroot\wager and wwwroot\tourney." />
+	</Target>
+
 </Project>

@@ -1,0 +1,71 @@
+<div class="admin-screen">
+  @if (returnNav(); as ret) {
+    <a [routerLink]="ret.path" [queryParams]="ret.queryParams" class="back-link">← {{ ret.label }}</a>
+  } @else {
+    <a routerLink="/admin/snapshot" class="back-link">← Tournament Snapshot</a>
+  }
+  <header class="header">
+    <app-star-flanked-title [title]="headTitle()" />
+  </header>
+  @if (detailLine()) {
+    <p class="subhead">{{ detailLine() }}</p>
+  }
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (summary().count === 0) {
+    <p class="empty">No wagers found for this filter.</p>
+  } @else {
+    @let s = summary();
+    <div class="totals" aria-label="Wager totals">
+      <p>Wagers made: <strong>{{ s.count }}</strong></p>
+      <p class="totals-wl">
+        <span class="st-pill st-pill--won">Won: <strong>{{ s.won }}</strong></span>
+        <span class="totals-wl__sep" aria-hidden="true">·</span>
+        <span class="st-pill st-pill--lost">Lost: <strong>{{ s.lost }}</strong></span>
+      </p>
+      <p>Total wagered: <strong>{{ bookUsd(s.totalWagered) }}</strong></p>
+      <p>Net: <strong>{{ bookUsd(s.netPnl) }}</strong></p>
+    </div>
+    @let open = wagersListOpen();
+    @let settled = wagersListSettled();
+    @if (open.length > 0) {
+      <h2 class="section-title">Open / pending</h2>
+      <ul class="wager-admin-list">
+        @for (w of open; track w.wagerId) {
+          <li class="wager-card">
+            <div class="wager-card__head">
+              <p class="wager-card__line wager-card__matchup">{{ matchup(w) }}</p>
+              <p class="status open">{{ statusText(w.status) }}</p>
+            </div>
+            <p class="wager-card__line">{{ pickLine(w) }}</p>
+            <p class="wager-card__line">Stake {{ bookUsd(w.stakeAmount) }}</p>
+            <a [routerLink]="['/admin/games', w.gameResultId]" class="mini-link" fragment="odds">Edit lines</a>
+          </li>
+        }
+      </ul>
+    }
+    @if (settled.length > 0) {
+      <h2 class="section-title">Settled / other</h2>
+      <ul class="wager-admin-list">
+        @for (w of settled; track w.wagerId) {
+          <li class="wager-card settled">
+            <div class="wager-card__head">
+              <p class="wager-card__line wager-card__matchup">{{ matchup(w) }}</p>
+              <p
+                class="status"
+                [class.won]="w.status === 'Won'"
+                [class.lost]="w.status === 'Lost'"
+              >
+                {{ statusText(w.status) }}
+              </p>
+            </div>
+            <p class="wager-card__line">{{ pickLine(w) }}</p>
+            <p class="wager-card__line">Stake {{ bookUsd(w.stakeAmount) }}</p>
+          </li>
+        }
+      </ul>
+    }
+  }
+</div>

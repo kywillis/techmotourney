@@ -55,9 +55,10 @@
       @if (isActiveUser() && isAdmin()) {
         <a routerLink="/admin" class="nav-link nav-link-admin" routerLinkActive="nav-link-active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">Admin home</a>
         <a routerLink="/admin/pending-players" class="nav-link" routerLinkActive="nav-link-active" (click)="closeMenu()">Pending signups</a>
-        <a routerLink="/admin/balance" class="nav-link" routerLinkActive="nav-link-active" (click)="closeMenu()">Player balance</a>
+        <a routerLink="/admin/players" class="nav-link" routerLinkActive="nav-link-active" (click)="closeMenu()">Players</a>
         <a routerLink="/admin/wagers" class="nav-link" routerLinkActive="nav-link-active" (click)="closeMenu()">Pending wagers</a>
         <a routerLink="/admin/games" class="nav-link" routerLinkActive="nav-link-active" (click)="closeMenu()">Games &amp; scores</a>
+        <a routerLink="/admin/snapshot" class="nav-link" routerLinkActive="nav-link-active" (click)="closeMenu()">Tournament Snapshot</a>
         <div class="nav-admin-tournament">
           <label class="nav-admin-tournament-label" for="admin-tournament-select">Change tournament</label>
           <select

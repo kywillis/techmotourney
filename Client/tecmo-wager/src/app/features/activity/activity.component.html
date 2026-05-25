@@ -22,21 +22,7 @@
     } @else {
       <ul class="audit-list">
         @for (e of entries(); track e.auditId) {
-          <li class="audit-item">
-            <p class="audit-primary">
-              <span class="action">{{ actionLabel(e.action) }}</span>
-              @if (amountDetail(e); as amt) {
-                <span class="detail"> · {{ amt }}</span>
-              }
-            </p>
-            @if (hasBalanceAfter(e)) {
-              <p class="balance-after">Balance after {{ formattedBalanceAfter(e) }}</p>
-            }
-            <p class="when">{{ e.createdAt | date: 'MMM d, y · h:mm a' }}</p>
-            @if (showGameLink(e)) {
-              <a [routerLink]="['/wagers/games', e.gameResultId]" class="view-game">View game</a>
-            }
-          </li>
+          <app-wager-history-card [view]="cardView(e)" />
         }
       </ul>
     }

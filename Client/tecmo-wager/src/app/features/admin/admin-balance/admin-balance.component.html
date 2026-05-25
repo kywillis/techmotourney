@@ -1,5 +1,9 @@
 <div class="admin-screen">
-  <a routerLink="/admin" class="back-link">← Admin home</a>
+  @if (returnNav(); as ret) {
+    <a [routerLink]="ret.path" [queryParams]="ret.queryParams" class="back-link">← {{ ret.label }}</a>
+  } @else {
+    <a routerLink="/admin" class="back-link">← Admin home</a>
+  }
   <header class="header">
     <app-star-flanked-title title="Player balance" />
   </header>

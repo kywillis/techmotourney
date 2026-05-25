@@ -46,6 +46,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/admin/admin-shell/admin-shell.component').then(m => m.AdminShellComponent),
     children: [
       { path: '', loadComponent: () => import('./features/admin/admin-home/admin-home.component').then(m => m.AdminHomeComponent) },
+      {
+        path: 'players',
+        loadComponent: () =>
+          import('./features/admin/admin-players-list/admin-players-list.component').then(m => m.AdminPlayersListComponent)
+      },
+      {
+        path: 'players/:playerId',
+        loadComponent: () =>
+          import('./features/admin/admin-player-audit/admin-player-audit.component').then(m => m.AdminPlayerAuditComponent)
+      },
       { path: 'balance', loadComponent: () => import('./features/admin/admin-balance/admin-balance.component').then(m => m.AdminBalanceComponent) },
       { path: 'wagers', loadComponent: () => import('./features/admin/admin-wagers/admin-wagers.component').then(m => m.AdminWagersComponent) },
       { path: 'games', loadComponent: () => import('./features/admin/admin-games/admin-games.component').then(m => m.AdminGamesComponent) },
@@ -54,6 +64,17 @@ export const routes: Routes = [
         path: 'pending-players',
         loadComponent: () =>
           import('./features/admin/admin-pending-players/admin-pending-players.component').then(m => m.AdminPendingPlayersComponent)
+      },
+      {
+        path: 'snapshot',
+        loadComponent: () => import('./features/admin/admin-snapshot/admin-snapshot.component').then(m => m.AdminSnapshotComponent)
+      },
+      {
+        path: 'snapshot/wagers/:kind/:id',
+        loadComponent: () =>
+          import('./features/admin/admin-tournament-wagers-list/admin-tournament-wagers-list.component').then(
+            m => m.AdminTournamentWagersListComponent
+          )
       }
     ]
   },
