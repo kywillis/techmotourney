@@ -403,3 +403,7 @@ FodyWeavers.xsd
 
 
 **/appsettings.secrets.json
+
+# Tecmo Score Grabber — machine-specific (copy from ScoreGrabber/appsettings.example.json)
+ScoreGrabber/appsettings.json
+ScoreGrabber/appsettings.Production.json
