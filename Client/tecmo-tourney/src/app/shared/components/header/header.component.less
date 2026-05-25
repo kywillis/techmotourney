@@ -1,7 +1,52 @@
-nav{
-    text-align: right;
+.top-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  text-align: left;
 }
-nav a{
-    display: inline-block;
-    margin:0 20px;
+
+.top-nav a {
+  display: inline-block;
+  margin: 0;
+}
+
+.top-nav a.active {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.nav-spacer {
+  flex: 1 1 auto;
+  min-width: 0.5rem;
+}
+
+.nav-auth,
+.nav-signout {
+  font-size: 0.85rem;
+}
+
+.nav-login-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-decoration: none;
+  color: inherit;
+  padding: 0.15rem;
+  border-radius: 4px;
+}
+
+.nav-login-link:hover {
+  opacity: 0.85;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-login-icon {
+  font-size: 1.35rem;
+}
+
+.nav-auth-label {
+  font-size: 0.75rem;
+  margin-right: 0.35rem;
 }

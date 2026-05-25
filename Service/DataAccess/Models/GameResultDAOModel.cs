@@ -1,4 +1,4 @@
-﻿namespace TecmoTourney.DataAccess.Models
+namespace TecmoTourney.DataAccess.Models
 {
     public class GameResultDAOModel
     {
@@ -18,6 +18,11 @@
         public int GameTypeId { get; set; }
         public bool IsDeleted { get; set; }
         public int? BracketGameId { get; set; }
+        /// <summary>
+        /// If set, this game does not count toward this player's preliminary seeding/standings (e.g. their 3rd game when odd N).
+        /// </summary>
+        public int? SeedingExemptPlayerId { get; set; }
         public DateTime DateAdded { get; set; }
+        public DateTime? GameStartedAt { get; set; }
     }
 }

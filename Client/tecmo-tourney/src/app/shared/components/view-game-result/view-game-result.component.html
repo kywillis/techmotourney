@@ -11,7 +11,7 @@
             </tr>
         </thead>
         <tr>
-            <td><span class="link" (click)="showPlayer(gameResult.player1.playerId)">{{gameResult.player1.playerName}}</span></td>
+            <td><span class="link" (click)="showPlayer(gameResult.player1.playerId)">{{gameResult.player1.playerName}}</span><span class="nc-badge" *ngIf="gameResult.seedingExemptPlayerId === gameResult.player1.playerId" title="Doesn't count for seeding">NC</span></td>
             <td><div *ngIf="gameResult.player1.teamName != ''" class="helmet-small helmet-small-{{gameResult.player1.teamName | lowercase}}"></div>{{gameResult.player1.teamName}}</td>
             <td>{{gameResult.player1.rushingYards}}</td>
             <td>{{gameResult.player1.passingYards}}</td>
@@ -19,7 +19,7 @@
             <td><span [ngClass]="{ 'win': spotlightWon(gameResult, gameResult.player1.score)}">{{gameResult.player1.score}}</span></td>
         </tr>
         <tr>
-            <td><span class="link" (click)="showPlayer(gameResult.player2.playerId)">{{gameResult.player2.playerName}}</span></td>
+            <td><span class="link" (click)="showPlayer(gameResult.player2.playerId)">{{gameResult.player2.playerName}}</span><span class="nc-badge" *ngIf="gameResult.seedingExemptPlayerId === gameResult.player2.playerId" title="Doesn't count for seeding">NC</span></td>
             <td><div *ngIf="gameResult.player1.teamName != ''" class="helmet-small helmet-small-{{gameResult.player2.teamName | lowercase}}"></div>{{gameResult.player2.teamName}}</td>
             <td>{{gameResult.player2.rushingYards}}</td>
             <td>{{gameResult.player2.passingYards}}</td>
@@ -30,6 +30,7 @@
             <td colspan="3">
                 <div *ngIf="showStatus && gameResult.status != GameStatus.Completed">{{gameResult.status}}</div>                
                 <div class="date" *ngIf="showDatePlayed">{{gameResult.date | date:'EEE h:mm a, MMMM d, y' }}</div>
+                <div class="exempt-status" *ngIf="gameResult.seedingExemptPlayerId">★ Doesn't count for {{ getSeedingExemptPlayerName() }} ★</div>
             </td>
             <td colspan="3" *ngIf="showControls && loggedIn()">
                 <a class="dark link large"  (click)="editGameResult(gameResult)">Edit <i class="bi bi-pen"></i></a>

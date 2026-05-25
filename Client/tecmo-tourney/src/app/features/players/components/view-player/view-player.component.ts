@@ -13,7 +13,7 @@ import { ITournament } from 'src/app/core/models/tournament.model';
 import { IGameSearchParameters } from 'src/app/core/models/gameSearchParameters';
 import { ModalComponent } from 'src/app/shared/components/modal/modal.component';
 import { PlayerStatDetailsType } from 'src/app/enums';
-import { AuthenticationService } from 'src/app/core/services/authentication.service';
+import { GoogleAuthService } from 'src/app/core/services/google-auth.service';
 
 @Component({
     selector: 'app-view-player',
@@ -61,7 +61,7 @@ export class ViewPlayerComponent implements OnInit, OnDestroy{
     private resultsService: ResultsService,
     private route: ActivatedRoute,
     private tournamentService: TournamentsService, 
-    private authenticationService: AuthenticationService) { }
+    private googleAuth: GoogleAuthService) { }
 
   ngOnInit(): void {    
     this.paramSubscription = this.route.paramMap.subscribe(params => {
@@ -369,7 +369,7 @@ export class ViewPlayerComponent implements OnInit, OnDestroy{
     this.loadPlayer(this.player!.playerId);
   }
 
-  loggedIn():boolean{
-    return this.authenticationService.isAdminLoggedIn();
+  loggedIn(): boolean {
+    return this.googleAuth.isAdminLoggedIn();
   }
 }

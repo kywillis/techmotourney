@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using TecmoTourney.DataAccess.Interfaces;
 
 namespace TecmoTourney.DataAccess
@@ -13,7 +13,11 @@ namespace TecmoTourney.DataAccess
             services.AddScoped<ITournamentBracketUpdateDAO, TournamentBracketUpdateDAO>();
             services.AddScoped<IPlayerTournamentDAO, PlayerTournamentDAO>();
             services.AddScoped<IGameTeamDAO, GameTeamDAO>();
-            services.AddScoped<IPointSpreadDAO, PointSpreadDAO>();
+            services.AddScoped<IGameOddsDAO, GameOddsDAO>();
+            services.AddScoped<IPendingActivationDAO, PendingActivationDAO>();
+            services.AddScoped<IWagerDAO, WagerDAO>();
+            services.AddScoped<IWagerAuditDAO, WagerAuditDAO>();
+            services.AddScoped<IWagerSettingsDAO, WagerSettingsDAO>();
         }
     }
 }

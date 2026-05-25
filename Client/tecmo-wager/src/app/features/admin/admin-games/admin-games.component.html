@@ -1,0 +1,21 @@
+<div class="admin-screen">
+  <a routerLink="/admin" class="back-link">← Admin home</a>
+  <header class="header">
+    <app-star-flanked-title title="Games & scores" />
+  </header>
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (games().length === 0) {
+    <p class="empty">No games for this tournament.</p>
+  } @else {
+    <ul class="game-list">
+      @for (g of games(); track g.gameResultId) {
+        <li>
+          <a [routerLink]="['/admin/games', g.gameResultId]">{{ label(g) }}</a>
+        </li>
+      }
+    </ul>
+  }
+</div>

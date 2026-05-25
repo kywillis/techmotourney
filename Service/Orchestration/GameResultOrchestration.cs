@@ -1,4 +1,4 @@
-﻿// TecmoTourney, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+// TecmoTourney, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
 // TecmoTourney.Orchestration.GameResultOrchestration
 using System;
 using System.Collections.Generic;
@@ -23,7 +23,7 @@ using TecmoTourney.ResultPattern;
 
 public class GameResultOrchestration : IGameResultOrchestration
 {
-    private class PointSpreadResponse
+    private class OddsGenerationResponse
     {
         public string Player1Name { get; set; } = string.Empty;
 
@@ -34,6 +34,12 @@ public class GameResultOrchestration : IGameResultOrchestration
         public string Summary { get; set; } = string.Empty;
 
         public string FavoredPlayerName { get; set; } = string.Empty;
+
+        public int? MoneyLinePlayer1 { get; set; }
+
+        public int? MoneyLinePlayer2 { get; set; }
+
+        public decimal? OverUnder { get; set; }
     }
 
     private const int _winnersGroup = 0;
@@ -54,7 +60,7 @@ public class GameResultOrchestration : IGameResultOrchestration
 
     private readonly IGameTeamDAO _gameTeamDAO;
 
-    private readonly IPointSpreadDAO _pointSpreadDAO;
+    private readonly IGameOddsDAO _gameOddsDAO;
 
     private readonly IMapper _mapper;
 
@@ -64,7 +70,7 @@ public class GameResultOrchestration : IGameResultOrchestration
 
     private readonly IConfiguration _configuration;
 
-    public GameResultOrchestration(IGameResultDAO gameResultDAO, ITournamentsDAO tournamentsDAO, IPlayerDAO playerDAO, IGameTeamDAO gameTeamDAO, IMapper mapper, ITournamentBracketUpdateDAO tournamentBracketUpdateDAO, IPointSpreadDAO pointSpreadDAO, IHostEnvironment environment, IConfiguration configuration)
+    public GameResultOrchestration(IGameResultDAO gameResultDAO, ITournamentsDAO tournamentsDAO, IPlayerDAO playerDAO, IGameTeamDAO gameTeamDAO, IMapper mapper, ITournamentBracketUpdateDAO tournamentBracketUpdateDAO, IGameOddsDAO gameOddsDAO, IHostEnvironment environment, IConfiguration configuration)
     {
         _tournamentsDAO = tournamentsDAO;
         _gameTeamDAO = gameTeamDAO;
@@ -72,7 +78,7 @@ public class GameResultOrchestration : IGameResultOrchestration
         _playerDAO = playerDAO;
         _mapper = mapper;
         _tournamentBracketUpdateDAO = tournamentBracketUpdateDAO;
-        _pointSpreadDAO = pointSpreadDAO;
+        _gameOddsDAO = gameOddsDAO;
         _environment = environment;
         _configuration = configuration;
         string key = _configuration["ApplicationConfig:gptKey"];
@@ -371,39 +377,45 @@ public class GameResultOrchestration : IGameResultOrchestration
         {
             errors.Add("Player 2 not found");
         }
+        int? t1 = gameResult.Player1.GameTeamId;
+        int? t2 = gameResult.Player2.GameTeamId;
+        if (t1.HasValue && t2.HasValue && t1.Value == t2.Value && t1.Value > 0)
+        {
+            errors.Add("Each player must use a different team.");
+        }
         return errors;
     }
 
-    public async Task<Operation<List<PointSpreadModel>, ApiError>> CreatePointSpreadsAsync(int tournamentId, IEnumerable<PointSpreadRequestModel> pointSpreads)
+    public async Task<Operation<List<GameOddsModel>, ApiError>> CreatePointSpreadsAsync(int tournamentId, IEnumerable<GameOddsRequestModel> pointSpreads)
     {
         try
         {
-            List<PointSpreadModel> results = new List<PointSpreadModel>();
+            List<GameOddsModel> results = new List<GameOddsModel>();
             if (!pointSpreads.Any())
             {
                 return results;
             }
-            IEnumerable<PointSpreadDAOModel> allPointSpreads = await _pointSpreadDAO.GetByTournamentIdAsync(tournamentId);
-            List<PointSpreadDAOModel> newPointSpreads = new List<PointSpreadDAOModel>();
-            foreach (PointSpreadRequestModel pointSpread in pointSpreads)
+            IEnumerable<GameOddsDAOModel> allGameOdds = await _gameOddsDAO.GetByTournamentIdAsync(tournamentId);
+            List<GameOddsDAOModel> newGameOdds = new List<GameOddsDAOModel>();
+            foreach (GameOddsRequestModel request in pointSpreads)
             {
-                if (!allPointSpreads.Any((PointSpreadDAOModel ps) => ((ps.Player1ID == pointSpread.Player1ID && ps.Player2ID == pointSpread.Player2ID) || (ps.Player1ID == pointSpread.Player2ID && ps.Player2ID == pointSpread.Player1ID)) && ps.BracketTypeId == (int)pointSpread.BracketType))
+                if (!allGameOdds.Any((GameOddsDAOModel g) => ((g.Player1Id == request.Player1ID && g.Player2Id == request.Player2ID) || (g.Player1Id == request.Player2ID && g.Player2Id == request.Player1ID)) && g.BracketTypeId == (int)request.BracketType))
                 {
-                    PointSpreadDAOModel pointSpreadDAOModel = _mapper.Map<PointSpreadDAOModel>(pointSpread);
-                    pointSpreadDAOModel.FavoredPlayerId = null;
-                    newPointSpreads.Add(pointSpreadDAOModel);
+                    GameOddsDAOModel gameOddsDAOModel = _mapper.Map<GameOddsDAOModel>(request);
+                    gameOddsDAOModel.FavoredPlayerId = null;
+                    newGameOdds.Add(gameOddsDAOModel);
                 }
             }
-            if (newPointSpreads.Any())
+            if (newGameOdds.Any())
             {
-                await generatePointSpread(newPointSpreads);
-                foreach (PointSpreadDAOModel pointSpreadDAOModel2 in newPointSpreads)
+                await generatePointSpread(newGameOdds);
+                foreach (GameOddsDAOModel gameOdds in newGameOdds)
                 {
-                    if (pointSpreadDAOModel2.Spread > 0)
+                    if (gameOdds.Spread > 0)
                     {
-                        pointSpreadDAOModel2.Spread *= -1;
+                        gameOdds.Spread *= -1;
                     }
-                    await _pointSpreadDAO.CreatePointSpreadsAsync(pointSpreadDAOModel2);
+                    await _gameOddsDAO.CreatePointSpreadsAsync(gameOdds);
                 }
             }
             return results;
@@ -415,12 +427,12 @@ public class GameResultOrchestration : IGameResultOrchestration
         }
     }
 
-    public async Task<Operation<List<PointSpreadModel>, ApiError>> GetPointSpreadsAsync(int tournamentId)
+    public async Task<Operation<List<GameOddsModel>, ApiError>> GetPointSpreadsAsync(int tournamentId)
     {
         try
         {
-            IEnumerable<PointSpreadDAOModel> pointSpreads = await _pointSpreadDAO.GetByTournamentIdAsync(tournamentId);
-            return _mapper.Map<List<PointSpreadModel>>(pointSpreads);
+            IEnumerable<GameOddsDAOModel> gameOdds = await _gameOddsDAO.GetByTournamentIdAsync(tournamentId);
+            return _mapper.Map<List<GameOddsModel>>(gameOdds);
         }
         catch (Exception ex)
         {
@@ -473,16 +485,16 @@ public class GameResultOrchestration : IGameResultOrchestration
         return (await File.ReadAllTextAsync(filePath)).Replace("{{gamedata}}", text.ToString());
     }
 
-    private async Task generatePointSpread(IEnumerable<PointSpreadDAOModel> pointSpreads)
+    private async Task generatePointSpread(IEnumerable<GameOddsDAOModel> pointSpreads)
     {
         try
         {
             IEnumerable<PlayerDAOModel> allPlayers = await _playerDAO.ListPlayersAsync(null, includeDeleted: true);
             string matchupList = string.Empty;
             string aiInstructions = await buildBaseAIText();
-            foreach (PointSpreadDAOModel pointSpread in pointSpreads)
+            foreach (GameOddsDAOModel gameOdds in pointSpreads)
             {
-                matchupList = matchupList + allPlayers.First((PlayerDAOModel p) => p.PlayerId == pointSpread.Player1ID).FullName + " vs " + allPlayers.First((PlayerDAOModel p) => p.PlayerId == pointSpread.Player2ID).FullName + "\r\n";
+                matchupList = matchupList + allPlayers.First((PlayerDAOModel p) => p.PlayerId == gameOdds.Player1Id).FullName + " vs " + allPlayers.First((PlayerDAOModel p) => p.PlayerId == gameOdds.Player2Id).FullName + "\r\n";
             }
             aiInstructions = aiInstructions.Replace("{{matchups}}", matchupList);
             string key = _configuration["ApplicationConfig:gptKey"];
@@ -492,27 +504,30 @@ public class GameResultOrchestration : IGameResultOrchestration
                 new UserChatMessage(ChatMessageContentPart.CreateTextPart(aiInstructions))
             };
             ChatCompletion completion = client.CompleteChat(messages);
-            Enumerable.Empty<PointSpreadResponse>();
-            IEnumerable<PointSpreadResponse> respsonses;
+            Enumerable.Empty<OddsGenerationResponse>();
+            IEnumerable<OddsGenerationResponse> respsonses;
             try
             {
-                respsonses = JsonConvert.DeserializeObject<IEnumerable<PointSpreadResponse>>(completion.Content[0].Text);
+                respsonses = JsonConvert.DeserializeObject<IEnumerable<OddsGenerationResponse>>(completion.Content[0].Text);
             }
             catch (Exception)
             {
                 throw;
             }
-            foreach (PointSpreadDAOModel pointSpread2 in pointSpreads)
+            foreach (GameOddsDAOModel gameOdds in pointSpreads)
             {
-                string player1Name = allPlayers.First((PlayerDAOModel p) => p.PlayerId == pointSpread2.Player1ID).FullName;
-                string player2Name = allPlayers.First((PlayerDAOModel p) => p.PlayerId == pointSpread2.Player2ID).FullName;
-                PointSpreadResponse response = respsonses.FirstOrDefault((PointSpreadResponse r) => r.Player2Name == player2Name && r.Player1Name == player1Name);
+                string player1Name = allPlayers.First((PlayerDAOModel p) => p.PlayerId == gameOdds.Player1Id).FullName;
+                string player2Name = allPlayers.First((PlayerDAOModel p) => p.PlayerId == gameOdds.Player2Id).FullName;
+                OddsGenerationResponse response = respsonses.FirstOrDefault((OddsGenerationResponse r) => r.Player2Name == player2Name && r.Player1Name == player1Name);
                 PlayerDAOModel favoredPlayer = allPlayers.FirstOrDefault((PlayerDAOModel p) => p.FullName == response.FavoredPlayerName);
                 if (response != null)
                 {
-                    pointSpread2.FavoredPlayerId = favoredPlayer?.PlayerId;
-                    pointSpread2.Spread = response.Spread;
-                    pointSpread2.Summary = response.Summary;
+                    gameOdds.FavoredPlayerId = favoredPlayer?.PlayerId;
+                    gameOdds.Spread = response.Spread;
+                    gameOdds.Summary = response.Summary;
+                    gameOdds.MoneyLinePlayer1 = response.MoneyLinePlayer1;
+                    gameOdds.MoneyLinePlayer2 = response.MoneyLinePlayer2;
+                    gameOdds.OverUnder = response.OverUnder;
                 }
             }
         }

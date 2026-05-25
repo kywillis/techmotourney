@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TecmoTourney.Models;
@@ -11,10 +11,11 @@ using TecmoTourney.ResultPattern;
 using System.Net;
 using Microsoft.Data.SqlClient;
 using TecmoTourney.DataAccess;
+using TecmoTourney;
 
 namespace TecmoTourney.Orchestration
 {
-    public class GameResultOrchestration : IGameResultOrchestration
+    internal class GameResultsOrchestration : IGameResultOrchestration
     {
         private const int _winnersGroup = 0;
         private const int _losersGroup = 1;
@@ -24,15 +25,17 @@ namespace TecmoTourney.Orchestration
         private readonly ITournamentsDAO _tournamentsDAO;
         private readonly ITournamentBracketUpdateDAO _tournamentBracketUpdateDAO;
         private readonly IPlayerDAO _playerDAO;
+        private readonly IGameOddsDAO _gameOddsDAO;
         private readonly IMapper _mapper;
 
-        public GameResultOrchestration(IGameResultDAO gameResultDAO, ITournamentsDAO tournamentsDAO, IPlayerDAO playerDAO, IMapper mapper, ITournamentBracketUpdateDAO tournamentBracketUpdateDAO)
+        public GameResultsOrchestration(IGameResultDAO gameResultDAO, ITournamentsDAO tournamentsDAO, IPlayerDAO playerDAO, IMapper mapper, ITournamentBracketUpdateDAO tournamentBracketUpdateDAO, IGameOddsDAO gameOddsDAO)
         {
             _tournamentsDAO = tournamentsDAO;
             _gameResultDAO = gameResultDAO;
             _playerDAO = playerDAO;
             _mapper = mapper;
             _tournamentBracketUpdateDAO = tournamentBracketUpdateDAO;
+            _gameOddsDAO = gameOddsDAO;
         }
 
         public async Task<Operation<GameResultModel, ApiError>> SaveGameResultAsync(SaveGameResultRequestModel gameResult)
@@ -151,11 +154,18 @@ namespace TecmoTourney.Orchestration
             }
         }
 
-        public async Task<Operation<List<GameResultModel>, ApiError>> SearchAsync(int tournamentId, int? player1Id, int? player2Id)
+        public async Task<Operation<List<GameResultModel>, ApiError>> SearchAsync(int? tournamentId, int? player1Id, int? player2Id, BracketLocation? bracketLocation)
         {
             try
             {
-                var gameResultDAOModels = await _gameResultDAO.SearchAsync(tournamentId,player1Id, player2Id);
+                var gameResultDAOModels = await _gameResultDAO.SearchAsync(tournamentId, player1Id, player2Id);
+                if (bracketLocation.HasValue)
+                {
+                    gameResultDAOModels = gameResultDAOModels.OrderBy(g => g.GameResultId);
+                    gameResultDAOModels = (bracketLocation != BracketLocation.Losers || gameResultDAOModels.Count() <= 1)
+                        ? gameResultDAOModels.Take(1)
+                        : gameResultDAOModels.Skip(1);
+                }
                 var games = _mapper.Map<List<GameResultModel>>(gameResultDAOModels);
                 await populatePlayerNames(games);
                 return games;
@@ -165,13 +175,108 @@ namespace TecmoTourney.Orchestration
                 return new ApiError(e.Message, HttpStatusCode.InternalServerError);
             }
         }
-       
+
+        public async Task<Operation<List<TournamentBracketUpdateModel>, ApiError>> GetGameUpdates(int tournamentId)
+        {
+            try
+            {
+                var updatedGames = new List<TournamentBracketUpdateModel>();
+                var updates = await _tournamentBracketUpdateDAO.GetByTournamentIdAsync(tournamentId, 1);
+                if (updates.Any())
+                {
+                    var allGameResults = (await _gameResultDAO.ListResultsByTournamentAsync(tournamentId)).Where(g => g.GameTypeId == 1);
+                    foreach (var update in updates)
+                    {
+                        var gameResult = _mapper.Map<GameResultModel>(await _gameResultDAO.GetGameResultAsync(update.GameResultId));
+                        if (gameResult == null)
+                        {
+                            update.StatusID = 2;
+                            await _tournamentBracketUpdateDAO.Save(update);
+                            return new ApiError("found update with no matching game result", HttpStatusCode.BadRequest);
+                        }
+                        var matchUps = allGameResults
+                            .Where(g => (g.Player1Id == gameResult.Player1.PlayerId && g.Player2Id == gameResult.Player2.PlayerId) || (g.Player1Id == gameResult.Player2.PlayerId && g.Player2Id == gameResult.Player1.PlayerId))
+                            .OrderBy(g => g.GameResultId)
+                            .ToList();
+                        gameResult.MatchUpIndex = matchUps.FindIndex(g => g.GameResultId == update.GameResultId);
+                        await populatePlayerNames(gameResult);
+                        updatedGames.Add(new TournamentBracketUpdateModel
+                        {
+                            GameResult = gameResult,
+                            TournamentBracketUpdateId = update.TournamentBracketUpdateId
+                        });
+                    }
+                }
+                return updatedGames;
+            }
+            catch (Exception e)
+            {
+                return new ApiError(e.Message, HttpStatusCode.InternalServerError);
+            }
+        }
+
+        public async Task<Operation<bool, ApiError>> AcknowledgeBracketUpdate(int tournamentBracketUpdateId)
+        {
+            try
+            {
+                var update = await _tournamentBracketUpdateDAO.GetByUpdateIdAsync(tournamentBracketUpdateId);
+                if (update == null)
+                    return new ApiError($"tournamentBracketUpdateId: {tournamentBracketUpdateId} not found", HttpStatusCode.BadRequest);
+                update.StatusID = 2;
+                await _tournamentBracketUpdateDAO.Save(update);
+                return true;
+            }
+            catch (Exception e)
+            {
+                return new ApiError(e.Message, HttpStatusCode.InternalServerError);
+            }
+        }
+
+        public async Task<Operation<List<GameOddsModel>, ApiError>> CreatePointSpreadsAsync(int tournamentId, IEnumerable<GameOddsRequestModel> pointSpreads)
+        {
+            try
+            {
+                var results = new List<GameOddsModel>();
+                if (pointSpreads == null || !pointSpreads.Any())
+                    return results;
+                var allGameOdds = await _gameOddsDAO.GetByTournamentIdAsync(tournamentId);
+                foreach (var request in pointSpreads)
+                {
+                    var exists = allGameOdds.Any(g => ((g.Player1Id == request.Player1ID && g.Player2Id == request.Player2ID) || (g.Player1Id == request.Player2ID && g.Player2Id == request.Player1ID)) && g.BracketTypeId == (int)request.BracketType);
+                    if (!exists)
+                    {
+                        var gameOddsDAOModel = _mapper.Map<GameOddsDAOModel>(request);
+                        gameOddsDAOModel.TournamentId = tournamentId;
+                        gameOddsDAOModel.BracketTypeId = (int)request.BracketType;
+                        gameOddsDAOModel.FavoredPlayerId = null;
+                        var created = await _gameOddsDAO.CreatePointSpreadsAsync(gameOddsDAOModel);
+                        results.Add(_mapper.Map<GameOddsModel>(created));
+                    }
+                }
+                return results;
+            }
+            catch (Exception e)
+            {
+                return new ApiError(e.Message, HttpStatusCode.InternalServerError);
+            }
+        }
+
+        public async Task<Operation<List<GameOddsModel>, ApiError>> GetPointSpreadsAsync(int tournamentId)
+        {
+            try
+            {
+                var gameOdds = await _gameOddsDAO.GetByTournamentIdAsync(tournamentId);
+                return _mapper.Map<List<GameOddsModel>>(gameOdds);
+            }
+            catch (Exception e)
+            {
+                return new ApiError(e.Message, HttpStatusCode.InternalServerError);
+            }
+        }
+
         private async Task updateTournament(GameResultModel gameResult)
         {
             var tournamentDAO = await _tournamentsDAO.GetById(gameResult.TournamentId);
-            var tournament = _mapper.Map<TournamentModel>(tournamentDAO);
-            var bracket = tournament.TournamentBracket;
-            
             await _tournamentsDAO.UpdateTournamentBracketDataAsync(tournamentDAO.TournamentId, tournamentDAO.BracketData);
         }
 

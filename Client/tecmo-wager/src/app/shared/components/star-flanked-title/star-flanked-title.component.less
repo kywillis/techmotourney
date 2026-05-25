@@ -1,0 +1,31 @@
+.star-flanked-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  --sft-star-h: 14px;
+  --sft-title-fs: 1rem;
+
+  &--lg {
+    --sft-star-h: 17px;
+    --sft-title-fs: 1.25rem;
+  }
+}
+
+.star-flanked-title__stars {
+  flex-shrink: 0;
+  height: var(--sft-star-h);
+  width: calc(172 * var(--sft-star-h) / 70);
+  background: url('/assets/stars.png') no-repeat center;
+  background-size: 100% 100%;
+}
+
+.star-flanked-title__heading {
+  margin: 0;
+  font-size: var(--sft-title-fs);
+  font-weight: inherit;
+  font-family: inherit;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--text);
+}

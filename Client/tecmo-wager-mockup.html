@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tecmo Wager – UI Mockup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #1863D6;
+      --text: #FFFFFF;
+      --link: #d8dcad;
+      --dark: #A6E7FF;
+      --highlight: #FB599A;
+      --success: #068000;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Press Start 2P', cursive;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      font-size: 10px;
+      line-height: 1.6;
+    }
+    .mockup-wrapper {
+      max-width: 420px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: var(--bg);
+      position: relative;
+    }
+    /* Tabs to switch screens */
+    .screen-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px;
+      background: rgba(0,0,0,.2);
+      border-bottom: 2px solid var(--dark);
+    }
+    .screen-tabs button {
+      font-family: inherit;
+      font-size: 8px;
+      padding: 8px 10px;
+      background: var(--dark);
+      color: var(--bg);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .screen-tabs button:hover, .screen-tabs button.active {
+      background: var(--highlight);
+      color: var(--text);
+    }
+    .screen {
+      display: none;
+      padding: 16px;
+      padding-bottom: 80px;
+    }
+    .screen.active { display: block; }
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 12px 0;
+      border-bottom: 2px solid var(--dark);
+      margin-bottom: 16px;
+    }
+    .header h1 { font-size: 14px; margin: 0; }
+    .balance-big {
+      font-size: 24px;
+      margin: 20px 0;
+      text-align: center;
+      color: var(--dark);
+    }
+    .balance-big span { color: var(--text); }
+    /* Quick actions grid */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 20px 0;
+    }
+    .quick-action {
+      background: rgba(255,255,255,.15);
+      border: 2px solid var(--dark);
+      border-radius: 8px;
+      padding: 20px 12px;
+      text-align: center;
+      text-decoration: none;
+      color: var(--text);
+      font-size: 9px;
+      min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .quick-action:hover { border-color: var(--highlight); color: var(--link); }
+    .quick-action .badge {
+      background: var(--highlight);
+      color: var(--bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 8px;
+      margin-left: 4px;
+    }
+    /* Cards */
+    .card {
+      background: rgba(255,255,255,.1);
+      border: 1px solid var(--dark);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .card h3 { font-size: 9px; margin: 0 0 8px 0; color: var(--dark); }
+    .game-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,.2);
+    }
+    .game-row:last-child { border-bottom: none; }
+    .vs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    .player-name { font-size: 9px; }
+    .player-avatar {
+      width: 32px;
+      height: 32px;
+      background: var(--dark);
+      border-radius: 4px;
+    }
+    .odds-line { font-size: 8px; color: var(--link); }
+    /* Game detail */
+    .matchup {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 20px 0;
+      border-bottom: 2px solid var(--dark);
+      margin-bottom: 16px;
+    }
+    .matchup .player-avatar { width: 48px; height: 48px; }
+    .matchup .player-name { font-size: 10px; }
+    .markets h4 { font-size: 9px; color: var(--dark); margin: 12px 0 6px 0; }
+    .market-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .market-side {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      border: 2px solid var(--dark);
+      border-radius: 6px;
+      font-size: 8px;
+      cursor: pointer;
+    }
+    .market-side.selected { border-color: var(--highlight); background: rgba(251,89,154,.2); }
+    .stake-row {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 2px solid var(--dark);
+    }
+    .stake-row input {
+      width: 100%;
+      padding: 12px;
+      font-size: 14px;
+      margin: 8px 0;
+      border-radius: 4px;
+      border: 2px solid var(--dark);
+      background: #fff;
+      color: #333;
+    }
+    .btn {
+      font-family: inherit;
+      font-size: 9px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 8px;
+    }
+    .btn-primary { background: var(--highlight); color: var(--text); }
+    .btn-secondary { background: var(--dark); color: var(--bg); }
+    .potential-win { font-size: 9px; color: var(--link); margin: 8px 0; }
+    /* Wagers list */
+    .wager-status { font-size: 8px; padding: 2px 6px; border-radius: 4px; }
+    .wager-status.pending { background: var(--dark); color: var(--bg); }
+    .wager-status.won { background: var(--success); color: #fff; }
+    .wager-status.lost { background: var(--highlight); color: #fff; }
+    .wager-meta { font-size: 8px; color: var(--link); margin-top: 4px; }
+    .btn-cancel { font-size: 8px; padding: 6px 10px; background: var(--highlight); color: #fff; border: none; border-radius: 4px; margin-top: 6px; }
+    /* Activity / Audit */
+    .audit-banner {
+      background: rgba(6,128,0,.3);
+      border: 2px solid var(--success);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+      font-size: 9px;
+    }
+    .audit-item {
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,.2);
+      font-size: 8px;
+    }
+    .audit-item .action { color: var(--dark); }
+    .audit-item .amount { color: var(--success); }
+    .audit-item .amount.negative { color: var(--highlight); }
+    /* Bottom nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 420px;
+      width: 100%;
+      display: flex;
+      background: rgba(0,0,0,.3);
+      border-top: 2px solid var(--dark);
+      padding: 8px;
+      gap: 4px;
+    }
+    .bottom-nav a {
+      flex: 1;
+      text-align: center;
+      padding: 10px 4px;
+      font-size: 7px;
+      color: var(--link);
+      text-decoration: none;
+    }
+    .bottom-nav a:hover, .bottom-nav a.active { color: var(--highlight); }
+    /* Login / Pending */
+    .face-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin: 16px 0;
+    }
+    .face-cell {
+      width: 100%;
+      aspect-ratio: 1;
+      background: var(--dark);
+      border-radius: 6px;
+      border: 2px solid transparent;
+    }
+    .face-cell.selected { border-color: var(--highlight); }
+    .welcome-msg { font-size: 8px; text-align: center; margin: 16px 0; line-height: 1.8; }
+    .btn-google {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: #fff;
+      color: #333;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 9px;
+      margin: 16px 0;
+      cursor: pointer;
+    }
+    /* Admin banner */
+    .admin-banner {
+      background: rgba(251,89,154,.25);
+      border: 2px solid var(--highlight);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 12px;
+      font-size: 8px;
+    }
+    .admin-banner a { color: var(--link); }
+    select {
+      background: var(--text);
+      color: var(--bg);
+      padding: 8px;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 8px;
+      margin-bottom: 12px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="mockup-wrapper">
+    <nav class="screen-tabs">
+      <button type="button" class="active" data-screen="home">Home</button>
+      <button type="button" data-screen="games">Games</button>
+      <button type="button" data-screen="game-detail">Game detail</button>
+      <button type="button" data-screen="current">Current</button>
+      <button type="button" data-screen="activity">Activity</button>
+      <button type="button" data-screen="login">Login</button>
+    </nav>
+
+    <!-- HOME -->
+    <section id="screen-home" class="screen active">
+      <header class="header">
+        <h1>Tecmo Wager</h1>
+      </header>
+      <div class="balance-big">Balance <span>$85.00</span></div>
+      <div class="quick-actions">
+        <a href="#" class="quick-action">Current wagers <span class="badge">3</span></a>
+        <a href="#" class="quick-action">Place bet</a>
+        <a href="#" class="quick-action">Games</a>
+        <a href="#" class="quick-action">Activity</a>
+      </div>
+      <div class="admin-banner" style="display: block;">
+        New users waiting to be activated. <a href="#">Activate →</a>
+      </div>
+    </section>
+
+    <!-- GAMES LIST -->
+    <section id="screen-games" class="screen">
+      <header class="header">
+        <h1>Games to bet</h1>
+        <p class="odds-line">Active: Spring 2025</p>
+      </header>
+      <div class="card">
+        <div class="game-row">
+          <div class="vs">
+            <div class="player-avatar"></div>
+            <span class="player-name">Montana</span>
+          </div>
+          <span class="odds-line">vs</span>
+          <div class="vs" style="flex-direction: row-reverse;">
+            <span class="player-name">Rice</span>
+            <div class="player-avatar"></div>
+          </div>
+        </div>
+        <p class="odds-line">Spread -3.5 | O/U 42 | ML -150</p>
+      </div>
+      <div class="card">
+        <div class="game-row">
+          <div class="vs">
+            <div class="player-avatar"></div>
+            <span class="player-name">Smith</span>
+          </div>
+          <span class="odds-line">vs</span>
+          <div class="vs" style="flex-direction: row-reverse;">
+            <span class="player-name">Young</span>
+            <div class="player-avatar"></div>
+          </div>
+        </div>
+        <p class="odds-line">Spread +7 | O/U 38.5 | ML +200</p>
+      </div>
+      <div class="card">
+        <div class="game-row">
+          <div class="vs">
+            <div class="player-avatar"></div>
+            <span class="player-name">Kelly</span>
+          </div>
+          <span class="odds-line">vs</span>
+          <div class="vs" style="flex-direction: row-reverse;">
+            <span class="player-name">Marino</span>
+            <div class="player-avatar"></div>
+          </div>
+        </div>
+        <p class="odds-line">Spread -1 | O/U 45 | ML -110</p>
+      </div>
+    </section>
+
+    <!-- GAME DETAIL + PLACE WAGER -->
+    <section id="screen-game-detail" class="screen">
+      <header class="header">
+        <h1>Place wager</h1>
+      </header>
+      <div class="matchup">
+        <div>
+          <div class="player-avatar"></div>
+          <div class="player-name">Montana</div>
+        </div>
+        <span class="odds-line">VS</span>
+        <div>
+          <div class="player-avatar"></div>
+          <div class="player-name">Rice</div>
+        </div>
+      </div>
+      <p class="odds-line" style="text-align: center;">Spread -3.5 | O/U 42 | ML -150</p>
+      <div class="markets">
+        <h4>Spread</h4>
+        <div class="market-row">
+          <div class="market-side selected">Montana -3.5</div>
+          <div class="market-side">Rice +3.5</div>
+        </div>
+        <h4>Over / Under 42</h4>
+        <div class="market-row">
+          <div class="market-side">Over 42</div>
+          <div class="market-side">Under 42</div>
+        </div>
+        <h4>Money line</h4>
+        <div class="market-row">
+          <div class="market-side">Montana -150</div>
+          <div class="market-side">Rice +150</div>
+        </div>
+      </div>
+      <div class="stake-row">
+        <label>Stake ($1–$40)</label>
+        <input type="number" value="10" min="1" max="40" placeholder="Amount">
+        <p class="potential-win">Potential win: $20.00 (even money)</p>
+        <button type="button" class="btn btn-primary">Place wager</button>
+      </div>
+      <p class="welcome-msg" style="color: var(--dark);">Action: $10 P1 spread, $5 Over 42</p>
+    </section>
+
+    <!-- CURRENT WAGERS -->
+    <section id="screen-current" class="screen">
+      <header class="header">
+        <h1>Current wagers</h1>
+      </header>
+      <div class="card">
+        <div class="game-row">
+          <span class="player-name">Montana vs Rice</span>
+          <span class="wager-status pending">Pending</span>
+        </div>
+        <p class="wager-meta">Spread – Montana -3.5 · $10 → Win $20</p>
+        <button type="button" class="btn-cancel">Cancel</button>
+      </div>
+      <div class="card">
+        <div class="game-row">
+          <span class="player-name">Smith vs Young</span>
+          <span class="wager-status pending">Pending</span>
+        </div>
+        <p class="wager-meta">Over 38.5 · $15 → Win $30</p>
+        <button type="button" class="btn-cancel">Cancel</button>
+      </div>
+      <div class="card">
+        <div class="game-row">
+          <span class="player-name">Kelly vs Marino</span>
+          <span class="wager-status pending">Pending</span>
+        </div>
+        <p class="wager-meta">Money line – Marino · $5 → Win $10</p>
+        <button type="button" class="btn-cancel">Cancel</button>
+      </div>
+    </section>
+
+    <!-- ACTIVITY / AUDIT -->
+    <section id="screen-activity" class="screen">
+      <header class="header">
+        <h1>Activity</h1>
+      </header>
+      <select>
+        <option>Spring 2025</option>
+        <option>Winter 2024</option>
+      </select>
+      <div class="audit-banner">
+        Final balance for this tournament: $85.00<br>
+        5–2, +$30
+      </div>
+      <div class="audit-item">
+        <span class="action">SettleWagerWin</span> Montana vs Rice · <span class="amount">+$20</span><br>
+        <span style="color: var(--link);">Today 2:45 PM</span>
+      </div>
+      <div class="audit-item">
+        <span class="action">PlaceWager</span> Smith -7 vs Young · $10<br>
+        <span style="color: var(--link);">Today 1:20 PM</span>
+      </div>
+      <div class="audit-item">
+        <span class="action">SettleWagerLose</span> Kelly vs Marino · <span class="amount negative">-$10</span><br>
+        <span style="color: var(--link);">Yesterday 8:00 PM</span>
+      </div>
+      <div class="audit-item">
+        <span class="action">BalanceAdd</span> Admin +$50 · Balance after $75<br>
+        <span style="color: var(--link);">Mar 14</span>
+      </div>
+    </section>
+
+    <!-- LOGIN / PENDING -->
+    <section id="screen-login" class="screen">
+      <header class="header">
+        <h1>Tecmo Wager</h1>
+      </header>
+      <button type="button" class="btn-google">Sign in with Google</button>
+      <p class="welcome-msg">
+        Welcome! Your account is waiting to be activated by an admin.<br>
+        Pick your Tecmo face:
+      </p>
+      <div class="face-grid">
+        <div class="face-cell"></div>
+        <div class="face-cell selected"></div>
+        <div class="face-cell"></div>
+        <div class="face-cell"></div>
+        <div class="face-cell"></div>
+        <div class="face-cell"></div>
+        <div class="face-cell"></div>
+        <div class="face-cell"></div>
+        <div class="face-cell"></div>
+        <div class="face-cell"></div>
+        <div class="face-cell"></div>
+        <div class="face-cell"></div>
+        <div class="face-cell"></div>
+        <div class="face-cell"></div>
+        <div class="face-cell"></div>
+      </div>
+      <button type="button" class="btn btn-primary">Save selection</button>
+    </section>
+
+    <nav class="bottom-nav">
+      <a href="#" class="active">Home</a>
+      <a href="#">Games</a>
+      <a href="#">Wagers</a>
+      <a href="#">Activity</a>
+    </nav>
+  </div>
+
+  <script>
+    document.querySelectorAll('.screen-tabs button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = 'screen-' + btn.dataset.screen;
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.screen-tabs button').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        btn.classList.add('active');
+      });
+    });
+    document.querySelectorAll('.market-side').forEach(el => {
+      el.addEventListener('click', () => {
+        el.parentElement.querySelectorAll('.market-side').forEach(s => s.classList.remove('selected'));
+        el.classList.add('selected');
+      });
+    });
+    document.querySelectorAll('.face-cell').forEach(el => {
+      el.addEventListener('click', () => {
+        document.querySelectorAll('.face-cell').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+      });
+    });
+  </script>
+</body>
+</html>

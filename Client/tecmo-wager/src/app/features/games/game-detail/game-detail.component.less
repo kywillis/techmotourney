@@ -1,0 +1,311 @@
+.game-detail-screen {
+  min-height: 100vh;
+  padding: 1rem;
+  padding-bottom: 4rem;
+}
+
+.game-detail-rule {
+  border: 0;
+  border-top: 2px solid var(--dark);
+  margin: 0.75rem 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.game-detail-rule--book-gap {
+  margin-top: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.header {
+  margin-bottom: 1rem;
+}
+
+.loading {
+  font-size: 0.625rem;
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.matchup {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 1rem 0 0.75rem 0;
+  margin-bottom: 0;
+}
+
+.player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.player-face-img {
+  width: 64px;
+  height: 64px;
+}
+
+.player-name {
+  font-size: 0.5625rem;
+  text-align: center;
+}
+
+.vs {
+  font-size: 0.5rem;
+  color: var(--link);
+}
+
+.markets {
+  margin-bottom: 1.5rem;
+
+  h3 {
+    font-size: 0.5625rem;
+    color: var(--dark);
+    margin: 0.75rem 0 0.25rem 0;
+  }
+}
+
+.market-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.market-side {
+  flex: 1;
+  padding: 0.75rem;
+  text-align: center;
+  border: 2px solid var(--dark);
+  border-radius: 6px;
+  font-size: 0.5rem;
+  font-family: inherit;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--link);
+  }
+
+  &.selected {
+    border-color: var(--highlight);
+    background: rgba(251, 89, 154, 0.2);
+  }
+}
+
+.market-book {
+  margin-bottom: 0.5rem;
+  padding: 0.75rem 0;
+  border-top: 2px solid var(--dark);
+
+  .book-status-msg {
+    font-size: 0.5625rem;
+    font-weight: 600;
+    margin: 0 0 0.35rem 0;
+    line-height: 1.45;
+  }
+
+  .book-status-msg--neutral {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .book-status-msg--bad {
+    color: var(--highlight);
+  }
+
+  .book-no-wagers-msg {
+    font-size: 0.5rem;
+    color: var(--link);
+    margin: 0.5rem 0 0.25rem 0;
+    line-height: 1.45;
+  }
+
+  .book-where-title {
+    font-size: 0.5rem;
+    color: var(--dark);
+    margin: 0.5rem 0 0.35rem 0;
+  }
+
+  &.market-book--paused .book-where-title {
+    margin-top: 0.35rem;
+  }
+
+  .book-bar-track {
+    position: relative;
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.12);
+    margin-bottom: 0.35rem;
+    overflow: hidden;
+  }
+
+  .book-bar-fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    min-width: 0;
+    transition: width 0.25s ease, background-color 0.25s ease;
+  }
+
+  .book-bar-fill--left {
+    right: 50%;
+    border-radius: 4px 0 0 4px;
+  }
+
+  .book-bar-fill--right {
+    left: 50%;
+    border-radius: 0 4px 4px 0;
+  }
+
+  .book-bar-fill--green {
+    background: #6ecf6e;
+  }
+
+  .book-bar-fill--yellow {
+    background: #e6c84a;
+  }
+
+  .book-bar-fill--red {
+    background: var(--highlight);
+  }
+
+  .book-labels {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.5rem;
+    color: var(--text);
+  }
+}
+
+.book-cap-note {
+  font-size: 0.5rem;
+  color: var(--link);
+  margin: 0 0 0.35rem 0;
+}
+
+.stake-row {
+  padding-top: 0.5rem;
+
+  label {
+    font-size: 0.5625rem;
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+
+  input {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    border: 2px solid var(--dark);
+    background: #fff;
+    color: #333;
+    box-sizing: border-box;
+
+    &::placeholder {
+      font-size: 0.84375rem;
+      color: #666;
+      font-family: inherit;
+    }
+  }
+
+  .payout-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    margin: 0 0 0.5rem 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .payout-col {
+    flex: 0 0 50%;
+    width: 50%;
+    max-width: 50%;
+    box-sizing: border-box;
+    font-size: 0.5625rem;
+    color: var(--link);
+    margin: 0;
+    text-align: left;
+    line-height: 1.4;
+  }
+
+  .payout-col--total-return {
+    opacity: 0.85;
+  }
+
+  .payout-caption {
+    opacity: 0.9;
+  }
+
+  .place-error {
+    font-size: 0.5rem;
+    color: var(--highlight);
+    margin: 0 0 0.5rem 0;
+
+    &.participant-block {
+      font-size: 0.5625rem;
+      margin-bottom: 0.75rem;
+    }
+  }
+}
+
+.game-action-panel {
+  margin-top: 0;
+  padding-top: 1rem;
+  border-top: 2px solid var(--dark);
+}
+
+.game-action-heading {
+  font-size: 0.5625rem;
+  color: var(--dark);
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+}
+
+.game-action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.35fr 0.85fr;
+  gap: 0.4rem 0.5rem;
+  font-size: 0.5rem;
+  align-items: start;
+}
+
+.game-action-header {
+  color: var(--dark);
+  font-weight: 600;
+}
+
+.game-action-cell {
+  color: var(--text);
+  text-align: left;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.btn {
+  font-family: inherit;
+  font-size: 0.5625rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 0.5rem;
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  background: var(--highlight);
+  color: var(--text);
+}

@@ -1,0 +1,304 @@
+:host {
+  display: block;
+}
+
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: var(--app-header-height);
+  display: grid;
+  grid-template-columns: 1fr minmax(0, auto) 1fr;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.5rem;
+  background: rgba(24, 99, 214, 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 2px solid var(--dark);
+  box-sizing: border-box;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-self: start;
+  min-width: 0;
+}
+
+/* Two lines, width = longest word — less horizontal space than one long line */
+.header-brand {
+  display: block;
+  width: min-content;
+  font-size: 0.5rem;
+  color: var(--text);
+  line-height: 1.12;
+  text-align: left;
+}
+
+.header-center {
+  justify-self: center;
+  text-align: center;
+  min-width: 0;
+  max-width: min(52vw, 260px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.header-tournament {
+  display: block;
+  font-size: 0.45rem;
+  color: var(--text);
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.header-admin-alerts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  justify-content: center;
+}
+
+.header-mini-banner {
+  display: inline-block;
+  padding: 0.2rem 0.45rem;
+  font-size: 0.4rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #1a1a1a;
+  background: #ffe08a;
+  border-radius: 4px;
+  text-decoration: none;
+  line-height: 1.2;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+
+  &:hover {
+    filter: brightness(1.06);
+    color: #1a1a1a;
+  }
+}
+
+.header-right {
+  justify-self: end;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  .bar {
+    display: block;
+    height: 3px;
+    width: 100%;
+    background: var(--text);
+    border-radius: 1px;
+  }
+}
+
+.header-admin-pill {
+  flex-shrink: 0;
+  margin-left: 0.35rem;
+  padding: 0.2rem 0.45rem;
+  font-size: 0.4rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dark);
+  background: var(--highlight);
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.header-user-cluster {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  min-width: 0;
+  max-width: min(52vw, 280px);
+}
+
+.header-user-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  max-width: 5.5rem;
+}
+
+.header-user-face-wrap {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  position: relative;
+  background: rgba(0, 0, 0, 0.15);
+
+  .player-face {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+}
+
+.header-user-name {
+  font-size: 0.4rem;
+  color: var(--text);
+  line-height: 1.2;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  max-width: 100%;
+}
+
+.header-balance {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  line-height: 1.15;
+  text-align: right;
+}
+
+.header-balance-label {
+  font-size: 0.5rem;
+  color: var(--link);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.header-balance-amount {
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.nav-backdrop {
+  position: fixed;
+  inset: 0;
+  top: var(--app-header-height);
+  z-index: 1001;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.nav-drawer {
+  position: fixed;
+  top: var(--app-header-height);
+  left: 0;
+  bottom: 0;
+  width: min(280px, 85vw);
+  z-index: 1002;
+  background: #1558c4;
+  border-right: 2px solid var(--dark);
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.25);
+  overflow-y: auto;
+}
+
+.nav-link {
+  display: block;
+  padding: 0.875rem 1.25rem;
+  font-size: 0.5625rem;
+  color: var(--text);
+  text-decoration: none;
+  font-family: inherit;
+  text-align: left;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--link);
+  }
+}
+
+.nav-link-button {
+  margin-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: 1rem;
+  color: var(--highlight);
+}
+
+.nav-note {
+  font-size: 0.5rem;
+  color: var(--link);
+  line-height: 1.6;
+  margin: 0 1.25rem 0.5rem 1.25rem;
+}
+
+.nav-link-admin {
+  color: var(--highlight);
+  font-weight: 600;
+}
+
+.nav-link-active {
+  background: rgba(255, 255, 255, 0.18);
+  border-left: 3px solid var(--highlight);
+  padding-left: calc(1.25rem - 3px);
+}
+
+.nav-admin-tournament {
+  margin: 0.5rem 1.25rem 0;
+  padding: 0.75rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.nav-admin-tournament-label {
+  display: block;
+  font-size: 0.45rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--link);
+  margin-bottom: 0.35rem;
+}
+
+.nav-admin-tournament-select {
+  width: 100%;
+  max-width: 100%;
+  padding: 0.5rem 0.4rem;
+  font-size: 0.5rem;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  background: #fff;
+  color: #1a1a1a;
+  box-sizing: border-box;
+}

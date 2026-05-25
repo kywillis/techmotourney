@@ -1,4 +1,4 @@
-﻿namespace TecmoTourney.Models
+namespace TecmoTourney.Models
 {
     public class GameResultModel
     {
@@ -11,5 +11,7 @@
         public int BracketGameId { get; set; }
         public int MatchUpIndex { get; set; }
         public DateTime Date { get; set; }
+        /// <summary>If set, this game does not count toward this player's preliminary seeding.</summary>
+        public int? SeedingExemptPlayerId { get; set; }
     }
 }

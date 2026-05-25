@@ -1,0 +1,180 @@
+.admin-screen {
+  min-height: 100vh;
+  padding: 1rem;
+  padding-bottom: 4rem;
+}
+
+.header {
+  text-align: center;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--dark);
+  margin-bottom: 1rem;
+}
+
+.admin-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 20rem;
+  margin: 0 auto;
+}
+
+.admin-link {
+  display: block;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  text-decoration: none;
+  color: var(--light);
+  background: var(--dark);
+  border: 2px solid var(--dark);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+
+  &:hover {
+    border-color: var(--highlight);
+  }
+}
+
+.loading,
+.empty,
+.error,
+.note {
+  font-size: 0.625rem;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.error {
+  color: var(--highlight);
+}
+
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 22rem;
+  margin: 0 auto;
+}
+
+.form-stack label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--dark);
+}
+
+.form-stack input {
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  border: 2px solid var(--dark);
+  background: #fff;
+  color: #1a1a1a;
+}
+
+.form-stack select {
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  border: 2px solid var(--dark);
+  background: #fff;
+  color: #1a1a1a;
+}
+
+.btn-primary {
+  margin-top: 0.5rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border: 2px solid var(--dark);
+  background: var(--highlight);
+  color: var(--light);
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-danger {
+  padding: 0.4rem 0.65rem;
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  border: 2px solid var(--highlight);
+  background: transparent;
+  color: var(--highlight);
+  cursor: pointer;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  color: var(--dark);
+}
+
+.balance-readout {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--dark);
+  background: rgba(255, 255, 255, 0.35);
+  border: 2px solid var(--dark);
+  text-align: center;
+}
+
+.balance-amount {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--light);
+}
+
+.game-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.game-list a {
+  display: block;
+  padding: 0.65rem;
+  text-decoration: none;
+  color: var(--light);
+  background: var(--dark);
+  border: 2px solid var(--dark);
+  font-size: 0.625rem;
+
+  &:hover {
+    border-color: var(--highlight);
+  }
+}
+
+.wager-card {
+  padding: 0.75rem;
+  border: 2px solid var(--dark);
+  background: rgba(0, 0, 0, 0.15);
+  font-size: 0.625rem;
+}
+
+.wager-card .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}

@@ -19,7 +19,7 @@ import { MatTabGroup } from '@angular/material/tabs';
 import { TournamentBracketUpdateService } from 'src/app/core/services/tournamentBracketUpdate.service';
 import { IGameSearchParameters } from 'src/app/core/models/gameSearchParameters';
 import { DatePipe } from '@angular/common';
-import { AuthenticationService } from 'src/app/core/services/authentication.service';
+import { GoogleAuthService } from 'src/app/core/services/google-auth.service';
 import { IResetTournamentRequest } from 'src/app/core/models/request/resetTournamentRequest.model';
 declare const $: any;
 
@@ -54,9 +54,9 @@ export class ViewTournamentComponent implements OnInit, OnDestroy  {
   TournamentStatus = TournamentStatus;
   tournamentUpdatesSubscription: Subscription | null = null;
   fetchSubscription!: Subscription;
+  private adminLoggedSubscription?: Subscription;
   selectedStatType : StatType = StatType.HighestScore;
   tournamentCompleted: boolean = false;
-  resetPassword: string = '';
   resetError: string = '';
   showResetControls: boolean = false;
   loading = false;
@@ -67,7 +67,7 @@ export class ViewTournamentComponent implements OnInit, OnDestroy  {
     private route: ActivatedRoute,
     private tournamentBracketUpdateService: TournamentBracketUpdateService,
     private datePipe: DatePipe, 
-    private authenticationService: AuthenticationService) { }
+    private googleAuth: GoogleAuthService) { }
 
   ngOnInit(): void {
     this.loading = true;
@@ -99,7 +99,7 @@ export class ViewTournamentComponent implements OnInit, OnDestroy  {
       }
     });
 
-    this.authenticationService.isAdminLoggedIn$.subscribe(val => {
+    this.googleAuth.isAdminLoggedIn$.subscribe(val => {
       this.sendBracketMessage("setAdmin", val);
     });
 
@@ -112,6 +112,7 @@ export class ViewTournamentComponent implements OnInit, OnDestroy  {
     if (this.fetchSubscription) {
       this.fetchSubscription.unsubscribe();
     }
+    this.adminLoggedSubscription?.unsubscribe();
   }
 
   startPrelims(): void{
@@ -285,27 +286,28 @@ export class ViewTournamentComponent implements OnInit, OnDestroy  {
     });
   }
 
-  loggedIn():boolean{
-    return this.authenticationService.isAdminLoggedIn();
+  loggedIn(): boolean {
+    return this.googleAuth.isAdminLoggedIn();
   }
 
-  showReset(){
+  showReset(): void {
+    this.resetError = '';
     this.resetModal.open();
   }
 
-  resetTournament(){
-    const request = {
-      tournamentId: this.tournament!.tournamentId,
-      password: this.resetPassword
-    } as IResetTournamentRequest;
+  resetTournament(): void {
+    const request: IResetTournamentRequest = {
+      tournamentId: this.tournament!.tournamentId
+    };
 
+    this.resetError = '';
     this.tournamentService.resetTournament(this.tournament!.tournamentId, request).subscribe({
-      next: (success) => {       
+      next: () => {
         this.resetModal.close();
-        this.loadTournament();       
+        this.loadTournament();
       },
-      error: (error) => {
-        this.resetError = 'reset failed';
+      error: () => {
+        this.resetError = 'Reset failed.';
       }
     });
   }

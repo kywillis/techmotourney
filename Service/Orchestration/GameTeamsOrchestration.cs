@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using TecmoTourney.Models;
 using TecmoTourney.Models.Requests;
 using TecmoTourney.Orchestration.Interfaces;
@@ -33,5 +33,5 @@ namespace TecmoTourney.Orchestration
                 return new ApiError($"could not get all gameteam: {e}", HttpStatusCode.InternalServerError);
             }
         }
-} 
+    }
 }

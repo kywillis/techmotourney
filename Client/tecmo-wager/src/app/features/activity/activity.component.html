@@ -1,0 +1,44 @@
+<div class="activity-screen">
+  <header class="header">
+    <app-star-flanked-title title="Activity" />
+  </header>
+
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (tournamentId() == null) {
+    <p class="empty">No active tournament.</p>
+  } @else {
+    @if (summary(); as s) {
+      <div class="audit-banner">
+        <p class="banner-balance">Final balance for this tournament: {{ formatMoney(s.netAmount) }}</p>
+        <p class="banner-record">{{ s.wins }}–{{ s.losses }} record</p>
+      </div>
+    }
+
+    @if (entries().length === 0) {
+      <p class="empty">No activity yet</p>
+    } @else {
+      <ul class="audit-list">
+        @for (e of entries(); track e.auditId) {
+          <li class="audit-item">
+            <p class="audit-primary">
+              <span class="action">{{ actionLabel(e.action) }}</span>
+              @if (amountDetail(e); as amt) {
+                <span class="detail"> · {{ amt }}</span>
+              }
+            </p>
+            @if (hasBalanceAfter(e)) {
+              <p class="balance-after">Balance after {{ formattedBalanceAfter(e) }}</p>
+            }
+            <p class="when">{{ e.createdAt | date: 'MMM d, y · h:mm a' }}</p>
+            @if (showGameLink(e)) {
+              <a [routerLink]="['/wagers/games', e.gameResultId]" class="view-game">View game</a>
+            }
+          </li>
+        }
+      </ul>
+    }
+  }
+</div>

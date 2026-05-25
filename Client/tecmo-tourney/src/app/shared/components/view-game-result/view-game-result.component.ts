@@ -2,7 +2,7 @@ import { Router } from '@angular/router';
 import { Component, Input, OnInit, Output, EventEmitter  } from '@angular/core';
 import { IGameResult } from 'src/app/core/models/gameResult.model';
 import { GameStatus } from 'src/app/enums';
-import { AuthenticationService } from 'src/app/core/services/authentication.service';
+import { GoogleAuthService } from 'src/app/core/services/google-auth.service';
 
 @Component({
     selector: 'app-view-game-result',
@@ -22,7 +22,7 @@ export class ViewGameResultComponent implements OnInit {
 
   GameStatus = GameStatus;
 
-  constructor(private router: Router, private authenticationService: AuthenticationService) {}
+  constructor(private router: Router, private googleAuth: GoogleAuthService) {}
 
   ngOnInit(): void {}
 
@@ -48,7 +48,14 @@ export class ViewGameResultComponent implements OnInit {
     return false;
   }
 
-  loggedIn():boolean{
-    return this.authenticationService.isAdminLoggedIn();
+  getSeedingExemptPlayerName(): string {
+    if (!this.gameResult?.seedingExemptPlayerId) return '';
+    if (this.gameResult.seedingExemptPlayerId === this.gameResult.player1.playerId) return this.gameResult.player1.playerName;
+    if (this.gameResult.seedingExemptPlayerId === this.gameResult.player2.playerId) return this.gameResult.player2.playerName;
+    return '';
+  }
+
+  loggedIn(): boolean {
+    return this.googleAuth.isAdminLoggedIn();
   }
 }

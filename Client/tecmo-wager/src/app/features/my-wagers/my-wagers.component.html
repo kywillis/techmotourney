@@ -1,0 +1,47 @@
+<div class="my-wagers-screen">
+  <header class="header">
+    <app-star-flanked-title title="My wagers" />
+  </header>
+
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (showEmpty() && activeTournament.tournamentId() === null) {
+    <p class="empty">No active tournament.</p>
+  } @else if (showEmpty()) {
+    <p class="empty">No wagers found</p>
+  } @else {
+    @if (activeWagers().length > 0) {
+      <h2 class="section-title">Open</h2>
+      <ul class="wager-list">
+        @for (w of activeWagers(); track w.wagerId) {
+          <li class="wager-card">
+            <p class="matchup">{{ matchup(w) }}</p>
+            <p class="pick-line"><span class="your-pick-label">Your Pick:</span> {{ pickLine(w) }}</p>
+            <p class="stake">{{ stakeAndPayout(w) }}</p>
+            @if (canViewGame(w)) {
+              <a [routerLink]="['/wagers/games', w.gameResultId]" class="view-game">View game</a>
+            }
+          </li>
+        }
+      </ul>
+    }
+
+    @if (settledWagers().length > 0) {
+      <h2 class="section-title">Settled</h2>
+      <ul class="wager-list">
+        @for (w of settledWagers(); track w.wagerId) {
+          <li class="wager-card settled">
+            <p class="matchup">{{ matchup(w) }}</p>
+            <p class="pick-line"><span class="your-pick-label">Your Pick:</span> {{ pickLine(w) }}</p>
+            <p class="stake">{{ stakeAndPayout(w) }}</p>
+            <p class="status" [class.won]="w.status === 'Won'" [class.lost]="w.status === 'Lost'">
+              {{ statusLabel(w.status) }}
+            </p>
+          </li>
+        }
+      </ul>
+    }
+  }
+</div>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seeding Exempt Indicator – Mockup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Press Start 2P', cursive;
+      background: #1863D6;
+      color: #FFFFFF;
+      padding: 20px;
+      font-size: 10px;
+    }
+    h1 {
+      font-size: 12px;
+      margin-bottom: 20px;
+      color: #d8dcad;
+    }
+    .game-block {
+      background: #1863D6;
+      border: 3px solid #FFFFFF;
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 24px;
+      max-width: 520px;
+    }
+    .game-block .label {
+      font-size: 8px;
+      color: #FB599A;
+      margin-bottom: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 6px 8px;
+      text-align: left;
+    }
+    th { color: #FFFFFF; }
+    td { color: #FFFFFF; }
+    a {
+      color: #A6E7FF;
+      text-decoration: none;
+    }
+    a:hover { color: #d8dcad; }
+    .nc-badge {
+      display: inline-block;
+      background: #0d47a1;
+      color: #A6E7FF;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 8px;
+      margin-left: 6px;
+      border: 1px solid #A6E7FF;
+    }
+    .status-line {
+      color: #d8dcad;
+      font-size: 8px;
+      margin-top: 4px;
+    }
+    .win {
+      background-color: #068000;
+      border-radius: 5px;
+      padding: 0 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>★ Prelim Games – Seeding Exempt Mockup ★</h1>
+
+  <!-- Game 1: Normal (no exempt) -->
+  <div class="game-block">
+    <div class="label">Normal game (counts for both)</div>
+    <table>
+      <thead>
+        <tr><th>Player</th><th>Team</th><th>Rush</th><th>Pass</th><th>Total</th><th>Score</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="#">Sinagra</a></td>
+          <td>Bills</td>
+          <td>45</td>
+          <td>120</td>
+          <td>165</td>
+          <td>21</td>
+        </tr>
+        <tr>
+          <td><a href="#">McGinty</a></td>
+          <td>Raiders</td>
+          <td>32</td>
+          <td>98</td>
+          <td>130</td>
+          <td class="win">28</td>
+        </tr>
+        <tr>
+          <td colspan="3"><span class="status-line">Completed</span></td>
+          <td colspan="3" style="text-align:right">
+            <a href="#">Edit</a> &nbsp; <a href="#">Delete</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Game 2: With exempt indicator (doesn't count for Willis) -->
+  <div class="game-block">
+    <div class="label">Exempt game – doesn’t count for one player</div>
+    <table>
+      <thead>
+        <tr><th>Player</th><th>Team</th><th>Rush</th><th>Pass</th><th>Total</th><th>Score</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <a href="#">Willis</a> <span class="nc-badge" title="Doesn't count for seeding">NC</span>
+          </td>
+          <td>49ers</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td><a href="#">Bucks</a></td>
+          <td></td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td colspan="3">
+            <span class="status-line">Waiting</span><br>
+            <span class="status-line">★ Doesn't count for Willis ★</span>
+          </td>
+          <td colspan="3" style="text-align:right">
+            <a href="#">Edit</a> &nbsp; <a href="#">Delete</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="font-size:8px; color:#d8dcad; max-width:520px;">
+    <strong>NC</strong> = No Count (game doesn’t count toward that player’s prelim seeding, e.g. 3rd game when odd number of players).
+  </p>
+</body>
+</html>

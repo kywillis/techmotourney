@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using TecmoTourney.DataAccess.Models;
 using Dapper;
@@ -11,16 +11,51 @@ namespace TecmoTourney.DataAccess
     {
         public PlayerDAO(ApplicationConfig config) : base(config) { }
 
+        public async Task<IEnumerable<PlayerDAOModel>> ListPlayersEligibleForGoogleLinkAsync()
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = @"SELECT * FROM TC_Players p
+WHERE p.IsDeleted = 0
+AND (p.GoogleSubjectId IS NULL OR LTRIM(RTRIM(p.GoogleSubjectId)) = '')
+ORDER BY p.FullName";
+                return await connection.QueryAsync<PlayerDAOModel>(sql);
+            }
+        }
+
+        public async Task<bool> TryLinkGoogleAndEmailAsync(int playerId, string googleSubjectId, string emailAddress)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = @"UPDATE TC_Players
+SET GoogleSubjectId = @GoogleSubjectId, EmailAddress = @EmailAddress
+WHERE PlayerId = @PlayerId AND IsDeleted = 0
+AND (GoogleSubjectId IS NULL OR LTRIM(RTRIM(GoogleSubjectId)) = '')";
+                var rows = await connection.ExecuteAsync(sql, new { PlayerId = playerId, GoogleSubjectId = googleSubjectId, EmailAddress = emailAddress });
+                return rows > 0;
+            }
+        }
+
         public async Task<IEnumerable<PlayerDAOModel>> ListPlayersAsync(int? tourneyId = null, bool includeDeleted = false)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
                 var includeDeletedValue = includeDeleted ? 1 : 0;
-                var sql = @$"SELECT distinct p.* 
+                string sql;
+                if (tourneyId.HasValue)
+                {
+                    sql = @$"SELECT DISTINCT p.*
                             FROM TC_Players p
-                            Left Outer JOIN TC_PlayerTournaments pt ON p.PlayerId = pt.PlayerId
-                            WHERE (@TourneyId is null or pt.TournamentId = @TourneyId) and 
-                            (p.IsDeleted = 0 or 1 = {includeDeletedValue})";
+                            INNER JOIN TC_PlayerTournaments pt ON p.PlayerId = pt.PlayerId
+                            WHERE pt.TournamentId = @TournamentId
+                            AND (p.IsDeleted = 0 OR 1 = {includeDeletedValue})";
+                    return await connection.QueryAsync<PlayerDAOModel>(sql, new { TournamentId = tourneyId.Value });
+                }
+                sql = @$"SELECT DISTINCT p.*
+                        FROM TC_Players p
+                        LEFT OUTER JOIN TC_PlayerTournaments pt ON p.PlayerId = pt.PlayerId
+                        WHERE (@TourneyId IS NULL OR pt.TournamentId = @TourneyId) AND
+                        (p.IsDeleted = 0 OR 1 = {includeDeletedValue})";
                 return await connection.QueryAsync<PlayerDAOModel>(sql, new { TourneyId = tourneyId });
             }
         }
@@ -34,11 +69,20 @@ namespace TecmoTourney.DataAccess
             }
         }
 
+        public async Task<PlayerDAOModel?> GetPlayerByGoogleSubjectIdAsync(string googleSubjectId)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "SELECT * FROM TC_Players p WHERE p.GoogleSubjectId = @GoogleSubjectId and p.IsDeleted = 0";
+                return await connection.QuerySingleOrDefaultAsync<PlayerDAOModel>(sql, new { GoogleSubjectId = googleSubjectId });
+            }
+        }
+
         public async Task<PlayerDAOModel> AddPlayerAsync(PlayerDAOModel player)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var sql = "INSERT INTO TC_Players (FullName, EmailAddress, ProfilePic) VALUES (@FullName, @EmailAddress, @ProfilePic); " +
+                var sql = "INSERT INTO TC_Players (FullName, EmailAddress, ProfilePic, GoogleSubjectId, IsAdmin, Balance, IsActive) VALUES (@FullName, @EmailAddress, @ProfilePic, @GoogleSubjectId, @IsAdmin, @Balance, @IsActive); " +
                     "SELECT CAST(SCOPE_IDENTITY() as int)";
                 var id = await connection.QuerySingleAsync<int>(sql, player);
                 player.PlayerId = id;
@@ -57,6 +101,26 @@ namespace TecmoTourney.DataAccess
 
                 await connection.ExecuteAsync(sql, new { player.FullName, player.EmailAddress, player.ProfilePic, Id = id });
                 return player;
+            }
+        }
+
+        public async Task<bool> UpdatePlayerBalanceAsync(int playerId, decimal newBalance)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "UPDATE TC_Players SET Balance = @Balance WHERE PlayerId = @PlayerId";
+                var rowsAffected = await connection.ExecuteAsync(sql, new { Balance = newBalance, PlayerId = playerId });
+                return rowsAffected > 0;
+            }
+        }
+
+        public async Task<bool> SetPlayerGoogleSubjectIdAsync(int playerId, string googleSubjectId)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "UPDATE TC_Players SET GoogleSubjectId = @GoogleSubjectId WHERE PlayerId = @PlayerId";
+                var rowsAffected = await connection.ExecuteAsync(sql, new { GoogleSubjectId = googleSubjectId, PlayerId = playerId });
+                return rowsAffected > 0;
             }
         }
 

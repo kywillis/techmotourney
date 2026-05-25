@@ -1,0 +1,98 @@
+<div class="games-list-screen">
+  <header class="header">
+    <app-star-flanked-title title="Games to bet" />
+    @if (activeTournament) {
+      <p class="active-tournament">Active: {{ activeTournament.name }}</p>
+    }
+  </header>
+
+  @if (loading) {
+    <p class="loading">Loading…</p>
+  } @else if (error) {
+    <p class="error">{{ error }}</p>
+  } @else {
+    <section class="games-section" aria-label="Open for betting">
+      <h2 class="games-section-title">Open for betting</h2>
+      @if (openGames.length === 0) {
+        <p class="section-empty">None right now.</p>
+      } @else {
+        <div class="game-cards">
+          @for (game of openGames; track game.gameResultId) {
+            <a [routerLink]="['/wagers/games', game.gameResultId]" class="game-card">
+              <div class="game-row">
+                <div class="vs">
+                  <div [class]="faceClass(game.player1ProfilePic)" class="player-avatar"></div>
+                  <span class="player-name">{{ game.player1Name }}</span>
+                </div>
+                <span class="vs-label">vs</span>
+                <div class="vs right">
+                  <span class="player-name">{{ game.player2Name }}</span>
+                  <div [class]="faceClass(game.player2ProfilePic)" class="player-avatar"></div>
+                </div>
+              </div>
+              <p class="odds-line">{{ oddsLine(game) }}</p>
+            </a>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="games-section" aria-label="In progress">
+      <h2 class="games-section-title">In progress</h2>
+      @if (inProgressGames.length === 0) {
+        <p class="section-empty">None right now.</p>
+      } @else {
+        <div class="game-cards">
+          @for (game of inProgressGames; track game.gameResultId) {
+            <div class="game-card game-card--static">
+              <p class="status-pill">Betting closed</p>
+              <div class="game-row">
+                <div class="vs">
+                  <div [class]="faceClass(game.player1ProfilePic)" class="player-avatar"></div>
+                  <span class="player-name">{{ game.player1Name }}</span>
+                </div>
+                <span class="vs-label">vs</span>
+                <div class="vs right">
+                  <span class="player-name">{{ game.player2Name }}</span>
+                  <div [class]="faceClass(game.player2ProfilePic)" class="player-avatar"></div>
+                </div>
+              </div>
+              <p class="odds-line">{{ oddsLine(game) }}</p>
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="games-section" aria-label="Completed">
+      <h2 class="games-section-title">Completed</h2>
+      @if (completedGames.length === 0) {
+        <p class="section-empty">None yet.</p>
+      } @else {
+        <div class="game-cards">
+          @for (game of completedGames; track game.gameResultId) {
+            <div class="game-card game-card--static">
+              <div class="game-row">
+                <div class="vs">
+                  <div [class]="faceClass(game.player1ProfilePic)" class="player-avatar"></div>
+                  <span class="player-name">{{ game.player1Name }}</span>
+                </div>
+                <span class="vs-label">vs</span>
+                <div class="vs right">
+                  <span class="player-name">{{ game.player2Name }}</span>
+                  <div [class]="faceClass(game.player2ProfilePic)" class="player-avatar"></div>
+                </div>
+              </div>
+              @if (game.player1Score != null && game.player2Score != null) {
+                <p class="score-line">
+                  Final {{ game.player1Score }} – {{ game.player2Score }}
+                </p>
+              }
+              <p class="odds-line odds-line--muted">{{ oddsLine(game) }}</p>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
+</div>

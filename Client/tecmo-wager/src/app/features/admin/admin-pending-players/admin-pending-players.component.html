@@ -1,0 +1,70 @@
+<div class="admin-screen">
+  <a routerLink="/admin" class="back-link">← Admin home</a>
+  <h1>Pending signups</h1>
+  <p class="intro">
+    Each Google signup appears once. Link it to an existing <strong>TC_Players</strong> row that has no Google id yet (any non-deleted player, not only tournament roster).
+    The player’s email is always replaced with the address from this signup. Or create a brand-new player from the signup data.
+  </p>
+  <p class="note-eligible">
+    The dropdown lists only players with no Google account linked.
+  </p>
+
+  @if (loading()) {
+    <p class="status">Loading…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (rows().length === 0) {
+    <p class="status">No one is waiting for approval.</p>
+  } @else {
+    @if (resultMessage()) {
+      <p class="result">{{ resultMessage() }}</p>
+    }
+    <ul class="pending-list">
+      @for (r of rows(); track r.pendingActivationId) {
+        <li class="pending-row">
+          <div class="pending-meta">
+            <span class="name">{{ r.fullName || '—' }}</span>
+            <span class="email">{{ r.email || '—' }}</span>
+          </div>
+          <div class="pending-actions">
+            <label class="link-label">
+              <span class="link-label-text">Link to existing</span>
+              <select
+                class="player-select"
+                [value]="selectedPlayerId(r.pendingActivationId)"
+                [disabled]="rowBusy(r.pendingActivationId) || linkablePlayers().length === 0"
+                (change)="onPlayerSelectNativeChange($event, r.pendingActivationId)"
+              >
+                <option value="">Choose player…</option>
+                @for (p of linkablePlayers(); track p.playerId) {
+                  <option [value]="p.playerId">{{ p.fullName }} — {{ p.emailAddress || 'no email' }}</option>
+                }
+              </select>
+            </label>
+            <div class="action-buttons">
+              <button
+                type="button"
+                class="btn btn-link"
+                [disabled]="
+                  rowBusy(r.pendingActivationId) ||
+                  !selectedPlayerId(r.pendingActivationId)
+                "
+                (click)="linkRow(r)"
+              >
+                {{ rowBusy(r.pendingActivationId) ? 'Working…' : 'Link Google to player' }}
+              </button>
+              <button
+                type="button"
+                class="btn btn-new"
+                [disabled]="rowBusy(r.pendingActivationId)"
+                (click)="createNewRow(r)"
+              >
+                {{ rowBusy(r.pendingActivationId) ? 'Working…' : 'Create new player' }}
+              </button>
+            </div>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</div>

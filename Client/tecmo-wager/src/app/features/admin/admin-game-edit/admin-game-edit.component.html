@@ -1,0 +1,126 @@
+<div class="admin-screen">
+  <a routerLink="/admin/games" class="back-link">← Games list</a>
+  <header class="header">
+    <app-star-flanked-title title="Edit Lines" />
+  </header>
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (error() && !row) {
+    <p class="error">{{ error() }}</p>
+  } @else if (row) {
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+    @if (message()) {
+      <p class="note">{{ message() }}</p>
+    }
+    <p class="matchup-label">
+      {{ row.player1.playerName || 'P' + row.player1.playerId }} vs
+      {{ row.player2.playerName || 'P' + row.player2.playerId }}
+    </p>
+
+    <h2 class="section-title">Scores &amp; stats</h2>
+    <form class="form-stack" (ngSubmit)="saveScores()">
+      <label>
+        Status
+        <select name="status" [(ngModel)]="status">
+          <option value="Waiting">Waiting</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </label>
+      <label>
+        Game type
+        <select name="gameType" [(ngModel)]="gameType">
+          <option value="Preliminary">Preliminary</option>
+          <option value="Tournament">Tournament</option>
+        </select>
+      </label>
+      <label>
+        Bracket game ID
+        <input type="number" name="bracketGameId" [(ngModel)]="bracketGameId" />
+      </label>
+      <p class="mini-heading">{{ row.player1.playerName || 'Player 1' }}</p>
+      <label>
+        Score
+        <input type="number" name="p1s" [(ngModel)]="p1Score" />
+      </label>
+      <label>
+        Pass yds
+        <input type="number" name="p1p" [(ngModel)]="p1Pass" />
+      </label>
+      <label>
+        Rush yds
+        <input type="number" name="p1r" [(ngModel)]="p1Rush" />
+      </label>
+      <label>
+        Team
+        <select name="p1team" [(ngModel)]="p1GameTeamId">
+          <option [ngValue]="null">—</option>
+          @for (t of teamOptionsForP1(); track t.gameTeamId) {
+            <option [ngValue]="t.gameTeamId">{{ t.teamName }}</option>
+          }
+        </select>
+      </label>
+      <p class="mini-heading">{{ row.player2.playerName || 'Player 2' }}</p>
+      <label>
+        Score
+        <input type="number" name="p2s" [(ngModel)]="p2Score" />
+      </label>
+      <label>
+        Pass yds
+        <input type="number" name="p2p" [(ngModel)]="p2Pass" />
+      </label>
+      <label>
+        Rush yds
+        <input type="number" name="p2r" [(ngModel)]="p2Rush" />
+      </label>
+      <label>
+        Team
+        <select name="p2team" [(ngModel)]="p2GameTeamId">
+          <option [ngValue]="null">—</option>
+          @for (t of teamOptionsForP2(); track t.gameTeamId) {
+            <option [ngValue]="t.gameTeamId">{{ t.teamName }}</option>
+          }
+        </select>
+      </label>
+      @if (duplicateTeamSelected()) {
+        <p class="error">Each player must use a different team.</p>
+      }
+      <button type="submit" class="btn-primary" [disabled]="savingScores() || duplicateTeamSelected()">
+        {{ savingScores() ? 'Saving…' : 'Save scores' }}
+      </button>
+    </form>
+
+    <h2 id="admin-odds-section" class="section-title">Odds</h2>
+    <form class="form-stack" (ngSubmit)="saveOdds()">
+      <label>
+        Spread (integer)
+        <input type="number" name="spread" [(ngModel)]="spread" />
+      </label>
+      <label>
+        Favored (spread)
+        <select name="fav" [(ngModel)]="favoredPlayerId">
+          <option [ngValue]="null">None / pick’em</option>
+          @for (p of favoredPickerOptions(); track p.playerId) {
+            <option [ngValue]="p.playerId">{{ p.fullName }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        Moneyline {{ row.player1.playerName || 'Player 1' }} (American, e.g. −110)
+        <input type="number" name="ml1" [(ngModel)]="moneyLinePlayer1" />
+      </label>
+      <label>
+        Moneyline {{ row.player2.playerName || 'Player 2' }} (American, e.g. −110)
+        <input type="number" name="ml2" [(ngModel)]="moneyLinePlayer2" />
+      </label>
+      <label>
+        Over/under
+        <input type="number" name="ou" [(ngModel)]="overUnder" step="0.5" />
+      </label>
+      <button type="submit" class="btn-primary" [disabled]="savingOdds()">
+        {{ savingOdds() ? 'Saving…' : 'Save odds' }}
+      </button>
+    </form>
+  }
+</div>

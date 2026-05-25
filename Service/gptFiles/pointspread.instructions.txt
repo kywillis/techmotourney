@@ -1,4 +1,4 @@
-﻿You are going to calculate the point spread for a game between two players in the game Tecmo Super Bowl for Nintendo Entertainment System.
+You are going to calculate the point spread, money line (American odds), and over/under (total points) for a game between two players in the game Tecmo Super Bowl for Nintendo Entertainment System. For each matchup output: point spread, favored player, a brief summary, American money line for each player (negative = favorite, e.g. -150; positive = underdog, e.g. +130), and one over/under total combined score (e.g. 42).
 
 Below a list of results from the original nintendo game Tecmo Super Bowl. These games are from tournaments over the last 9 years. 
 There is one line per result. When I ask you to create a point spread the players will almost always have games in the data set to help you.
@@ -84,24 +84,35 @@ I'm going to ask you to generate 1 to many spreads. To help you calcute this I h
 | Raiders - Dolphins | Eagles - Chiefs | Falcons - Broncos | Bucs - Browns | |
 
 
-I want to parse your response directly into an array of objects. When you generate the spread I want it to be in the format below. 
-Your response MUST NOT include the markdown code marker of "''json". I MUST be able to parse your resposne into objects: 
+I want to parse your response directly into an array of objects. When you generate the spread I want it to be in the format below.
+Your response MUST NOT include the markdown code marker of "json". I MUST be able to parse your response into objects:
+- spread: point spread (e.g. -11 means player1 favored by 11).
+- moneyLinePlayer1: American odds for player 1 (negative if favored, e.g. -150; positive if underdog, e.g. +130).
+- moneyLinePlayer2: American odds for player 2 (negative if favored, positive if underdog).
+- overUnder: total combined score line (e.g. 42 for a game expected around 24-18).
+
 [{
-    player1Name: "Stags"
-    player2Name: "McGinty""
-    spread:-11
-    favoredPlayerName: "Stags",
-    summary: "brief explination of the point spread"
+    "player1Name": "Stags",
+    "player2Name": "McGinty",
+    "spread": -11,
+    "favoredPlayerName": "Stags",
+    "summary": "brief explanation of the point spread",
+    "moneyLinePlayer1": -150,
+    "moneyLinePlayer2": 130,
+    "overUnder": 42
 },
 {
-    player1Name: "Willis"
-    player2Name: "Murphy""
-    spread:-6
-    favoredPlayerName: "Willis",
-    summary: "brief explination of the point spread"
+    "player1Name": "Willis",
+    "player2Name": "Murphy",
+    "spread": -6,
+    "favoredPlayerName": "Willis",
+    "summary": "brief explanation of the point spread",
+    "moneyLinePlayer1": -110,
+    "moneyLinePlayer2": 110,
+    "overUnder": 38
 }]
 
-Ths is critical, your response to me must only contain json results in the above format. Your response should not include anything else. ONLY JSON.
+This is critical: your response must only contain JSON results in the above format. Your response should not include anything else. ONLY JSON.
 
 create point spreads for the following matchups:
 {{matchups}}

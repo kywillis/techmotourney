@@ -1,4 +1,4 @@
-﻿using TecmoTourney.Models;
+using TecmoTourney.Models;
 using TecmoTourney.Models.Requests;
 using TecmoTourney.Orchestration.Interfaces;
 using TecmoTourney.DataAccess.Interfaces;
@@ -23,18 +23,20 @@ namespace TecmoTourney.Orchestration
         private readonly IPlayerDAO _playerDAO;
         private readonly IMapper _mapper;
         private readonly IGameResultDAO _gameResultDAO;
-        private readonly IPointSpreadDAO _pointSpreadDAOcs;
+        private readonly IGameOddsDAO _gameOddsDAO;
+        private readonly IGameOddsGenerationService _gameOddsGenerationService;
 
-        private List<PointSpread> _existingPointSpeads = new List<PointSpread>() { };
+        private List<BracketMatchup> _existingPointSpeads = new List<BracketMatchup>() { };
 
-        public TournamentsOrchestration(ITournamentsDAO tournamentsDAO, IPlayerTournamentDAO playerTournamentDAO, IGameResultDAO gameResultDAO, IPlayerDAO playerDAO, IMapper mapper, IPointSpreadDAO pointSpreadDAOcs)
+        public TournamentsOrchestration(ITournamentsDAO tournamentsDAO, IPlayerTournamentDAO playerTournamentDAO, IGameResultDAO gameResultDAO, IPlayerDAO playerDAO, IMapper mapper, IGameOddsDAO gameOddsDAO, IGameOddsGenerationService gameOddsGenerationService)
         {
             _gameResultDAO = gameResultDAO;
             _playerTournamentDAO = playerTournamentDAO;
             _tournamentsDAO = tournamentsDAO;
             _playerDAO = playerDAO;
             _mapper = mapper;
-            _pointSpreadDAOcs = pointSpreadDAOcs;
+            _gameOddsDAO = gameOddsDAO;
+            _gameOddsGenerationService = gameOddsGenerationService;
         }
 
         public async Task<Operation<List<TournamentModel>, ApiError>> ListAllAsync() 
@@ -75,16 +77,25 @@ namespace TecmoTourney.Orchestration
         }
 
         /// <summary>
-        /// returns the first active tournament found, there should only be one
+        /// Returns the current playable tournament: not Deleted or Completed, status Waiting / Preliminaries / Tournament.
+        /// If several match (data issue), prefers latest <see cref="TournamentDAOModel.StartDate"/> then highest <see cref="TournamentDAOModel.TournamentId"/>.
         /// </summary>
-        /// <returns></returns>
         public async Task<Operation<TournamentModel, ApiError>> GetActive()
         {
             try
             {
                 var all = await _tournamentsDAO.ListAllAsync();
-                var active = all.FirstOrDefault(t => t.StatusId != (int)TournamentStatus.Deleted || t.StatusId != (int)TournamentStatus.Completed);
-                if(active == null)
+                var active = all
+                    .Where(t =>
+                        t.StatusId != (int)TournamentStatus.Deleted
+                        && t.StatusId != (int)TournamentStatus.Completed
+                        && (t.StatusId == (int)TournamentStatus.Waiting
+                            || t.StatusId == (int)TournamentStatus.Preliminaries
+                            || t.StatusId == (int)TournamentStatus.Tournament))
+                    .OrderByDescending(t => t.StartDate ?? DateTime.MinValue)
+                    .ThenByDescending(t => t.TournamentId)
+                    .FirstOrDefault();
+                if (active == null)
                     return new ApiError("no in progress tournament found", HttpStatusCode.BadRequest);
 
                 return _mapper.Map<TournamentModel>(active);
@@ -257,25 +268,27 @@ namespace TecmoTourney.Orchestration
             {
                 List<TournamentStandingModel> standings = new List<TournamentStandingModel>();
                 var players = await _playerDAO.ListPlayersAsync(tournamentId);
-                var prelimGames = (await _gameResultDAO.ListResultsByTournamentAsync(tournamentId)).Where(g => g.GameTypeId == (int)GameType.Preliminary);
+                var prelimGames = (await _gameResultDAO.ListResultsByTournamentAsync(tournamentId)).Where(g => g.GameTypeId == (int)GameType.Preliminary).ToList();
                 var seed = 1;
 
                 foreach (var player in players) 
                 {
+                    // Exclude games that don't count for this player's seeding (e.g. their 3rd game when odd N)
+                    var gamesThatCountForPlayer = prelimGames.Where(g => GameUtils.PlayerInGame(g, player.PlayerId) != null && g.SeedingExemptPlayerId != player.PlayerId).ToList();
                     standings.Add(new TournamentStandingModel() { 
-                        GamesPlayed = prelimGames.Count(g => GameUtils.PlayerInGame(g, player.PlayerId) != null && g.StatusId == (int)status),
+                        GamesPlayed = gamesThatCountForPlayer.Count(g => g.StatusId == (int)status),
                         PlayerId = player.PlayerId,
                         PlayerName = player.FullName,
-                        PreliminariesScore = calculatePlayerPreliminaryScore(prelimGames, player.PlayerId),
+                        PreliminariesScore = calculatePlayerPreliminaryScore(gamesThatCountForPlayer, player.PlayerId),
                         TournamentFinishPosition = 0,
-                        TotalPassingYards = GameUtils.GetPlayerStat(prelimGames, player.PlayerId, GameStat.PassingYards),
-                        TotalRushingYards = GameUtils.GetPlayerStat(prelimGames, player.PlayerId, GameStat.RushingYards),
-                        TotalPassingYardsAllowed = GameUtils.GetPlayerStat(prelimGames, player.PlayerId, GameStat.PassingYardsAllowed),
-                        TotalRushingYardsAllowed = GameUtils.GetPlayerStat(prelimGames, player.PlayerId, GameStat.RushingYardsAllowed),
-                        TotalPointsFor = GameUtils.GetPlayerStat(prelimGames, player.PlayerId, GameStat.PointsScoreFor),
-                        TotalPointsAgainst = GameUtils.GetPlayerStat(prelimGames, player.PlayerId, GameStat.PointsScoreAgainst),
-                        Wins = GameUtils.GetPlayerStat(prelimGames, player.PlayerId, GameStat.Wins),
-                        Loses = GameUtils.GetPlayerStat(prelimGames, player.PlayerId, GameStat.Losses),
+                        TotalPassingYards = GameUtils.GetPlayerStat(gamesThatCountForPlayer, player.PlayerId, GameStat.PassingYards),
+                        TotalRushingYards = GameUtils.GetPlayerStat(gamesThatCountForPlayer, player.PlayerId, GameStat.RushingYards),
+                        TotalPassingYardsAllowed = GameUtils.GetPlayerStat(gamesThatCountForPlayer, player.PlayerId, GameStat.PassingYardsAllowed),
+                        TotalRushingYardsAllowed = GameUtils.GetPlayerStat(gamesThatCountForPlayer, player.PlayerId, GameStat.RushingYardsAllowed),
+                        TotalPointsFor = GameUtils.GetPlayerStat(gamesThatCountForPlayer, player.PlayerId, GameStat.PointsScoreFor),
+                        TotalPointsAgainst = GameUtils.GetPlayerStat(gamesThatCountForPlayer, player.PlayerId, GameStat.PointsScoreAgainst),
+                        Wins = GameUtils.GetPlayerStat(gamesThatCountForPlayer, player.PlayerId, GameStat.Wins),
+                        Loses = GameUtils.GetPlayerStat(gamesThatCountForPlayer, player.PlayerId, GameStat.Losses),
                         TournamentId = tournamentId,
                         Seed = 0
                     });
@@ -427,15 +440,20 @@ namespace TecmoTourney.Orchestration
                 {
                     for (int i = 0; i < PRELIM_GAMES; i++)
                     {
-                        if (getGameCount(player.PlayerId, games) > 2) //check if this player is already in two games
+                        if (getGameCount(player.PlayerId, games) >= PRELIM_GAMES) //skip when this player already has two games
                             continue;
 
                         var shuffledPlayerList = allPlayers //create random ordering of players without the current player
                                                     .Where(p => p.PlayerId != player.PlayerId)
                                                     .OrderBy(x => Guid.NewGuid()).ToList();
                         var opponentId = getOpponent(player.PlayerId, games, shuffledPlayerList);
-                        if (opponentId == null) //there are no players left
-                            opponentId = shuffledPlayerList.First().PlayerId;
+                        var isSeedingExemptGame = opponentId == null; // odd N: opponent already has 2 games; this game won't count for their seeding
+                        if (opponentId == null) // odd N — give current player an opponent whose 3rd game this is; prefer someone we haven't already played
+                        {
+                            var opponentNotYetPlayed = shuffledPlayerList
+                                .FirstOrDefault(p => !games.Any(g => GameUtils.PlayerInGame(g, player.PlayerId).HasValue && GameUtils.PlayerInGame(g, p.PlayerId).HasValue));
+                            opponentId = opponentNotYetPlayed?.PlayerId ?? shuffledPlayerList.First().PlayerId;
+                        }
 
                         games.Add(new GameResultDAOModel()
                         {
@@ -445,14 +463,18 @@ namespace TecmoTourney.Orchestration
                             StatusId = (int)GameStatus.Waiting,
                             GameTypeId = (int)GameType.Preliminary,
                             IsDeleted = false,
+                            SeedingExemptPlayerId = isSeedingExemptGame ? opponentId : null,
                         });
                     }
                 }
 
+                var savedGames = new List<GameResultDAOModel>();
                 foreach (var game in games)
                 {
-                    await _gameResultDAO.CreateGameResultAsync(game);
+                    savedGames.Add(await _gameResultDAO.CreateGameResultAsync(game));
                 }
+
+                await _gameOddsGenerationService.EnsureOddsForNewGameResultsAsync(savedGames);
 
                 var savedTournament = await _tournamentsDAO.GetById(tournament.TournamentId);
                 return _mapper.Map<TournamentModel>(savedTournament);
@@ -463,9 +485,9 @@ namespace TecmoTourney.Orchestration
             }
         }
 
-        private IEnumerable<PointSpread> generateMissingPointSpeads(string rawBracketData)
+        private IEnumerable<BracketMatchup> generateMissingPointSpeads(string rawBracketData)
         {
-            List<PointSpread> pointSpreads = new List<PointSpread>();
+            List<BracketMatchup> pointSpreads = new List<BracketMatchup>();
             var bracketData = JsonConvert.DeserializeObject<TournamentBracketModel>(rawBracketData);
             return pointSpreads;
         }
@@ -474,9 +496,6 @@ namespace TecmoTourney.Orchestration
         {
             try
             {
-                if (!request.Password.Equals("Browns98"))
-                    return new ApiError("reset password incorrect", HttpStatusCode.Forbidden);
-
                 if (tournamentId != request.TournamentId)
                     return new ApiError("tournament ids in request do not match", HttpStatusCode.BadRequest);
 
@@ -494,7 +513,7 @@ namespace TecmoTourney.Orchestration
                     await _gameResultDAO.UpdateGameResultAsync(game.GameResultId, game);
                 }
 
-                await _pointSpreadDAOcs.DeleteByTournamentIdAsync(tournamentId);
+                await _gameOddsDAO.DeleteByTournamentIdAsync(tournamentId);
                 return true;
             }
             catch (Exception e)
@@ -504,7 +523,7 @@ namespace TecmoTourney.Orchestration
         }
     }
 
-    public class PointSpread
+    public class BracketMatchup
     {
         public int Player1ID { get; set; }
         public int Player2ID { get; set; }

@@ -1,0 +1,56 @@
+<div class="admin-screen">
+  <a routerLink="/admin" class="back-link">← Admin home</a>
+  <header class="header">
+    <app-star-flanked-title title="Player balance" />
+  </header>
+  <p class="note">Adjust a player’s global wager balance. The list is limited to players on the tournament selected in the menu.</p>
+  @if (listLoading()) {
+    <p class="loading">Loading players…</p>
+  } @else if (listError()) {
+    <p class="error">{{ listError() }}</p>
+  } @else {
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+    @if (message()) {
+      <p class="note">{{ message() }}</p>
+    }
+    <form class="form-stack" (ngSubmit)="submit()">
+      <label>
+        Player
+        <select
+          name="playerId"
+          [(ngModel)]="selectedPlayerId"
+          (ngModelChange)="onPlayerChange()"
+          required
+        >
+          <option [ngValue]="null">Choose a player…</option>
+          @for (p of players(); track p.playerId) {
+            <option [ngValue]="p.playerId">{{ p.fullName }}</option>
+          }
+        </select>
+      </label>
+      @if (selectedPlayerId != null && currentBalance != null) {
+        <p class="balance-readout" aria-live="polite">
+          Current balance
+          <span class="balance-amount">${{ currentBalance | number: '1.2-2' }}</span>
+        </p>
+      }
+      <label>
+        Action
+        <select name="action" [(ngModel)]="action">
+          <option value="Add">Add</option>
+          <option value="Set">Set</option>
+          <option value="SetToZero">Set to zero</option>
+        </select>
+      </label>
+      <label>
+        Amount (Set / Add)
+        <input type="number" name="amount" [(ngModel)]="amount" step="0.01" />
+      </label>
+      <button type="submit" class="btn-primary" [disabled]="submitting()">
+        {{ submitting() ? 'Saving…' : 'Apply' }}
+      </button>
+    </form>
+  }
+</div>

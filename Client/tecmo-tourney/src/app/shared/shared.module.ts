@@ -2,6 +2,7 @@ import { NgModule, Optional, SkipSelf } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
+import { RouterModule } from '@angular/router';
 
 // Import your core services here
 import { HeaderComponent } from '../shared/components/header/header.component';
@@ -19,7 +20,8 @@ import { SectionHeaderComponent } from '../shared/components/section-header/sect
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    HttpClientModule  // Import HttpClientModule here if your services need HTTP
+    HttpClientModule,
+    RouterModule
   ],
   providers: [
   ],

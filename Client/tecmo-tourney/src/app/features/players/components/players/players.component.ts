@@ -6,7 +6,7 @@ import { DeletePlayerComponent } from '../delete-player/delete-player.component'
 import { EditPlayerComponent } from '../edit-player/edit-player.component';
 import { IPlayerSummary } from 'src/app/core/models/playerSummary.model';
 import { IPlayer } from 'src/app/core/models/player.model';
-import { AuthenticationService } from 'src/app/core/services/authentication.service';
+import { GoogleAuthService } from 'src/app/core/services/google-auth.service';
 
 @Component({
     selector: 'app-players',
@@ -26,7 +26,7 @@ export class PlayersComponent implements OnInit {
   constructor(
       private playersService: PlayersService, 
       private router: Router, 
-      private authenticationService: AuthenticationService) { }
+      private googleAuth: GoogleAuthService) { }
 
   ngOnInit(): void {
     this.loadPlayers();
@@ -84,7 +84,7 @@ export class PlayersComponent implements OnInit {
     this.router.navigate(['/players', playerId]);
   }
 
-  loggedIn():boolean{
-    return this.authenticationService.isAdminLoggedIn();
+  loggedIn(): boolean {
+    return this.googleAuth.isAdminLoggedIn();
   }
 }

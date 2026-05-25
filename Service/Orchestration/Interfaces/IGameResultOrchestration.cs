@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using TecmoTourney.Models;
 using TecmoTourney.Models.Requests;
@@ -17,7 +17,7 @@ namespace TecmoTourney.Orchestration.Interfaces
         Task<Operation<bool, ApiError>> DeleteGameResultAsync(int id);
         Task<Operation<List<TournamentBracketUpdateModel>, ApiError>> GetGameUpdates(int tournamentId);
         Task<Operation<bool, ApiError>> AcknowledgeBracketUpdate(int tournamentBracketUpdateId);
-        Task<Operation<List<PointSpreadModel>, ApiError>> CreatePointSpreadsAsync(int tournamentId, IEnumerable<PointSpreadRequestModel> pointSpreads);
-        Task<Operation<List<PointSpreadModel>, ApiError>> GetPointSpreadsAsync(int tournamentId);
+        Task<Operation<List<GameOddsModel>, ApiError>> CreatePointSpreadsAsync(int tournamentId, IEnumerable<GameOddsRequestModel> pointSpreads);
+        Task<Operation<List<GameOddsModel>, ApiError>> GetPointSpreadsAsync(int tournamentId);
     }
 }

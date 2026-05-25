@@ -6,5 +6,8 @@ export interface IPointSpread{
     bracketType: BracketLocation;
     spread: number;
     favoredPlayerId: number;
-    summary:string;
+    summary: string;
+    moneyLinePlayer1?: number | null;
+    moneyLinePlayer2?: number | null;
+    overUnder?: number | null;
 }

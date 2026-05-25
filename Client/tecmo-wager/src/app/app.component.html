@@ -1,0 +1,4 @@
+<app-main-nav />
+<main class="app-main" [class.app-main--padded]="auth.hasSession()">
+  <router-outlet />
+</main>

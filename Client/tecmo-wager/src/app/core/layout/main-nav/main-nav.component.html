@@ -1,0 +1,90 @@
+@if (hasSession()) {
+  <header class="app-header" role="banner">
+    <div class="header-left">
+      <button
+        type="button"
+        class="hamburger"
+        (click)="toggleMenu()"
+        [attr.aria-expanded]="menuOpen()"
+        aria-controls="main-nav-drawer"
+        [attr.aria-label]="menuOpen() ? 'Close menu' : 'Open menu'"
+      >
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </button>
+      <span class="header-brand">Tecmo Wager</span>
+    </div>
+    <div class="header-center">
+      <span
+        class="header-tournament"
+        [attr.title]="displayTournamentName() || null"
+      >{{ displayTournamentName() || '\u2014' }}</span>
+      @if (isAdmin() && pendingPlayersCount() > 0) {
+        <div class="header-admin-alerts" role="navigation" aria-label="Admin alerts">
+          <a routerLink="/admin/pending-players" class="header-mini-banner" (click)="closeMenu()">
+            Players {{ pendingPlayersCount() }}
+          </a>
+        </div>
+      }
+    </div>
+    <div class="header-right">
+      @if (isActiveUser()) {
+        <div class="header-user-cluster" role="group" [attr.aria-label]="isAdmin() ? 'Admin' : 'Account'">
+          @if (!isAdmin()) {
+            <div class="header-balance" aria-label="Account balance">
+              <span class="header-balance-label">Balance</span>
+              <span class="header-balance-amount">${{ balance() | number: '1.0-0' }}</span>
+            </div>
+          }
+          <div class="header-user-identity">
+            <div class="header-user-face-wrap" aria-hidden="true">
+              <div [class]="faceClass(profilePicDisplayIndex())" class="player-face"></div>
+            </div>
+            @if (fullName()) {
+              <span class="header-user-name">{{ fullName() }}</span>
+            }
+          </div>
+          @if (isAdmin()) {
+            <span class="header-admin-pill" aria-hidden="true">Admin</span>
+          }
+        </div>
+      }
+    </div>
+  </header>
+
+  @if (menuOpen()) {
+    <div class="nav-backdrop" (click)="closeMenu()" aria-hidden="true"></div>
+    <nav id="main-nav-drawer" class="nav-drawer" role="navigation" [attr.aria-label]="isAdmin() ? 'Admin' : 'Main'">
+      @if (isActiveUser() && isAdmin()) {
+        <a routerLink="/admin" class="nav-link nav-link-admin" routerLinkActive="nav-link-active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">Admin home</a>
+        <a routerLink="/admin/pending-players" class="nav-link" routerLinkActive="nav-link-active" (click)="closeMenu()">Pending signups</a>
+        <a routerLink="/admin/balance" class="nav-link" routerLinkActive="nav-link-active" (click)="closeMenu()">Player balance</a>
+        <a routerLink="/admin/wagers" class="nav-link" routerLinkActive="nav-link-active" (click)="closeMenu()">Pending wagers</a>
+        <a routerLink="/admin/games" class="nav-link" routerLinkActive="nav-link-active" (click)="closeMenu()">Games &amp; scores</a>
+        <div class="nav-admin-tournament">
+          <label class="nav-admin-tournament-label" for="admin-tournament-select">Change tournament</label>
+          <select
+            id="admin-tournament-select"
+            class="nav-admin-tournament-select"
+            [value]="adminTournament.tournamentId() ?? ''"
+            (change)="onAdminTournamentChange($event)"
+          >
+            @for (t of adminTournament.tournaments(); track t.tournamentId) {
+              <option [value]="t.tournamentId">{{ t.name }}</option>
+            }
+          </select>
+        </div>
+      } @else if (isActiveUser()) {
+        <a routerLink="/" class="nav-link" (click)="closeMenu()">Home</a>
+        <a routerLink="/wagers/games" class="nav-link" (click)="closeMenu()">Games / Place bet</a>
+        <a routerLink="/wagers" class="nav-link" (click)="closeMenu()">My wagers</a>
+        <a routerLink="/activity" class="nav-link" (click)="closeMenu()">Activity</a>
+      } @else if (isPendingUser()) {
+        <p class="nav-note">Your account is waiting to be activated.</p>
+        <a routerLink="/pending" class="nav-link" (click)="closeMenu()">Status</a>
+      }
+      <button type="button" class="nav-link nav-link-button" (click)="logout()">Sign out</button>
+    </nav>
+  }
+}

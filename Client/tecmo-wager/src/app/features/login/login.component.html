@@ -1,0 +1,15 @@
+<div class="login-screen">
+  <header class="header">
+    <app-star-flanked-title title="Tecmo Wager" size="lg" />
+  </header>
+  <div class="content">
+    <p class="tagline">Sign in to place wagers</p>
+    <div #googleButton class="google-button-container"></div>
+    @if (errorMessage) {
+      <p class="error">{{ errorMessage }}</p>
+    }
+    @if (loading) {
+      <p class="loading">Signing in…</p>
+    }
+  </div>
+</div>

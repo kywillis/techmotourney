@@ -15,8 +15,9 @@
     <table class="stats-table players">
         <thead>
             <tr>
-                <th style="width: 40%;">Name</th>
+                <th style="width: 36%;">Name</th>
                 <th>Date</th>
+                <th>Status</th>
                 <th></th>
                 <th></th>
             </tr>
@@ -25,6 +26,7 @@
             <tr *ngFor="let tournament of tournaments">
                 <td class="name"><span class="link" (click)="goToTournament(tournament.tournamentId)">{{tournament.name}}</span></td>
                 <td class="date">{{tournament.startDate | date:'M/d/yy' }}</td>
+                <td class="status">{{ tournamentStatusLabel(tournament.status) }}</td>
                 <td class="edit">
                     <span *ngIf="loggedin()" class="link" (click)="openEditTournament(tournament)">Edit</span>
                 </td>
@@ -34,20 +36,6 @@
             </tr>
         </tbody>
     </table>
-    <div class="adminCnt">
-        <span *ngIf="!showAdmin" (click)="toggleLogin()">Show</span>
-        <span *ngIf="showAdmin" (click)="toggleLogin()">Hide</span>
-        <div *ngIf="showAdmin">
-            <div *ngIf="!loggedin()">
-                <input type="text" [(ngModel)]="password" />
-                <button class="btn btn-main" (click)="login()">Go</button>
-                <div *ngIf="loginResult != ''">{{loginResult}}</div>
-            </div>
-            <div *ngIf="loggedin()">
-                <button class="btn btn-main" (click)="logout()">Logout</button>
-            </div>
-        </div>
-    </div>
 </div>
 <app-modal #deleteTournamentModal title="Delete Tournament">
     <app-delete-tournament #deleteTournament (tournamentDeleted)="tournamentDeleted()"></app-delete-tournament>

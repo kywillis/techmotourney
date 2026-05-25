@@ -130,14 +130,13 @@
 </app-modal>
 
 <app-modal #resetModal title="Reset Tournament">
-    <strong>You are about to reset this tournmanet</strong>
+    <strong>You are about to reset this tournament</strong>
     <ul>
         <li>This will reset this tournament to a status of Preliminaries.</li>
         <li>It will set all bracket games to deleted</li>
         <li>It will delete the bracket data</li>
         <li>It will delete all point spread data</li>
     </ul>
-    Reset Password: <input type="text" [(ngModel)]="resetPassword">
-    <button class="btn btn-primary" (click)="resetTournament()">Reset Tournmanent</button>
+    <button type="button" class="btn btn-primary" (click)="resetTournament()">Reset tournament</button>
     <div *ngIf="resetError" style="color: red;">{{resetError}}</div>
 </app-modal>

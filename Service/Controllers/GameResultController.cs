@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using TecmoTourney.Models;
 using TecmoTourney.Orchestration.Interfaces;
 using System.Collections.Generic;
@@ -80,16 +80,16 @@ namespace TecmoTourney.Controllers
         }
 
         [HttpPost("{tournamentId}/pointSpreads")]
-        [ProducesResponseType(200, Type = typeof(PointSpreadModel[]))]
+        [ProducesResponseType(200, Type = typeof(GameOddsModel[]))]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> CreatePointSpreads(int tournamentId, IEnumerable<PointSpreadRequestModel> pointSpreads)
+        public async Task<IActionResult> CreatePointSpreads(int tournamentId, IEnumerable<GameOddsRequestModel> pointSpreads)
         {
             var results = await _gameResultOrchestration.CreatePointSpreadsAsync(tournamentId, pointSpreads);
             return results.ToActionResult();
         }
 
         [HttpGet("{tournamentId}/pointSpreads")]
-        [ProducesResponseType(200, Type = typeof(PointSpreadModel[]))]
+        [ProducesResponseType(200, Type = typeof(GameOddsModel[]))]
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetPointSpreads(int tournamentId)
         {

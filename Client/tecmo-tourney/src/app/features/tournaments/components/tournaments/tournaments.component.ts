@@ -1,11 +1,12 @@
 import { Router } from '@angular/router';
-import { Component, Input, input, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ITournament } from 'src/app/core/models/tournament.model';
 import { TournamentsService } from 'src/app/core/services/tournaments.service';
 import { ModalComponent } from 'src/app/shared/components/modal/modal.component';
 import { EditTournamentComponent } from '../edit-tournament/edit-tournament.component';
 import { DeleteTournamentComponent } from '../delete-tournament/delete-tournament.component';
-import { AuthenticationService } from 'src/app/core/services/authentication.service';
+import { GoogleAuthService } from 'src/app/core/services/google-auth.service';
+import { TournamentStatus } from 'src/app/enums';
 
 @Component({
     selector: 'app-tournaments',
@@ -21,21 +22,26 @@ export class TournamentsComponent implements OnInit{
   
   tournaments = [] as ITournament[];
   loading = false;
-  password = "";
-  showAdmin = false;
-  loginResult = "";
-
-  constructor(private tournamentsService: TournamentsService, private router: Router, private authenticationService: AuthenticationService) { }
+  constructor(
+    private tournamentsService: TournamentsService,
+    private router: Router,
+    private googleAuth: GoogleAuthService
+  ) {}
  
   ngOnInit(): void {
     this.loadTournaments();
   }
 
-  loadTournaments(): void{
-    this.loading = false;
+  loadTournaments(): void {
+    this.loading = true;
     this.tournamentsService.getAllTournaments().subscribe({
-      next: (tournaments) =>{
-        this.tournaments = tournaments;
+      next: (tournaments) => {
+        const sorted = [...tournaments].sort((a, b) => {
+          const ta = new Date(a.startDate).getTime();
+          const tb = new Date(b.startDate).getTime();
+          return tb - ta;
+        });
+        this.tournaments = sorted;
         this.loading = false;
       },
       error: (error) => {
@@ -84,28 +90,34 @@ export class TournamentsComponent implements OnInit{
     this.loadTournaments();
   }
 
-  toggleLogin(){
-    this.showAdmin = !this.showAdmin;
-    this.loginResult = "";
+  loggedin(): boolean {
+    return this.googleAuth.isAdminLoggedIn();
   }
 
-  login(){
-    this.authenticationService.loginAdmin(this.password).subscribe((result)=>{
-      if(result){
-        this.loginResult = "admin activated";
-        this.showAdmin = false;
-      }
-      else 
-        this.loginResult = "admin login failed";
-    });
-  }
-
-  loggedin():boolean{
-    return this.authenticationService.isAdminLoggedIn();
-  }
-
-  logout(){
-    this.showAdmin = false;
-    return this.authenticationService.logoutAdmin();
+  /** Maps API status (string enum name or legacy numeric) to readable enum label. */
+  tournamentStatusLabel(status: TournamentStatus | string | number): string {
+    const numericNames: Record<number, string> = {
+      0: 'Waiting',
+      1: 'Preliminaries',
+      2: 'Tournament',
+      3: 'Completed',
+      4: 'Deleted'
+    };
+    if (typeof status === 'number' && numericNames[status] !== undefined) {
+      return numericNames[status];
+    }
+    const s = String(status).trim();
+    if (/^\d+$/.test(s)) {
+      const n = Number(s);
+      if (numericNames[n] !== undefined) return numericNames[n];
+    }
+    const byLower: Record<string, string> = {
+      waiting: 'Waiting',
+      preliminaries: 'Preliminaries',
+      tournament: 'Tournament',
+      completed: 'Completed',
+      deleted: 'Deleted'
+    };
+    return byLower[s.toLowerCase()] ?? s;
   }
 }

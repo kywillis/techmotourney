@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using TecmoTourney.Models;
 using TecmoTourney.DataAccess.Models;
 using TecmoTourney.Models.Requests;
@@ -47,10 +47,17 @@ namespace TecmoTourney
                 .ForMember(dest => dest.StatusId, opt => opt.MapFrom(src => (int)src.Status))
                 .ForMember(dest => dest.GameTypeId, opt => opt.MapFrom(src => (int)src.GameType));
 
-            CreateMap<PointSpreadModel, PointSpreadDAOModel>();
-            CreateMap<PointSpreadRequestModel, PointSpreadDAOModel>();
-            CreateMap<PointSpreadDAOModel, PointSpreadModel>();
+            CreateMap<GameOddsModel, GameOddsDAOModel>();
+            CreateMap<GameOddsRequestModel, GameOddsDAOModel>()
+                .ForMember(dest => dest.Player1Id, opt => opt.MapFrom(src => src.Player1ID))
+                .ForMember(dest => dest.Player2Id, opt => opt.MapFrom(src => src.Player2ID));
+            CreateMap<GameOddsDAOModel, GameOddsModel>();
 
+            CreateMap<PendingActivationDAOModel, PendingActivationModel>();
+            CreateMap<WagerDAOModel, WagerModel>();
+            CreateMap<WagerAuditDAOModel, WagerAuditEntryModel>();
+            CreateMap<WagerSettingsDAOModel, WagerSettingsModel>();
+            CreateMap<WagerSettingsModel, WagerSettingsDAOModel>();
         }
     }
 }

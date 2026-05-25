@@ -1,5 +1,20 @@
-<nav>
-    <a href="/">home</a>
-    <a href="/tournaments">tournaments</a>
-    <a href="/players">players</a>
+<nav class="top-nav">
+    <a routerLink="/home" routerLinkActive="active">home</a>
+    <a routerLink="/tournaments" routerLinkActive="active">tournaments</a>
+    <a routerLink="/players" routerLinkActive="active">players</a>
+    <span class="nav-spacer"></span>
+    <a
+      *ngIf="!hasSession"
+      routerLink="/login"
+      class="nav-auth nav-login-link"
+      aria-label="Sign in"
+      title="Sign in"
+    >
+      <span class="material-icons nav-login-icon" aria-hidden="true">login</span>
+    </a>
+    <ng-container *ngIf="hasSession">
+        <span *ngIf="isAdmin" class="nav-auth-label">Admin</span>
+        <span *ngIf="!isAdmin" class="nav-auth-label text-muted">Signed in</span>
+        <button type="button" class="btn btn-link nav-signout p-0" (click)="signOut()">Sign out</button>
+    </ng-container>
 </nav>

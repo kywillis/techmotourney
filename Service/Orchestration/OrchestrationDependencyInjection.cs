@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using TecmoTourney.Orchestration.Interfaces;
 
 namespace TecmoTourney.Orchestration
@@ -11,6 +11,10 @@ namespace TecmoTourney.Orchestration
             services.AddScoped<IGameResultOrchestration, GameResultOrchestration>();
             services.AddScoped<ITournamentsOrchestration, TournamentsOrchestration>();
             services.AddScoped<IGameTeamOrchestration, GameTeamsOrchestration>();
+            services.AddScoped<IWagerAuthOrchestration, WagerAuthOrchestration>();
+            services.AddScoped<IWagerOrchestration, WagerOrchestration>();
+            services.AddScoped<IWagerAdminOrchestration, WagerAdminOrchestration>();
+            services.AddScoped<IGameOddsGenerationService, GameOddsGenerationService>();
         }
     }
 }

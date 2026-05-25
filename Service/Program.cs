@@ -1,8 +1,17 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using TecmoTourney.DataAccess;
 using TecmoTourney.Orchestration;
 using TecmoTourney;
+using TecmoTourney.Middleware;
+using TecmoTourney.Notifications;
 using Microsoft.Extensions.Options;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+
+// Register Dapper type handlers for wager enums (stored as string in DB)
+WagerDapperRegistration.RegisterWagerEnumHandlers();
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -19,6 +28,7 @@ builder.Configuration
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
@@ -26,12 +36,43 @@ builder.Services.AddControllers()
 builder.Services.Configure<ApplicationConfig>(builder.Configuration.GetSection("ApplicationConfig"));
 builder.Services.AddSingleton(resolver => resolver.GetRequiredService<IOptions<ApplicationConfig>>().Value);
 
-// Add CORS policy
+// Bind Azure AI settings (for odds generation)
+builder.Services.Configure<AzureAIOptions>(builder.Configuration.GetSection(AzureAIOptions.SectionName));
+builder.Services.AddSingleton(resolver => resolver.GetRequiredService<IOptions<AzureAIOptions>>().Value);
+
+// Bind Google auth (for wager app)
+builder.Services.Configure<GoogleAuthOptions>(builder.Configuration.GetSection(GoogleAuthOptions.SectionName));
+
+// Twilio SMS (optional): new pending wager signups
+builder.Services.Configure<TwilioSmsOptions>(builder.Configuration.GetSection(TwilioSmsOptions.SectionName));
+builder.Services.AddSingleton<IPendingSignupSmsNotifier, TwilioPendingSignupSmsNotifier>();
+
+// Add Authentication: Google ID tokens (JWT) for wager endpoints
+var googleAuth = builder.Configuration.GetSection(GoogleAuthOptions.SectionName).Get<GoogleAuthOptions>();
+if (!string.IsNullOrEmpty(googleAuth?.ClientId))
+{
+    builder.Services.AddAuthentication()
+    .AddJwtBearer("Google", options =>
+    {
+        options.Authority = "https://accounts.google.com";
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidIssuer = "https://accounts.google.com",
+            ValidAudiences = new[] { googleAuth.ClientId },
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(1)
+        };
+    });
+}
+
+// Add CORS policy (existing tecmo-tourney + wager app origins)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin",
-        builder => builder
-            .WithOrigins("http://localhost:4200") // Angular app URL
+        policyBuilder => policyBuilder
+            .WithOrigins("http://localhost:4200", "http://localhost:4201")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials());
@@ -53,7 +94,6 @@ var app = builder.Build();
 // Serve Angular files from wwwroot (or another folder if needed)
 app.UseDefaultFiles(); // Looks for index.html
 app.UseStaticFiles();  // Serves static assets like JS, CSS
-app.MapFallbackToFile("index.html");
 
 if (app.Environment.IsDevelopment())
 {
@@ -63,8 +103,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowSpecificOrigin");
+app.UseAuthentication();
 app.UseAuthorization();
+app.UseTournamentsWriteAdmin();
+app.UseWagerPlayerResolution();
 
-// API routes
+// API routes first; SPA fallback last so /api/* is never served index.html
 app.MapControllers();
+app.MapFallbackToFile("index.html");
 app.Run();

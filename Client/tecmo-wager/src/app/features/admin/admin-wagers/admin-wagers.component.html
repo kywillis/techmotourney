@@ -1,0 +1,35 @@
+<div class="admin-screen">
+  <a routerLink="/admin" class="back-link">← Admin home</a>
+  <header class="header">
+    <app-star-flanked-title title="Pending wagers" />
+  </header>
+  @if (loading()) {
+    <p class="loading">Loading…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (wagers().length === 0) {
+    <p class="empty">No pending wagers for this tournament.</p>
+  } @else {
+    <ul class="wager-admin-list">
+      @for (w of wagers(); track w.wagerId) {
+        <li class="wager-card">
+          <p><strong>{{ w.bettorFullName || 'Player ' + w.playerId }}</strong></p>
+          <p>{{ matchup(w) }}</p>
+          <p>{{ w.pickDescription }}</p>
+          <p>Stake ${{ w.stakeAmount | number: '1.0-2' }}</p>
+          <div class="row">
+            <a [routerLink]="['/admin/games', w.gameResultId]" fragment="odds" class="mini-link">Edit Lines</a>
+            <button
+              type="button"
+              class="btn-danger"
+              [disabled]="busyId() === w.wagerId"
+              (click)="cancel(w.wagerId)"
+            >
+              {{ busyId() === w.wagerId ? '…' : 'Cancel & refund' }}
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</div>

@@ -1,0 +1,125 @@
+.games-list-screen {
+  min-height: 100vh;
+  padding: 1rem;
+  padding-bottom: 4rem;
+}
+
+.header {
+  text-align: center;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--dark);
+  margin-bottom: 1rem;
+}
+
+.active-tournament {
+  font-size: 0.5rem;
+  margin: 0.5rem 0 0 0;
+  color: var(--link);
+}
+
+.loading,
+.empty,
+.error {
+  font-size: 0.625rem;
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.error {
+  color: var(--highlight);
+}
+
+.games-section {
+  margin-bottom: 1.75rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.games-section-title {
+  font-size: 0.5625rem;
+  color: var(--dark);
+  margin: 0 0 0.5rem 0;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.section-empty {
+  font-size: 0.5rem;
+  color: var(--link);
+  text-align: center;
+  margin: 0.5rem 0 0 0;
+}
+
+.game-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.game-card {
+  display: block;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--dark);
+  border-radius: 8px;
+  padding: 1rem;
+  text-decoration: none;
+  color: var(--text);
+
+  &:hover {
+    border-color: var(--highlight);
+  }
+}
+
+.game-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.vs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+
+  &.right {
+    flex-direction: row-reverse;
+  }
+}
+
+/* 64×64 matches global .player-face sprite viewport (tecmo-tourney); no background-size override */
+.player-avatar {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  background-color: var(--dark);
+}
+
+.player-name {
+  font-size: 0.5625rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vs-label {
+  font-size: 0.5rem;
+  color: var(--link);
+  flex-shrink: 0;
+}
+
+.odds-line {
+  font-size: 0.5rem;
+  color: var(--link);
+  margin: 0;
+
+  &--muted {
+    opacity: 0.85;
+  }
+}

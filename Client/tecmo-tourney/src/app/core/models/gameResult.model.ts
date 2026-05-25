@@ -8,5 +8,7 @@ export interface IGameResult {
     player2: IGameResultPlayer;
     date: Date;
     status: GameStatus;
-    gameType: GameType
+    gameType: GameType;
+    /** If set, this game does not count toward this player's preliminary seeding. */
+    seedingExemptPlayerId?: number | null;
   }
